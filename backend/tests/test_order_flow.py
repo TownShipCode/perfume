@@ -1,0 +1,152 @@
+from __future__ import annotations
+
+import asyncio
+
+from src.config import get_settings
+from src.db.connection import close_database, connect_database, fetch_one, initialize_database
+from src.services.catalog_service import ProductInput, create_product
+from src.services.customer_service import get_customer_by_phone
+from src.services.order_flow import handle_image_message, handle_text_message
+from src.services.session_service import get_session_by_phone
+
+
+def test_order_flow_collects_address_and_creates_order(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("LOCAL_SQLITE_PATH", str(tmp_path / "order-flow.db"))
+    get_settings.cache_clear()
+
+    async def scenario() -> None:
+        settings = get_settings()
+        database = await connect_database(settings)
+        try:
+            await initialize_database(database)
+            await create_product(
+                database,
+                ProductInput(
+                    product_number=1,
+                    name="Red Shoes",
+                    price="350.00",
+                    image_url="https://example.com/red-shoes.jpg",
+                    keywords=["shoe", "shoes", "red shoe"],
+                ),
+            )
+
+            added = await handle_text_message(
+                database,
+                {"message_id": "m1", "from": "27820000000", "type": "text", "text": "2 shoes", "profile_name": "Alice"},
+            )
+            assert added["action"] == "cart_updated"
+            assert added["cart"]["total"] == "700.00"
+
+            done = await handle_text_message(
+                database,
+                {"message_id": "m2", "from": "27820000000", "type": "text", "text": "done", "profile_name": "Alice"},
+            )
+            assert done["action"] == "address_collection_started"
+            assert done["state"] == "address_collection"
+
+            area = await handle_text_message(
+                database,
+                {"message_id": "m3", "from": "27820000000", "type": "text", "text": "Khayelitsha", "profile_name": "Alice"},
+            )
+            assert area["action"] == "address_collection_progress"
+            assert area["current_step"] == 1
+
+            street = await handle_text_message(
+                database,
+                {"message_id": "m4", "from": "27820000000", "type": "text", "text": "12 Main Road", "profile_name": "Alice"},
+            )
+            assert street["action"] == "address_collection_progress"
+            assert street["current_step"] == 2
+
+            city = await handle_text_message(
+                database,
+                {"message_id": "m5", "from": "27820000000", "type": "text", "text": "Cape Town", "profile_name": "Alice"},
+            )
+            assert city["action"] == "order_created"
+            assert city["state"] == "pop_waiting"
+            assert city["address"] == "12 Main Road, Khayelitsha, Cape Town"
+            assert city["order_number"].startswith("ORD-")
+
+            session = await get_session_by_phone(database, "27820000000")
+            assert session is not None
+            assert session["state"] == "pop_waiting"
+            assert session["cart"] == []
+
+            customer = await get_customer_by_phone(database, "27820000000")
+            assert customer is not None
+            assert customer["address_verified"] in (1, True)
+            assert customer["full_address"] == "12 Main Road, Khayelitsha, Cape Town"
+
+            query = "SELECT order_number, status, total FROM orders WHERE customer_id = ?"
+            order = await fetch_one(database, query, customer["id"])
+            assert order is not None
+            assert order["status"] == "pending"
+        finally:
+            await close_database(database)
+
+    asyncio.run(scenario())
+    get_settings.cache_clear()
+
+
+def test_order_flow_marks_pop_received_and_confirms_session(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("LOCAL_SQLITE_PATH", str(tmp_path / "pop-flow.db"))
+    get_settings.cache_clear()
+
+    async def scenario() -> None:
+        settings = get_settings()
+        database = await connect_database(settings)
+        try:
+            await initialize_database(database)
+            await create_product(
+                database,
+                ProductInput(
+                    product_number=1,
+                    name="Red Shoes",
+                    price="350.00",
+                    image_url="https://example.com/red-shoes.jpg",
+                    keywords=["shoe", "shoes", "red shoe"],
+                ),
+            )
+
+            for message_id, text in [
+                ("m1", "2 shoes"),
+                ("m2", "done"),
+                ("m3", "Khayelitsha"),
+                ("m4", "12 Main Road"),
+                ("m5", "Cape Town"),
+            ]:
+                await handle_text_message(
+                    database,
+                    {"message_id": message_id, "from": "27820000000", "type": "text", "text": text, "profile_name": "Alice"},
+                )
+
+            result = await handle_image_message(
+                database,
+                {
+                    "message_id": "m6",
+                    "from": "27820000000",
+                    "type": "image",
+                    "image_id": "media-123",
+                    "image_url": None,
+                    "profile_name": "Alice",
+                },
+            )
+            assert result["action"] == "pop_received"
+            assert result["state"] == "confirmed"
+            assert result["media_reference"] == "media-123"
+
+            session = await get_session_by_phone(database, "27820000000")
+            assert session is not None
+            assert session["state"] == "confirmed"
+
+            customer = await get_customer_by_phone(database, "27820000000")
+            assert customer is not None
+            order = await fetch_one(database, "SELECT status, pop_image_url FROM orders WHERE customer_id = ?", customer["id"])
+            assert order is not None
+            assert order["status"] == "pop_received"
+            assert order["pop_image_url"] == "media-123"
+        finally:
+            await close_database(database)
+
+    asyncio.run(scenario())
+    get_settings.cache_clear()

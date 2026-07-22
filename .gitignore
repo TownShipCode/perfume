@@ -1,0 +1,32 @@
+# Secrets and local environment files
+.env
+.env.*
+!.env.example
+
+# Python virtual environments
+.venv/
+venv/
+
+# Python caches and tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editable install / packaging artifacts
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Local database and runtime files
+*.db
+*.db-shm
+*.db-wal
+backend/data/
+
+# Frontend dependency caches
+node_modules/

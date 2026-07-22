@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "whatsapp-order-platform-backend"
+version = "0.1.0"
+description = "Phase 1 foundation for a WhatsApp order platform backend"
+requires-python = ">=3.11"
+dependencies = [
+    "asyncpg>=0.30,<1.0",
+    "fastapi>=0.116,<1.0",
+    "pydantic>=2.11,<3.0",
+    "python-dotenv>=1.0,<2.0",
+    "uvicorn[standard]>=0.35,<1.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
