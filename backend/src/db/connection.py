@@ -38,6 +38,7 @@ def _adapt_sql_for_sqlite(sql: str) -> str:
         adapted = adapted.replace(old, new)
     adapted = adapted.replace("INTEGER AUTOINCREMENT PRIMARY KEY", "INTEGER PRIMARY KEY AUTOINCREMENT")
     adapted = adapted.replace("INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL", "INTEGER PRIMARY KEY AUTOINCREMENT")
+    adapted = adapted.replace("ALTER TABLE orders ADD COLUMN forwarded_at TIMESTAMPTZ;", "ALTER TABLE orders ADD COLUMN forwarded_at TIMESTAMP;")
     return adapted
 
 
@@ -119,11 +120,26 @@ async def execute_script(database: Database, sql: str) -> None:
     if database.mode == "postgres":
         assert database.pool is not None
         async with database.pool.acquire() as connection:
-            await connection.execute(sql)
+            statements = [statement.strip() for statement in sql.split(";") if statement.strip()]
+            for statement in statements:
+                try:
+                    await connection.execute(statement)
+                except Exception as error:
+                    if versionless_duplicate_column(error):
+                        continue
+                    raise
         return
 
     assert database.connection is not None
-    database.connection.executescript(_adapt_sql_for_sqlite(sql))
+    script = _adapt_sql_for_sqlite(sql)
+    statements = [statement.strip() for statement in script.split(";") if statement.strip()]
+    for statement in statements:
+        try:
+            database.connection.execute(statement)
+        except sqlite3.OperationalError as error:
+            if "duplicate column name" in str(error).lower():
+                continue
+            raise
     database.connection.commit()
 
 
@@ -161,4 +177,9 @@ async def execute(database: Database, query: str, *params: object) -> None:
     assert database.connection is not None
     database.connection.execute(query, params)
     database.connection.commit()
+
+
+def versionless_duplicate_column(error: Exception) -> bool:
+    text = str(error).lower()
+    return "duplicate_column" in text or "already exists" in text
 

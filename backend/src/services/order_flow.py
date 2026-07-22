@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from src.config import get_settings
 from src.db.connection import Database
 from src.models.cart import CartItem
 from src.services.cart_service import add_item_to_cart, build_cart
-from src.services.catalog_service import get_keyword_map
+from src.services.catalog_service import build_catalog_lines, get_keyword_map
 from src.services.customer_service import get_customer_by_phone, get_or_create_customer, save_customer_address
 from src.services.order_service import create_order, get_latest_open_order, record_pop_received
 from src.services.order_parser import parse_order
 from src.services.session_service import get_or_create_session, get_session_by_phone, save_session_state
+from src.services.state_machine import State
 
 
 ADDRESS_STEPS = [
@@ -30,22 +32,40 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
 
     text = (event.get("text") or "").strip()
     lowered = text.lower()
+    settings = get_settings()
 
-    if session.get("state") == "address_collection":
+    if lowered in settings.whatsapp_greeting_commands:
+        lines = await build_catalog_lines(database)
+        return {
+            "action": "welcome_catalogue",
+            "state": session.get("state", State.IDLE),
+            "customer_name": customer.get("name"),
+            "catalogue": "\n".join(lines) if lines else "No products available right now.",
+        }
+
+    if lowered in settings.whatsapp_catalog_commands:
+        lines = await build_catalog_lines(database)
+        return {
+            "action": "catalogue",
+            "state": session.get("state", State.IDLE),
+            "catalogue": "\n".join(lines) if lines else "No products available right now.",
+        }
+
+    if session.get("state") == State.ADDRESS_COLLECTION:
         return await _handle_address_collection(database, customer, session, cart_items, text)
 
-    if session.get("state") == "address_confirmation":
+    if session.get("state") == State.ADDRESS_CONFIRMATION:
         return await _handle_address_confirmation(database, customer, session, cart_items, lowered)
 
-    if session.get("state") == "pop_waiting":
-        return {"action": "awaiting_pop", "state": "pop_waiting"}
+    if session.get("state") == State.POP_WAITING:
+        return {"action": "awaiting_pop", "state": State.POP_WAITING}
 
-    if lowered == "done":
+    if lowered in settings.whatsapp_checkout_commands:
         if not cart_items:
-            return {"action": "checkout_blocked", "reason": "empty_cart", "state": session.get("state", "idle")}
+            return {"action": "checkout_blocked", "reason": "empty_cart", "state": session.get("state", State.IDLE)}
 
-        next_state = "address_confirmation" if customer.get("address_verified") and customer.get("full_address") else "address_collection"
-        temp_address = None if next_state == "address_confirmation" else {}
+        next_state = State.ADDRESS_CONFIRMATION if customer.get("address_verified") and customer.get("full_address") else State.ADDRESS_COLLECTION
+        temp_address = None if next_state == State.ADDRESS_CONFIRMATION else {}
         updated_session = await save_session_state(
             database,
             phone_number,
@@ -56,7 +76,7 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
         )
         price_map = await _build_price_map(database)
         cart = build_cart(cart_items, price_map)
-        if next_state == "address_confirmation":
+        if next_state == State.ADDRESS_CONFIRMATION:
             return {
                 "action": "address_confirmation_requested",
                 "state": updated_session["state"],
@@ -73,13 +93,13 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
     keyword_map = await get_keyword_map(database)
     parsed = parse_order(text, keyword_map)
     if parsed is None:
-        return {"action": "unmatched", "state": session.get("state", "idle"), "text": text}
+        return {"action": "unmatched", "state": session.get("state", State.IDLE), "text": text}
 
     updated_items = add_item_to_cart(cart_items, parsed["product_id"], parsed["quantity"])
     updated_session = await save_session_state(
         database,
         phone_number,
-        state="ordering",
+        state=State.ORDERING,
         cart=updated_items,
         current_step=session.get("current_step", 0),
         temp_address=session.get("temp_address"),
@@ -112,7 +132,7 @@ async def _handle_address_collection(
         updated_session = await save_session_state(
             database,
             phone_number,
-            state="address_collection",
+            state=State.ADDRESS_COLLECTION,
             cart=cart_items,
             current_step=next_step,
             temp_address=temp_address,
@@ -148,7 +168,8 @@ async def _handle_address_confirmation(
     lowered: str,
 ) -> dict[str, object]:
     phone_number = customer["phone_number"]
-    if lowered in {"yes", "y"}:
+    settings = get_settings()
+    if lowered in settings.whatsapp_confirm_commands:
         return await _finalize_order(
             database,
             customer_id=customer["id"],
@@ -157,11 +178,11 @@ async def _handle_address_confirmation(
             full_address=customer.get("full_address"),
         )
 
-    if lowered in {"no", "n"}:
+    if lowered in settings.whatsapp_reject_commands:
         updated_session = await save_session_state(
             database,
             phone_number,
-            state="address_collection",
+            state=State.ADDRESS_COLLECTION,
             cart=cart_items,
             current_step=0,
             temp_address={},
@@ -174,7 +195,7 @@ async def _handle_address_confirmation(
 
     return {
         "action": "address_confirmation_pending",
-        "state": session.get("state", "address_confirmation"),
+        "state": session.get("state", State.ADDRESS_CONFIRMATION),
         "address": customer.get("full_address"),
     }
 
@@ -193,7 +214,7 @@ async def _finalize_order(
     updated_session = await save_session_state(
         database,
         phone_number,
-        state="pop_waiting",
+        state=State.POP_WAITING,
         cart=[],
         current_step=0,
         temp_address=None,
@@ -234,7 +255,7 @@ async def handle_image_message(database: Database, event: dict) -> dict[str, obj
     if customer is None or session is None:
         return {"action": "unexpected_image", "reason": "unknown_customer"}
 
-    if session.get("state") != "pop_waiting":
+    if session.get("state") != State.POP_WAITING:
         return {"action": "unexpected_image", "reason": "not_waiting_for_pop", "state": session.get("state")}
 
     order = await get_latest_open_order(database, customer["id"])

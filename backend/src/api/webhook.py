@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Header, Request
+from fastapi import APIRouter, Depends, Header, Request
 
 from src.config import get_settings
+from src.middleware.rate_limit import webhook_rate_limit
+from src.services.message_templates import build_customer_reply
 from src.services.order_flow import handle_image_message, handle_text_message
+from src.services.whatsapp_sender import deliver_reply
 from src.services.whatsapp_webhook import (
     extract_message_event,
     is_message_processed,
@@ -26,7 +29,7 @@ async def verify_webhook(
     return verify_webhook_challenge(hub_mode, hub_verify_token, hub_challenge, settings)
 
 
-@router.post("/webhook")
+@router.post("/webhook", dependencies=[Depends(webhook_rate_limit())])
 async def receive_webhook(
     request: Request,
     x_hub_signature_256: str | None = Header(default=None),
@@ -50,4 +53,7 @@ async def receive_webhook(
         result = await handle_text_message(request.app.state.database, event)
     elif event.get("type") == "image":
         result = await handle_image_message(request.app.state.database, event)
-    return {"status": "accepted", "event": event, "result": result}
+    reply = await build_customer_reply(request.app.state.database, result)
+    delivery = await deliver_reply(event, reply)
+    return {"status": "accepted", "event": event, "result": result, "reply": reply, "delivery": delivery}
+

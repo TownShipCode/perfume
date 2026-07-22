@@ -6,6 +6,7 @@ from src.config import get_settings
 from src.db.connection import close_database, connect_database, fetch_one, initialize_database
 from src.services.catalog_service import ProductInput, create_product
 from src.services.customer_service import get_customer_by_phone
+from src.services.message_templates import build_customer_reply
 from src.services.order_flow import handle_image_message, handle_text_message
 from src.services.session_service import get_session_by_phone
 
@@ -145,6 +146,137 @@ def test_order_flow_marks_pop_received_and_confirms_session(tmp_path, monkeypatc
             assert order is not None
             assert order["status"] == "pop_received"
             assert order["pop_image_url"] == "media-123"
+        finally:
+            await close_database(database)
+
+    asyncio.run(scenario())
+    get_settings.cache_clear()
+
+
+def test_order_flow_returns_catalogue_for_menu_command(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("LOCAL_SQLITE_PATH", str(tmp_path / "catalogue-flow.db"))
+    get_settings.cache_clear()
+
+    async def scenario() -> None:
+        settings = get_settings()
+        database = await connect_database(settings)
+        try:
+            await initialize_database(database)
+            await create_product(
+                database,
+                ProductInput(
+                    product_number=1,
+                    name="Red Shoes",
+                    price="350.00",
+                    image_url="https://example.com/red-shoes.jpg",
+                    keywords=["shoe", "shoes", "red shoe"],
+                ),
+            )
+            await create_product(
+                database,
+                ProductInput(
+                    product_number=2,
+                    name="Blue Hat",
+                    price="120.00",
+                    image_url="https://example.com/blue-hat.jpg",
+                    keywords=["hat", "blue hat"],
+                ),
+            )
+
+            result = await handle_text_message(
+                database,
+                {"message_id": "m1", "from": "27820000000", "type": "text", "text": "menu", "profile_name": "Alice"},
+            )
+            assert result["action"] == "catalogue"
+            assert "1. Red Shoes - R350" in result["catalogue"]
+            assert "2. Blue Hat - R120" in result["catalogue"]
+
+            reply = await build_customer_reply(database, result)
+            assert reply is not None
+            assert "Available products:" in reply["text"]
+            assert "Reply with something like: 2 shoes" in reply["text"]
+
+            session = await get_session_by_phone(database, "27820000000")
+            assert session is not None
+            assert session["state"] == "idle"
+        finally:
+            await close_database(database)
+
+    asyncio.run(scenario())
+    get_settings.cache_clear()
+
+
+def test_order_flow_uses_configured_catalogue_commands(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("LOCAL_SQLITE_PATH", str(tmp_path / "catalogue-command-config.db"))
+    monkeypatch.setenv("WHATSAPP_CATALOG_COMMANDS", "shop,list")
+    get_settings.cache_clear()
+
+    async def scenario() -> None:
+        settings = get_settings()
+        database = await connect_database(settings)
+        try:
+            await initialize_database(database)
+            await create_product(
+                database,
+                ProductInput(
+                    product_number=1,
+                    name="Red Shoes",
+                    price="350.00",
+                    image_url="https://example.com/red-shoes.jpg",
+                    keywords=["shoe", "shoes", "red shoe"],
+                ),
+            )
+
+            configured = await handle_text_message(
+                database,
+                {"message_id": "m1", "from": "27820000000", "type": "text", "text": "shop", "profile_name": "Alice"},
+            )
+            assert configured["action"] == "catalogue"
+
+            default_menu = await handle_text_message(
+                database,
+                {"message_id": "m2", "from": "27820000000", "type": "text", "text": "menu", "profile_name": "Alice"},
+            )
+            assert default_menu["action"] == "unmatched"
+        finally:
+            await close_database(database)
+
+    asyncio.run(scenario())
+    get_settings.cache_clear()
+
+
+def test_order_flow_returns_welcome_catalogue_for_greeting(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("LOCAL_SQLITE_PATH", str(tmp_path / "greeting-flow.db"))
+    get_settings.cache_clear()
+
+    async def scenario() -> None:
+        settings = get_settings()
+        database = await connect_database(settings)
+        try:
+            await initialize_database(database)
+            await create_product(
+                database,
+                ProductInput(
+                    product_number=1,
+                    name="Red Shoes",
+                    price="350.00",
+                    image_url="https://example.com/red-shoes.jpg",
+                    keywords=["shoe", "shoes", "red shoe"],
+                ),
+            )
+
+            result = await handle_text_message(
+                database,
+                {"message_id": "m1", "from": "27820000000", "type": "text", "text": "hi", "profile_name": "Alice"},
+            )
+            assert result["action"] == "welcome_catalogue"
+            assert "1. Red Shoes - R350" in result["catalogue"]
+            assert result["customer_name"] == "Alice"
+
+            reply = await build_customer_reply(database, result)
+            assert reply is not None
+            assert "Hi Alice!" in reply["text"]
+            assert "Here is our catalogue:" in reply["text"]
         finally:
             await close_database(database)
 

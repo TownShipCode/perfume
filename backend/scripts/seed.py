@@ -27,6 +27,13 @@ MESSAGE_TEMPLATES = {
     "address_confirmation": "Address saved: {full_address}. Is this correct?",
     "order_final": "Order {order_number} confirmed. Total: {total} {currency}. Please send your POP image.",
     "pop_received": "POP received. We will confirm your order shortly.",
+    "address_request_street": "Thanks. Now send your STREET and HOUSE NUMBER.",
+    "address_request_city": "Thanks. Now send your CITY.",
+    "checkout_blocked": "Your cart is empty. Add a product first, for example: 2 shoes.",
+    "unmatched": "I could not match that product. Try something like: 2 shoes or 1 hat.",
+    "awaiting_pop": "Your order is waiting for POP. Please send your POP image.",
+    "address_confirmation_pending": "Please reply YES to use your saved address, or NO to enter a new one.",
+    "manufacturer_forward": "NEW ORDER {order_number}\nCustomer: {customer_name}\nPhone: {phone_number}\nAddress: {full_address}\nItems:\n{items}\nTotal: {total} {currency}\nPOP: {pop_image_url}",
 }
 
 

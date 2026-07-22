@@ -23,11 +23,12 @@ def main() -> int:
     ok &= check("Backend dir", BACKEND_DIR.exists(), str(BACKEND_DIR))
     ok &= check("pyproject", (BACKEND_DIR / "pyproject.toml").exists(), "backend/pyproject.toml")
     ok &= check("Env template", (PROJECT_ROOT / ".env.example").exists(), ".env.example")
+    migrations_dir = BACKEND_DIR / "src" / "db" / "migrations"
+    expected = sorted(int(p.name.split("_", 1)[0]) for p in migrations_dir.glob("[0-9]*_*.sql"))
     ok &= check(
         "Migration files",
-        (BACKEND_DIR / "src" / "db" / "migrations" / "001_schema_migrations.sql").exists()
-        and (BACKEND_DIR / "src" / "db" / "migrations" / "002_core_tables.sql").exists(),
-        "001_schema_migrations.sql + 002_core_tables.sql",
+        len(expected) >= 2,
+        f"found migrations {', '.join(str(v).zfill(3) for v in expected)}",
     )
 
     required_in_production = [

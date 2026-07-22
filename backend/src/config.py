@@ -25,6 +25,8 @@ class Settings:
     api_base_url: str
     database_url: str | None
     local_sqlite_path: Path
+    whatsapp_api_base_url: str
+    whatsapp_send_mode: str
     whatsapp_api_key: str | None
     whatsapp_phone_number_id: str | None
     whatsapp_verify_token: str | None
@@ -32,6 +34,11 @@ class Settings:
     dashboard_api_key: str | None
     admin_phone: str | None
     manufacturer_phone: str | None
+    whatsapp_greeting_commands: tuple[str, ...]
+    whatsapp_catalog_commands: tuple[str, ...]
+    whatsapp_checkout_commands: tuple[str, ...]
+    whatsapp_confirm_commands: tuple[str, ...]
+    whatsapp_reject_commands: tuple[str, ...]
     cors_origins: tuple[str, ...]
     sentry_dsn: str | None
 
@@ -49,6 +56,11 @@ def _optional(name: str) -> str | None:
     return value.strip() if value and value.strip() else None
 
 
+def _csv_values(raw_value: str) -> tuple[str, ...]:
+    values = tuple(item.strip().lower() for item in raw_value.split(",") if item.strip())
+    return values
+
+
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     raw_sqlite_path = os.getenv("LOCAL_SQLITE_PATH", "backend/data/app.db")
@@ -56,6 +68,11 @@ def get_settings() -> Settings:
     cors_origins = tuple(
         origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if origin.strip()
     )
+    whatsapp_greeting_commands = _csv_values(os.getenv("WHATSAPP_GREETING_COMMANDS", "hi,hello,hey,start"))
+    whatsapp_catalog_commands = _csv_values(os.getenv("WHATSAPP_CATALOG_COMMANDS", "menu,catalogue,catalog,products"))
+    whatsapp_checkout_commands = _csv_values(os.getenv("WHATSAPP_CHECKOUT_COMMANDS", "done,checkout,order"))
+    whatsapp_confirm_commands = _csv_values(os.getenv("WHATSAPP_CONFIRM_COMMANDS", "yes,y,ok,correct"))
+    whatsapp_reject_commands = _csv_values(os.getenv("WHATSAPP_REJECT_COMMANDS", "no,n"))
 
     settings = Settings(
         app_env=os.getenv("APP_ENV", "development").lower(),
@@ -65,6 +82,8 @@ def get_settings() -> Settings:
         api_base_url=os.getenv("API_BASE_URL", "http://localhost:8000"),
         database_url=_optional("DATABASE_URL"),
         local_sqlite_path=local_sqlite_path,
+        whatsapp_api_base_url=os.getenv("WHATSAPP_API_BASE_URL", "https://graph.facebook.com/v24.0"),
+        whatsapp_send_mode=os.getenv("WHATSAPP_SEND_MODE", "dry_run").lower(),
         whatsapp_api_key=_optional("WHATSAPP_API_KEY"),
         whatsapp_phone_number_id=_optional("WHATSAPP_PHONE_NUMBER_ID"),
         whatsapp_verify_token=_optional("WHATSAPP_VERIFY_TOKEN"),
@@ -72,6 +91,11 @@ def get_settings() -> Settings:
         dashboard_api_key=_optional("DASHBOARD_API_KEY"),
         admin_phone=_optional("ADMIN_PHONE"),
         manufacturer_phone=_optional("MANUFACTURER_PHONE"),
+        whatsapp_greeting_commands=whatsapp_greeting_commands,
+        whatsapp_catalog_commands=whatsapp_catalog_commands,
+        whatsapp_checkout_commands=whatsapp_checkout_commands,
+        whatsapp_confirm_commands=whatsapp_confirm_commands,
+        whatsapp_reject_commands=whatsapp_reject_commands,
         cors_origins=cors_origins,
         sentry_dsn=_optional("SENTRY_DSN"),
     )
@@ -98,4 +122,23 @@ def validate_settings(settings: Settings) -> None:
                 "Missing required production configuration: " + ", ".join(missing)
             )
 
+    if settings.whatsapp_send_mode not in {"dry_run", "live", "off"}:
+        raise SettingsError("WHATSAPP_SEND_MODE must be one of: dry_run, live, off")
+
+    if not settings.whatsapp_catalog_commands:
+        raise SettingsError("WHATSAPP_CATALOG_COMMANDS must include at least one command")
+
+    if not settings.whatsapp_greeting_commands:
+        raise SettingsError("WHATSAPP_GREETING_COMMANDS must include at least one command")
+
+    if not settings.whatsapp_checkout_commands:
+        raise SettingsError("WHATSAPP_CHECKOUT_COMMANDS must include at least one command")
+
+    if not settings.whatsapp_confirm_commands:
+        raise SettingsError("WHATSAPP_CONFIRM_COMMANDS must include at least one command")
+
+    if not settings.whatsapp_reject_commands:
+        raise SettingsError("WHATSAPP_REJECT_COMMANDS must include at least one command")
+
     settings.local_sqlite_path.parent.mkdir(parents=True, exist_ok=True)
+

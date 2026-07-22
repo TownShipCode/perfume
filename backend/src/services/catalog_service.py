@@ -16,6 +16,15 @@ class ProductInput(BaseModel):
     keywords: list[str] = Field(default_factory=list)
 
 
+class ProductUpdateInput(BaseModel):
+    product_number: int = Field(gt=0)
+    name: str
+    price: Decimal = Field(ge=0)
+    image_url: str | None = None
+    is_active: bool = True
+    keywords: list[str] = Field(default_factory=list)
+
+
 async def list_active_products(database: Database) -> list[dict]:
     return await fetch_all(
         database,
@@ -26,6 +35,14 @@ async def list_active_products(database: Database) -> list[dict]:
         ORDER BY product_number
         """,
     )
+
+
+async def build_catalog_lines(database: Database) -> list[str]:
+    products = await list_active_products(database)
+    lines: list[str] = []
+    for product in products:
+        lines.append(f"{product['product_number']}. {product['name']} - R{product['price']}")
+    return lines
 
 
 async def list_all_products(database: Database) -> list[dict]:
@@ -120,6 +137,132 @@ async def create_product(database: Database, payload: ProductInput) -> dict:
             keyword,
         )
     return row
+
+
+async def get_product_by_id(database: Database, product_id: int) -> dict | None:
+    if database.mode == "postgres":
+        return await fetch_one(
+            database,
+            """
+            SELECT id, product_number, name, price, image_url, is_active, created_at, updated_at
+            FROM products
+            WHERE id = $1
+            """,
+            product_id,
+        )
+
+    return await fetch_one(
+        database,
+        """
+        SELECT id, product_number, name, price, image_url, is_active, created_at, updated_at
+        FROM products
+        WHERE id = ?
+        """,
+        product_id,
+    )
+
+
+async def get_products_by_ids(database: Database, product_ids: list[int]) -> dict[int, dict]:
+    unique_ids = sorted({product_id for product_id in product_ids if product_id > 0})
+    if not unique_ids:
+        return {}
+
+    if database.mode == "postgres":
+        placeholders = ", ".join(f"${index}" for index in range(1, len(unique_ids) + 1))
+        rows = await fetch_all(
+            database,
+            f"""
+            SELECT id, product_number, name, price, image_url, is_active, created_at, updated_at
+            FROM products
+            WHERE id IN ({placeholders})
+            ORDER BY product_number
+            """,
+            *unique_ids,
+        )
+    else:
+        placeholders = ", ".join("?" for _ in unique_ids)
+        rows = await fetch_all(
+            database,
+            f"""
+            SELECT id, product_number, name, price, image_url, is_active, created_at, updated_at
+            FROM products
+            WHERE id IN ({placeholders})
+            ORDER BY product_number
+            """,
+            *unique_ids,
+        )
+
+    return {row["id"]: row for row in rows}
+
+
+async def update_product(database: Database, product_id: int, payload: ProductUpdateInput) -> dict | None:
+    existing = await get_product_by_id(database, product_id)
+    if existing is None:
+        return None
+
+    normalized_keywords = _normalize_keywords(payload.keywords)
+
+    if database.mode == "postgres":
+        await execute(
+            database,
+            """
+            UPDATE products
+            SET product_number = $1, name = $2, price = $3, image_url = $4, is_active = $5, updated_at = NOW()
+            WHERE id = $6
+            """,
+            payload.product_number,
+            payload.name,
+            payload.price,
+            payload.image_url,
+            payload.is_active,
+            product_id,
+        )
+        await execute(database, "DELETE FROM product_keywords WHERE product_id = $1", product_id)
+        for keyword in normalized_keywords:
+            await execute(
+                database,
+                "INSERT INTO product_keywords (product_id, keyword) VALUES ($1, $2) ON CONFLICT (keyword) DO UPDATE SET product_id = EXCLUDED.product_id",
+                product_id,
+                keyword,
+            )
+    else:
+        await execute(
+            database,
+            """
+            UPDATE products
+            SET product_number = ?, name = ?, price = ?, image_url = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """,
+            payload.product_number,
+            payload.name,
+            str(payload.price),
+            payload.image_url,
+            1 if payload.is_active else 0,
+            product_id,
+        )
+        await execute(database, "DELETE FROM product_keywords WHERE product_id = ?", product_id)
+        for keyword in normalized_keywords:
+            await execute(
+                database,
+                "INSERT OR REPLACE INTO product_keywords (id, product_id, keyword) VALUES ((SELECT id FROM product_keywords WHERE keyword = ?), ?, ?)",
+                keyword,
+                product_id,
+                keyword,
+            )
+
+    return await get_product_by_id(database, product_id)
+
+
+async def delete_product(database: Database, product_id: int) -> bool:
+    existing = await get_product_by_id(database, product_id)
+    if existing is None:
+        return False
+
+    if database.mode == "postgres":
+        await execute(database, "DELETE FROM products WHERE id = $1", product_id)
+    else:
+        await execute(database, "DELETE FROM products WHERE id = ?", product_id)
+    return True
 
 
 def _normalize_keywords(keywords: list[str]) -> list[str]:

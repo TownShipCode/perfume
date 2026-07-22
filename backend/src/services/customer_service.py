@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.db.connection import Database, execute, fetch_one
+from src.db.connection import Database, fetch_all, execute, fetch_one
 
 
 async def get_customer_by_phone(database: Database, phone_number: str) -> dict | None:
@@ -74,3 +74,74 @@ async def save_customer_address(
     updated = await get_customer_by_phone(database, phone_number)
     assert updated is not None
     return updated
+
+
+async def list_customers(database: Database) -> list[dict]:
+    if database.mode == "postgres":
+        return await fetch_all(
+            database,
+            """
+            SELECT c.*, COUNT(o.id) AS order_count
+            FROM customers c
+            LEFT JOIN orders o ON o.customer_id = c.id
+            GROUP BY c.id
+            ORDER BY c.created_at DESC, c.id DESC
+            """
+        )
+
+    return await fetch_all(
+        database,
+        """
+        SELECT c.*, COUNT(o.id) AS order_count
+        FROM customers c
+        LEFT JOIN orders o ON o.customer_id = c.id
+        GROUP BY c.id
+        ORDER BY c.created_at DESC, c.id DESC
+        """
+    )
+
+
+async def list_customer_orders(database: Database, phone_number: str) -> list[dict]:
+    if database.mode == "postgres":
+        return await fetch_all(
+            database,
+            """
+             SELECT o.id, o.order_number, o.customer_id, o.items, o.total, o.status, o.pop_image_url, o.tracking_info,
+                 o.forwarded_to, o.forwarded_at, o.forward_delivery_status, o.forward_message_id, o.forward_error,
+                 o.forward_payload, o.forward_response, o.forward_attempts, o.created_at, o.updated_at
+            FROM orders o
+            JOIN customers c ON c.id = o.customer_id
+            WHERE c.phone_number = $1
+            ORDER BY o.created_at DESC, o.id DESC
+            """,
+            phone_number,
+        )
+
+    return await fetch_all(
+        database,
+        """
+         SELECT o.id, o.order_number, o.customer_id, o.items, o.total, o.status, o.pop_image_url, o.tracking_info,
+             o.forwarded_to, o.forwarded_at, o.forward_delivery_status, o.forward_message_id, o.forward_error,
+             o.forward_payload, o.forward_response, o.forward_attempts, o.created_at, o.updated_at
+        FROM orders o
+        JOIN customers c ON c.id = o.customer_id
+        WHERE c.phone_number = ?
+        ORDER BY o.created_at DESC, o.id DESC
+        """,
+        phone_number,
+    )
+
+
+async def update_customer_address(
+    database: Database,
+    phone_number: str,
+    *,
+    area: str,
+    street: str,
+    city: str,
+) -> dict | None:
+    existing = await get_customer_by_phone(database, phone_number)
+    if existing is None:
+        return None
+    return await save_customer_address(database, phone_number, area=area, street=street, city=city)
+
