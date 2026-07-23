@@ -40,6 +40,8 @@ def make_settings(**overrides: object) -> Settings:
         "free_shipping_threshold": __import__("decimal").Decimal("2000.00"),
         "whatsapp_cancel_commands": ("cancel",),
         "pop_expiry_hours": 24,
+        "default_language": "en",
+        "supported_languages": ("en", "zu"),
         "cors_origins": ("http://localhost:5173",),
         "sentry_dsn": None,
     }

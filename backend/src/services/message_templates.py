@@ -9,6 +9,9 @@ from src.db.connection import Database, execute, fetch_all, fetch_one
 DEFAULT_TEMPLATES = {
     "catalogue": "Available products:\n{catalogue}\n\nReply with something like: 2 shoes",
     "welcome_catalogue": "Hi{customer_name}! Here is our catalogue:\n{catalogue}\n\nReply with something like: 2 shoes",
+    "product_detail": "{product_name}\n{description}\nPrice: {price} {currency}\n\nReply with \"1 {product_name}\" to order.",
+    "language_selection": "Please choose your language:\nReply: en for English\nReply: zu for isiZulu",
+    "language_set": "Language set to {language}. Reply to continue.",
     "cart_update": "Added {quantity}x {product_name}. Total: {total} {currency}.",
     "address_request": "I need your delivery address. First: what is your area?",
     "address_request_street": "Thanks. Now send your STREET and HOUSE NUMBER.",
@@ -118,22 +121,50 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
     if action == "order_cancelled":
         return {"text": await render_template(database, "order_cancelled")}
 
+    if action == "product_detail":
+        return {
+            "text": await render_template(
+                database,
+                "product_detail",
+                product_name=result.get("product_name", ""),
+                description=result.get("description", ""),
+                price=result.get("price", "0"),
+                currency=settings.store_currency,
+            )
+        }
+
+    if action == "language_selection":
+        return {"text": await render_template(database, "language_selection")}
+
+    if action == "language_set":
+        return {"text": await render_template(database, "language_set", language=result.get("language", "en"))}
+
     return None
 
 
-async def render_template(database: Database, template_key: str, **context: object) -> str:
-    template = await get_template_body(database, template_key)
+async def render_template(database: Database, template_key: str, language: str = "en", **context: object) -> str:
+    template = await get_template_body(database, template_key, language)
     return template.format(**context)
 
 
-async def get_template_body(database: Database, template_key: str) -> str:
+async def get_template_body(database: Database, template_key: str, language: str = "en") -> str:
     if database.mode == "postgres":
-        row = await fetch_one(database, "SELECT body FROM message_templates WHERE template_key = $1", template_key)
+        row = await fetch_one(database, "SELECT body FROM message_templates WHERE template_key = $1 AND language = $2", template_key, language)
     else:
-        row = await fetch_one(database, "SELECT body FROM message_templates WHERE template_key = ?", template_key)
+        row = await fetch_one(database, "SELECT body FROM message_templates WHERE template_key = ? AND language = ?", template_key, language)
 
     if row and row.get("body"):
         return row["body"]
+
+    # Fallback to English
+    if language != "en":
+        if database.mode == "postgres":
+            row = await fetch_one(database, "SELECT body FROM message_templates WHERE template_key = $1 AND language = 'en'", template_key)
+        else:
+            row = await fetch_one(database, "SELECT body FROM message_templates WHERE template_key = ? AND language = 'en'", template_key)
+        if row and row.get("body"):
+            return row["body"]
+
     return DEFAULT_TEMPLATES[template_key]
 
 

@@ -6,8 +6,8 @@ from src.config import Settings, get_settings
 from src.db.connection import Database
 from src.models.cart import CartItem
 from src.services.cart_service import add_item_to_cart, build_cart
-from src.services.catalog_service import build_catalog_lines, get_keyword_map
-from src.services.customer_service import get_customer_by_phone, get_or_create_customer, save_customer_address
+from src.services.catalog_service import build_catalog_lines, get_keyword_map, get_product_by_number
+from src.services.customer_service import get_customer_by_phone, get_or_create_customer, save_customer_address, set_customer_language
 from src.services.order_service import create_order, get_latest_open_order, record_pop_received
 from src.services.order_parser import parse_order
 from src.services.session_service import get_or_create_session, get_session_by_phone, save_session_state
@@ -34,7 +34,13 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
     lowered = text.lower()
     settings = get_settings()
 
+    if session.get("state") == State.LANGUAGE_SELECTION:
+        return await _handle_language_selection(database, customer, session, lowered)
+
     if lowered in settings.whatsapp_greeting_commands:
+        if not customer.get("language"):
+            updated_session = await save_session_state(database, phone_number, state=State.LANGUAGE_SELECTION, cart=cart_items, current_step=0, temp_address=None)
+            return {"action": "language_selection", "state": updated_session["state"]}
         lines = await build_catalog_lines(database)
         return {
             "action": "welcome_catalogue",
@@ -53,6 +59,15 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
 
     if session.get("state") == State.ADDRESS_COLLECTION:
         return await _handle_address_collection(database, customer, session, cart_items, text)
+
+    # info N: show product detail
+    if lowered.startswith("info ") or lowered.startswith("details "):
+        num_text = lowered.split(maxsplit=1)[1] if " " in lowered else ""
+        if num_text.isdigit():
+            product = await get_product_by_number(database, int(num_text))
+            if product:
+                return {"action": "product_detail", "product_name": product["name"], "description": product.get("description") or "No description available.", "price": str(product["price"])}
+        return {"action": "unmatched", "state": session.get("state", State.IDLE), "text": text}
 
     if session.get("state") == State.ADDRESS_CONFIRMATION:
         return await _handle_address_confirmation(database, customer, session, cart_items, lowered)
@@ -123,6 +138,24 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
         "matched_item": parsed,
         "cart": _serialize_cart(cart),
     }
+
+
+async def _handle_language_selection(
+    database: Database,
+    customer: dict,
+    session: dict,
+    lowered: str,
+) -> dict[str, object]:
+    settings = get_settings()
+    if lowered in settings.supported_languages:
+        await set_customer_language(database, customer["phone_number"], lowered)
+        await save_session_state(
+            database, customer["phone_number"],
+            state=State.IDLE, cart=session.get("cart", []),
+            current_step=0, temp_address=session.get("temp_address"),
+        )
+        return {"action": "language_set", "language": lowered, "state": State.IDLE}
+    return {"action": "language_selection", "state": State.LANGUAGE_SELECTION}
 
 
 async def _handle_address_collection(

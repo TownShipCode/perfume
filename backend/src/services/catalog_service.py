@@ -144,6 +144,20 @@ async def create_product(database: Database, payload: ProductInput) -> dict:
     return row
 
 
+async def get_product_by_number(database: Database, product_number: int) -> dict | None:
+    if database.mode == "postgres":
+        return await fetch_one(
+            database,
+            "SELECT id, product_number, name, price, image_url, description, is_active FROM products WHERE product_number = $1 AND is_active = TRUE",
+            product_number,
+        )
+    return await fetch_one(
+        database,
+        "SELECT id, product_number, name, price, image_url, description, is_active FROM products WHERE product_number = ? AND is_active = 1",
+        product_number,
+    )
+
+
 async def get_product_by_id(database: Database, product_id: int) -> dict | None:
     if database.mode == "postgres":
         return await fetch_one(

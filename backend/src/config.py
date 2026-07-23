@@ -44,6 +44,8 @@ class Settings:
     whatsapp_reject_commands: tuple[str, ...]
     whatsapp_cancel_commands: tuple[str, ...]
     pop_expiry_hours: int
+    default_language: str
+    supported_languages: tuple[str, ...]
     cors_origins: tuple[str, ...]
     sentry_dsn: str | None
 
@@ -83,6 +85,8 @@ def get_settings() -> Settings:
     free_shipping_threshold = Decimal(os.getenv("FREE_SHIPPING_THRESHOLD", "2000.00") or "2000.00")
     whatsapp_cancel_commands = _csv_values(os.getenv("WHATSAPP_CANCEL_COMMANDS", "cancel,stop"))
     pop_expiry_hours = int(os.getenv("POP_EXPIRY_HOURS", "24") or "24")
+    default_language = os.getenv("DEFAULT_LANGUAGE", "en").strip().lower() or "en"
+    supported_languages = _csv_values(os.getenv("SUPPORTED_LANGUAGES", "en,zu"))
 
     settings = Settings(
         app_env=os.getenv("APP_ENV", "development").lower(),
@@ -110,6 +114,8 @@ def get_settings() -> Settings:
         free_shipping_threshold=free_shipping_threshold,
         whatsapp_cancel_commands=whatsapp_cancel_commands,
         pop_expiry_hours=pop_expiry_hours,
+        default_language=default_language,
+        supported_languages=supported_languages,
         cors_origins=cors_origins,
         sentry_dsn=_optional("SENTRY_DSN"),
     )
@@ -165,6 +171,12 @@ def validate_settings(settings: Settings) -> None:
 
     if settings.pop_expiry_hours < 1:
         raise SettingsError("POP_EXPIRY_HOURS must be >= 1")
+
+    if not settings.supported_languages:
+        raise SettingsError("SUPPORTED_LANGUAGES must include at least one language")
+
+    if settings.default_language not in settings.supported_languages:
+        raise SettingsError(f"DEFAULT_LANGUAGE ({settings.default_language}) must be in SUPPORTED_LANGUAGES")
 
     settings.local_sqlite_path.parent.mkdir(parents=True, exist_ok=True)
 

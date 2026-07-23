@@ -145,3 +145,14 @@ async def update_customer_address(
         return None
     return await save_customer_address(database, phone_number, area=area, street=street, city=city)
 
+
+async def set_customer_language(database: Database, phone_number: str, language: str) -> dict | None:
+    existing = await get_customer_by_phone(database, phone_number)
+    if existing is None:
+        return None
+    if database.mode == "postgres":
+        await execute(database, "UPDATE customers SET language = $1, updated_at = NOW() WHERE phone_number = $2", language, phone_number)
+    else:
+        await execute(database, "UPDATE customers SET language = ?, updated_at = CURRENT_TIMESTAMP WHERE phone_number = ?", language, phone_number)
+    return await get_customer_by_phone(database, phone_number)
+

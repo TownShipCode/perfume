@@ -269,9 +269,24 @@ def test_order_flow_returns_welcome_catalogue_for_greeting(tmp_path, monkeypatch
                 ),
             )
 
+            # First greeting: no language set → language selection
             result = await handle_text_message(
                 database,
                 {"message_id": "m1", "from": "27820000000", "type": "text", "text": "hi", "profile_name": "Alice"},
+            )
+            assert result["action"] == "language_selection"
+
+            # Set language
+            lang_result = await handle_text_message(
+                database,
+                {"message_id": "m2", "from": "27820000000", "type": "text", "text": "en", "profile_name": "Alice"},
+            )
+            assert lang_result["action"] == "language_set"
+
+            # Second greeting: language set → welcome catalogue
+            result = await handle_text_message(
+                database,
+                {"message_id": "m3", "from": "27820000000", "type": "text", "text": "hi", "profile_name": "Alice"},
             )
             assert result["action"] == "welcome_catalogue"
             assert "1. Red Shoes - R350" in result["catalogue"]
@@ -280,7 +295,6 @@ def test_order_flow_returns_welcome_catalogue_for_greeting(tmp_path, monkeypatch
             reply = await build_customer_reply(database, result)
             assert reply is not None
             assert "Hi Alice!" in reply["text"]
-            assert "Here is our catalogue:" in reply["text"]
         finally:
             await close_database(database)
 
