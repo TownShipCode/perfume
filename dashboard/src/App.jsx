@@ -107,8 +107,8 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        await dashboardApi.checkSession(baseUrl);
-        setAuthenticated(true);
+        const session = await dashboardApi.checkSession(baseUrl);
+        setAuthenticated(session.authenticated === true);
       } catch {
         setAuthenticated(false);
       }
