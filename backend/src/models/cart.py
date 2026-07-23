@@ -11,5 +11,5 @@ class CartItem(BaseModel):
 
 
 class Cart(BaseModel):
-    items: list[CartItem] = Field(default_factory=list)
+    items: list[CartItem] = Field(default_factory=list)  # type: ignore[arg-type]
     total: Decimal = Field(default=Decimal("0.00"))

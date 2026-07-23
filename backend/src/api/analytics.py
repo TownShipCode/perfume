@@ -36,13 +36,25 @@ async def get_summary(request: Request) -> dict:
     except Exception:
         status_breakdown = []
 
+    try:
+        top_products = await fetch_all(
+            database,
+            """SELECT p.name, COALESCE(SUM((item->>'quantity')::int), 0) as total_qty
+               FROM orders, jsonb_array_elements(orders.items) as item
+               JOIN products p ON p.id = (item->>'product_id')::int
+               GROUP BY p.name ORDER BY total_qty DESC LIMIT 5""",
+        )
+        top_products = [dict(t) for t in top_products]
+    except Exception:
+        top_products = []
+
     return {
         "total_orders": total_orders["count"] if total_orders else 0,
         "pending_pop": pending_pop["count"] if pending_pop else 0,
         "confirmed": confirmed["count"] if confirmed else 0,
         "revenue": float(revenue["total"]) if revenue else 0,
         "active_products": active_products["count"] if active_products else 0,
-        "top_products": [],
+        "top_products": top_products,
         "status_breakdown": [dict(s) for s in status_breakdown],
     }
 
