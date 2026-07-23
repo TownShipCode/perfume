@@ -38,6 +38,7 @@ export default function App() {
   const [templateBody, setTemplateBody] = useState('');
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
+  const [productFeedback, setProductFeedback] = useState('');
   const [addressForm, setAddressForm] = useState(emptyAddress);
   const [statusFilter, setStatusFilter] = useState('');
   const [forwardStatusFilter, setForwardStatusFilter] = useState('');
@@ -113,10 +114,14 @@ export default function App() {
       if (editingProductId) {
         await dashboardApi.updateProduct(editingProductId, payload, apiKey, baseUrl);
         setMessage('Product updated.');
+        setProductFeedback('✓ Saved');
+        setTimeout(() => setProductFeedback(''), 2500);
         // stay in edit mode so the user can see their changes persisted
       } else {
         await dashboardApi.createProduct(payload, apiKey, baseUrl);
         setMessage('Product created.');
+        setProductFeedback('✓ Created');
+        setTimeout(() => setProductFeedback(''), 2500);
         setProductForm(emptyProduct);
         setEditingProductId(null);
       }
@@ -353,6 +358,7 @@ export default function App() {
               Active
             </label>
             <button type="submit">{editingProductId ? 'Update product' : 'Create product'}</button>
+            {productFeedback && <span className="inline-feedback">{productFeedback}</span>}
           </form>
 
           <div className="card-list">
