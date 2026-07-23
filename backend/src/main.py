@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import subprocess
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.analytics import router as analytics_routes
@@ -64,11 +66,34 @@ async def root() -> dict[str, object]:
     }
 
 
+GIT_SHA = ""
+try:
+    result = subprocess.run(
+        ["git", "rev-parse", "--short", "HEAD"],
+        capture_output=True, text=True, timeout=5,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    if result.returncode == 0:
+        GIT_SHA = result.stdout.strip()
+except Exception:
+    pass
+
+
 @app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+async def health(request: Request) -> dict[str, object]:
+    return {
+        "status": "ok",
+        "version": "0.1.0",
+        "commit": GIT_SHA,
+        "db": request.app.state.database.mode,
+    }
 
 
 @app.get("/api/health")
-async def api_health() -> dict[str, str]:
-    return {"status": "ok"}
+async def api_health(request: Request) -> dict[str, object]:
+    return {
+        "status": "ok",
+        "version": "0.1.0",
+        "commit": GIT_SHA,
+        "db": request.app.state.database.mode,
+    }
