@@ -78,6 +78,14 @@ try:
 except Exception:
     pass
 
+if not GIT_SHA:
+    # Fallback: read SHA from file baked into Docker image
+    sha_file = Path("/app/git_sha.txt")
+    if sha_file.exists():
+        GIT_SHA = sha_file.read_text(encoding="utf-8").strip()
+        if GIT_SHA == "unknown":
+            GIT_SHA = ""
+
 
 @app.get("/health")
 async def health(request: Request) -> dict[str, object]:
