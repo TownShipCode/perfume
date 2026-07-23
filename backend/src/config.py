@@ -26,6 +26,7 @@ class Settings:
     api_base_url: str
     database_url: str | None
     local_sqlite_path: Path
+    whatsapp_provider: str
     whatsapp_api_base_url: str
     whatsapp_send_mode: str
     whatsapp_api_key: str | None
@@ -96,6 +97,7 @@ def get_settings() -> Settings:
         api_base_url=os.getenv("API_BASE_URL", "http://localhost:8000"),
         database_url=_optional("DATABASE_URL"),
         local_sqlite_path=local_sqlite_path,
+        whatsapp_provider=os.getenv("WHATSAPP_PROVIDER", "meta").lower(),
         whatsapp_api_base_url=os.getenv("WHATSAPP_API_BASE_URL", "https://graph.facebook.com/v24.0"),
         whatsapp_send_mode=os.getenv("WHATSAPP_SEND_MODE", "dry_run").lower(),
         whatsapp_api_key=_optional("WHATSAPP_API_KEY"),
@@ -124,19 +126,26 @@ def get_settings() -> Settings:
 
 
 def validate_settings(settings: Settings) -> None:
+    if settings.whatsapp_provider not in {"meta", "kapso"}:
+        raise SettingsError("WHATSAPP_PROVIDER must be 'meta' or 'kapso'")
+
     if settings.is_production:
-        missing = [
-            name
-            for name, value in {
-                "DATABASE_URL": settings.database_url,
+        required = {
+            "DATABASE_URL": settings.database_url,
+            "DASHBOARD_API_KEY": settings.dashboard_api_key,
+        }
+        if settings.whatsapp_provider == "meta":
+            required.update({
                 "WHATSAPP_API_KEY": settings.whatsapp_api_key,
                 "WHATSAPP_PHONE_NUMBER_ID": settings.whatsapp_phone_number_id,
                 "WHATSAPP_VERIFY_TOKEN": settings.whatsapp_verify_token,
                 "WHATSAPP_APP_SECRET": settings.whatsapp_app_secret,
-                "DASHBOARD_API_KEY": settings.dashboard_api_key,
-            }.items()
-            if not value
-        ]
+            })
+        elif settings.whatsapp_provider == "kapso":
+            required.update({
+                "WHATSAPP_API_KEY": settings.whatsapp_api_key,
+            })
+        missing = [name for name, value in required.items() if not value]
         if missing:
             raise SettingsError(
                 "Missing required production configuration: " + ", ".join(missing)

@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import asyncio
 import json
 from typing import Any
-from urllib import request as urllib_request
 
 from src.config import Settings, get_settings
 
@@ -17,81 +15,82 @@ async def deliver_reply(event: dict[str, Any], reply: dict[str, str] | None) -> 
     if not recipient:
         return {"status": "skipped", "reason": "missing_recipient"}
 
-    payload = {
-        "messaging_product": "whatsapp",
-        "to": recipient,
-        "type": "text",
-        "text": {"body": reply["text"]},
-    }
-
-    return await _send_payload(settings, payload)
+    return await _send(settings, recipient, reply["text"])
 
 
 async def send_text_message(recipient: str, text: str) -> dict[str, Any]:
     settings = get_settings()
+    return await _send(settings, recipient, text)
+
+
+async def _send(settings: Settings, to: str, text: str) -> dict[str, Any]:
+    if settings.whatsapp_send_mode == "off":
+        return {"status": "skipped", "reason": "send_mode_off", "text": text[:100]}
+
     payload = {
         "messaging_product": "whatsapp",
-        "to": recipient,
+        "to": to,
         "type": "text",
         "text": {"body": text},
     }
 
-    return await _send_payload(settings, payload)
-
-
-async def _send_payload(settings: Settings, payload: dict[str, Any]) -> dict[str, Any]:
-    if settings.whatsapp_send_mode == "off":
-        return {"status": "skipped", "reason": "send_mode_off", "payload": payload}
-
     if settings.whatsapp_send_mode != "live":
-        return {"status": "dry_run", "payload": payload}
+        return {"status": "dry_run", "recipient": to, "text": text[:100], "payload": payload}
 
-    if not settings.whatsapp_api_key or not settings.whatsapp_phone_number_id:
-        if settings.is_production:
-            return {"status": "failed", "reason": "missing_provider_configuration", "payload": payload}
-        return {"status": "skipped", "reason": "missing_provider_configuration", "payload": payload}
+    if not settings.whatsapp_api_key:
+        return {"status": "failed", "reason": "missing_api_key"}
+
+    phone_id = settings.whatsapp_phone_number_id or "1102791516242887"
 
     try:
-        response = await _post_whatsapp_message(settings, payload)
+        if settings.whatsapp_provider == "kapso":
+            return await _send_kapso(settings, to, text, phone_id)
+        else:
+            return await _send_meta(settings, to, text, phone_id)
     except Exception as error:
-        return {
-            "status": "failed",
-            "error": str(error),
-            "payload": payload,
-        }
+        return {"status": "failed", "error": str(error)}
 
-    return {
-        "status": "sent",
-        "payload": payload,
-        "provider_response": response,
-        "provider_message_id": _extract_provider_message_id(response),
+
+async def _send_kapso(settings: Settings, to: str, text: str, phone_id: str) -> dict[str, Any]:
+    """Send via Kapso gateway — mirrors miana's _send_via_kapso pattern."""
+    import aiohttp
+
+    url = f"https://api.kapso.ai/meta/whatsapp/v24.0/{phone_id}/messages"
+    headers = {"X-API-Key": settings.whatsapp_api_key or "", "Content-Type": "application/json"}
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "text",
+        "text": {"body": text},
     }
 
-
-def _extract_provider_message_id(response: dict[str, Any]) -> str | None:
-    messages = response.get("messages")
-    if not isinstance(messages, list) or not messages:
-        return None
-    first = messages[0]
-    if not isinstance(first, dict):
-        return None
-    value = first.get("id")
-    return value if isinstance(value, str) and value else None
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=payload, headers=headers,
+                                timeout=aiohttp.ClientTimeout(total=15)) as resp:
+            body = await resp.text()
+            if resp.status in (200, 201):
+                return {"status": "sent", "recipient": to, "text": text[:100]}
+            return {"status": "failed", "http_status": resp.status, "body": body[:200]}
 
 
-async def _post_whatsapp_message(settings: Settings, payload: dict[str, Any]) -> dict[str, Any]:
-    url = f"{settings.whatsapp_api_base_url.rstrip('/')}/{settings.whatsapp_phone_number_id}/messages"
+async def _send_meta(settings: Settings, to: str, text: str, phone_id: str) -> dict[str, Any]:
+    """Send via Meta WhatsApp Cloud API directly."""
+    import asyncio
+    from urllib import request as urllib_request
+
+    url = f"{settings.whatsapp_api_base_url.rstrip('/')}/{phone_id}/messages"
     headers = {
         "Authorization": f"Bearer {settings.whatsapp_api_key}",
         "Content-Type": "application/json",
         "User-Agent": "curl/8.0",
     }
-    return await asyncio.to_thread(_send_request, url, headers, payload)
-
-
-def _send_request(url: str, headers: dict[str, str], payload: dict[str, Any]) -> dict[str, Any]:
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "text",
+        "text": {"body": text},
+    }
     body = json.dumps(payload).encode("utf-8")
     req = urllib_request.Request(url, data=body, headers=headers, method="POST")
-    with urllib_request.urlopen(req, timeout=30) as response:
-        text = response.read().decode("utf-8")
-    return json.loads(text) if text else {"ok": True}
+    result = await asyncio.to_thread(urllib_request.urlopen, req, timeout=30)
+    return {"status": "sent", "recipient": to, "text": text[:100]}

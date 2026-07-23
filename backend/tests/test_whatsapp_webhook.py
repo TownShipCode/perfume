@@ -22,6 +22,7 @@ def make_settings(**overrides: object) -> Settings:
         "api_base_url": "http://localhost:8000",
         "database_url": None,
         "local_sqlite_path": __import__("pathlib").Path("app.db"),
+        "whatsapp_provider": "meta",
         "whatsapp_api_base_url": "https://graph.facebook.com/v24.0",
         "whatsapp_send_mode": "dry_run",
         "whatsapp_api_key": None,

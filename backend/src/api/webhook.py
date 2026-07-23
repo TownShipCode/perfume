@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, Header, Request
+from fastapi.responses import JSONResponse
 
 from src.config import get_settings
 from src.middleware.rate_limit import webhook_rate_limit
@@ -17,6 +20,7 @@ from src.services.whatsapp_webhook import (
 )
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter(tags=["webhook"])
 
 
@@ -34,29 +38,70 @@ async def verify_webhook(
 async def receive_webhook(
     request: Request,
     x_hub_signature_256: str | None = Header(default=None),
-) -> dict[str, object]:
+) -> JSONResponse:
     settings = get_settings()
+
+    # Verify payload signature (Kapso forwards Meta's HMAC)
     raw_body = await request.body()
     if not verify_signature(raw_body, x_hub_signature_256, settings):
-        return {"status": "rejected", "reason": "invalid_signature"}
+        return JSONResponse(status_code=200, content={"status": "rejected", "reason": "invalid_signature"})
 
-    await expire_stale_pop_orders(request.app.state.database, settings.pop_expiry_hours)
-
+    # Parse the webhook payload
     payload = await request.json()
     event = extract_message_event(payload)
+
+    # Status update callbacks (delivered/read/sent receipts) — log and acknowledge
     if event is None:
-        return {"status": "ignored", "reason": "no_message"}
+        statuses = payload.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {}).get("statuses", [])
+        if statuses:
+            for s in statuses:
+                logger.info("WEBHOOK status_update | msg=%s status=%s", s.get("id"), s.get("status"))
+        return JSONResponse(status_code=200, content={"status": "acknowledged", "reason": "status_update"})
 
-    if await is_message_processed(request.app.state.database, event["message_id"]):
-        return {"status": "duplicate", "message_id": event["message_id"]}
+    # Idempotency: deduplicate by message_id
+    try:
+        if await is_message_processed(request.app.state.database, event["message_id"]):
+            return JSONResponse(status_code=200, content={"status": "duplicate", "message_id": event["message_id"]})
+    except Exception as exc:
+        # DB error during idempotency check → transient, Kapso should retry
+        logger.error("WEBHOOK idempotency_check_failed | %s", exc)
+        return JSONResponse(status_code=503, content={"status": "retry", "reason": "db_unavailable"})
 
-    await mark_message_processed(request.app.state.database, event["message_id"])
-    result: dict[str, object] | None = None
-    if event.get("type") == "text":
-        result = await handle_text_message(request.app.state.database, event)
-    elif event.get("type") == "image":
-        result = await handle_image_message(request.app.state.database, event)
-    reply = await build_customer_reply(request.app.state.database, result)
-    delivery = await deliver_reply(event, reply)
-    return {"status": "accepted", "event": event, "result": result, "reply": reply, "delivery": delivery}
+    # Mark as processed BEFORE handling (prevent double-processing on retry)
+    try:
+        await mark_message_processed(request.app.state.database, event["message_id"])
+    except Exception as exc:
+        logger.error("WEBHOOK mark_processed_failed | %s", exc)
+        return JSONResponse(status_code=503, content={"status": "retry", "reason": "db_unavailable"})
+
+    # Process message with transient/permanent error classification
+    try:
+        await expire_stale_pop_orders(request.app.state.database, settings.pop_expiry_hours)
+        result: dict[str, object] | None = None
+        if event.get("type") == "text":
+            result = await handle_text_message(request.app.state.database, event)
+        elif event.get("type") == "image":
+            result = await handle_image_message(request.app.state.database, event)
+        reply = await build_customer_reply(request.app.state.database, result)
+        delivery = await deliver_reply(event, reply)
+        return JSONResponse(status_code=200, content={
+            "status": "accepted", "event": event, "result": result,
+            "reply": reply, "delivery": delivery,
+        })
+    except Exception as exc:
+        logger.error("WEBHOOK processing_error | %s", exc)
+        if _is_transient(exc):
+            return JSONResponse(status_code=503, content={"status": "retry", "reason": "transient_error"})
+        # Permanent error — acknowledge so Kapso doesn't retry forever
+        return JSONResponse(status_code=200, content={"status": "error", "reason": "permanent_error"})
+
+
+def _is_transient(exc: Exception) -> bool:
+    """Classify exceptions: transient (Kapso should retry) vs permanent (dead letter)."""
+    error_str = str(exc).lower()
+    transient_markers = [
+        "connection", "timeout", "unavailable", "pool", "too many",
+        "server closed", "cannot connect", "connection refused",
+    ]
+    return any(marker in error_str for marker in transient_markers)
 
