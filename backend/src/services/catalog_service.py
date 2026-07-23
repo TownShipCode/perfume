@@ -28,7 +28,7 @@ class ProductUpdateInput(BaseModel):
 
 
 async def list_active_products(database: Database) -> list[dict]:
-    return await fetch_all(
+    rows = await fetch_all(
         database,
         """
         SELECT id, product_number, name, price, image_url, description, is_active, created_at, updated_at
@@ -37,6 +37,7 @@ async def list_active_products(database: Database) -> list[dict]:
         ORDER BY product_number
         """,
     )
+    return await _attach_keywords(database, rows)
 
 
 async def build_catalog_lines(database: Database) -> list[str]:
@@ -48,7 +49,7 @@ async def build_catalog_lines(database: Database) -> list[str]:
 
 
 async def list_all_products(database: Database) -> list[dict]:
-    return await fetch_all(
+    rows = await fetch_all(
         database,
         """
         SELECT id, product_number, name, price, image_url, description, is_active, created_at, updated_at
@@ -56,6 +57,32 @@ async def list_all_products(database: Database) -> list[dict]:
         ORDER BY product_number
         """,
     )
+    return await _attach_keywords(database, rows)
+
+
+async def _attach_keywords(database: Database, products: list[dict]) -> list[dict]:
+    if not products:
+        return products
+    product_ids = [p["id"] for p in products]
+    if database.mode == "postgres":
+        kw_rows = await fetch_all(
+            database,
+            "SELECT product_id, keyword FROM product_keywords WHERE product_id = ANY($1) ORDER BY product_id, keyword",
+            product_ids,
+        )
+    else:
+        placeholders = ",".join("?" for _ in product_ids)
+        kw_rows = await fetch_all(
+            database,
+            f"SELECT product_id, keyword FROM product_keywords WHERE product_id IN ({placeholders}) ORDER BY product_id, keyword",
+            *product_ids,
+        )
+    kw_map: dict[int, list[str]] = {pid: [] for pid in product_ids}
+    for row in kw_rows:
+        kw_map[row["product_id"]].append(row["keyword"])
+    for product in products:
+        product["keywords"] = kw_map.get(product["id"], [])
+    return products
 
 
 async def get_keyword_map(database: Database) -> dict[str, dict]:

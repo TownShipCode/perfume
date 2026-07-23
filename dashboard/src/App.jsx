@@ -39,7 +39,7 @@ export default function App() {
       const [ordersResponse, customersResponse, productsResponse, templatesResponse] = await Promise.all([
         dashboardApi.getOrders(apiKey, baseUrl, statusFilter, forwardStatusFilter),
         dashboardApi.getCustomers(apiKey, baseUrl),
-        dashboardApi.getProducts(baseUrl),
+        dashboardApi.getProducts(apiKey, baseUrl),
         dashboardApi.getTemplates(apiKey, baseUrl),
       ]);
       setOrders(ordersResponse.items);
@@ -104,12 +104,13 @@ export default function App() {
       if (editingProductId) {
         await dashboardApi.updateProduct(editingProductId, payload, apiKey, baseUrl);
         setMessage('Product updated.');
+        // stay in edit mode so the user can see their changes persisted
       } else {
         await dashboardApi.createProduct(payload, apiKey, baseUrl);
         setMessage('Product created.');
+        setProductForm(emptyProduct);
+        setEditingProductId(null);
       }
-      setProductForm(emptyProduct);
-      setEditingProductId(null);
       await loadAll();
     } catch (error) {
       setMessage(error.message);
@@ -205,16 +206,17 @@ export default function App() {
 
   function beginEditProduct(product) {
     setEditingProductId(product.id);
+    const kw = product.keywords || [];
     setProductForm({
       product_number: product.product_number,
-      name: product.name,
-      price: product.price,
+      name: product.name || '',
+      price: product.price != null ? String(product.price) : '0.00',
       image_url: product.image_url || '',
       description: product.description || '',
       is_active: Boolean(product.is_active),
-      keywords: '',
+      keywords: Array.isArray(kw) ? kw.join(', ') : '',
     });
-    setMessage('Provide keywords for the product before saving.');
+    setMessage('Editing product. Update keywords and save.');
   }
 
   return (
