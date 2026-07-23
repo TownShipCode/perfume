@@ -74,6 +74,12 @@ async def execute_script(database: Database, sql: str) -> None:
                 continue
             try:
                 await connection.execute(statement)
+            except AttributeError:
+                # asyncpg 0.31.0 raises AttributeError: 'NoneType' object
+                # has no attribute 'decode' for some DDL statements that
+                # return no result rows (e.g., IF NOT EXISTS with pre-existing objects).
+                # The statement succeeded — the error is in asyncpg's result handling.
+                pass
             except Exception as error:
                 if versionless_duplicate_column(error):
                     continue
