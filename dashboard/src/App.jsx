@@ -14,9 +14,18 @@ const emptyProduct = {
 
 const emptyAddress = { area: '', street: '', city: '' };
 
+function loadSetting(key, fallback) {
+  try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
+}
+function saveSetting(key, value) {
+  try { localStorage.setItem(key, value); } catch { /* noop */ }
+}
+
+const PROD_URL = 'https://biomed-production.up.railway.app';
+
 export default function App() {
-  const [apiKey, setApiKey] = useState('');
-  const [baseUrl, setBaseUrl] = useState('http://127.0.0.1:8000');
+  const [apiKey, setApiKey] = useState(() => loadSetting('biomed_api_key', ''));
+  const [baseUrl, setBaseUrl] = useState(() => loadSetting('biomed_base_url', PROD_URL));
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedOrderPreview, setSelectedOrderPreview] = useState(null);
@@ -227,12 +236,12 @@ export default function App() {
 
         <label>
           API base URL
-          <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} />
+          <input value={baseUrl} onChange={(event) => { setBaseUrl(event.target.value); saveSetting('biomed_base_url', event.target.value); }} />
         </label>
 
         <label>
           Dashboard API key
-          <input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} />
+          <input type="password" value={apiKey} onChange={(event) => { setApiKey(event.target.value); saveSetting('biomed_api_key', event.target.value); }} />
         </label>
 
         <button onClick={loadAll}>Refresh board</button>
