@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,22 +11,17 @@ MIGRATIONS_DIR = Path(__file__).resolve().parent / "migrations"
 
 @dataclass
 class Database:
-    mode: str
-    connection: sqlite3.Connection | None = None
-    pool: object | None = None
+    pool: object
 
 
 async def connect_database(settings: Settings | None = None) -> Database:
     settings = settings or get_settings()
-    if settings.database_url and settings.database_url.startswith("postgres"):
-        import asyncpg
-        pool = await asyncpg.create_pool(dsn=settings.database_url, min_size=1, max_size=5)
-        return Database(mode="postgres", pool=pool)
-
-    connection = sqlite3.connect(settings.local_sqlite_path)
-    connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA foreign_keys = ON")
-    return Database(mode="sqlite", connection=connection)
+    dsn = settings.database_url
+    if not dsn or not dsn.startswith("postgres"):
+        raise RuntimeError("DATABASE_URL must be a valid PostgreSQL connection string")
+    import asyncpg
+    pool = await asyncpg.create_pool(dsn=dsn, min_size=1, max_size=5)
+    return Database(pool=pool)
 
 
 async def close_database(database: Database) -> None:
