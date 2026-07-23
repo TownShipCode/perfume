@@ -7,6 +7,7 @@ const emptyProduct = {
   name: '',
   price: '0.00',
   image_url: '',
+  description: '',
   is_active: true,
   keywords: '',
 };
@@ -209,6 +210,7 @@ export default function App() {
       name: product.name,
       price: product.price,
       image_url: product.image_url || '',
+      description: product.description || '',
       is_active: Boolean(product.is_active),
       keywords: '',
     });
@@ -332,6 +334,7 @@ export default function App() {
             <input placeholder="Product number" value={productForm.product_number} onChange={(event) => setProductForm({ ...productForm, product_number: event.target.value })} />
             <input placeholder="Name" value={productForm.name} onChange={(event) => setProductForm({ ...productForm, name: event.target.value })} />
             <input placeholder="Price" value={productForm.price} onChange={(event) => setProductForm({ ...productForm, price: event.target.value })} />
+            <input placeholder="Description (e.g., 1L bottle)" value={productForm.description} onChange={(event) => setProductForm({ ...productForm, description: event.target.value })} />
             <input placeholder="Image URL" value={productForm.image_url} onChange={(event) => setProductForm({ ...productForm, image_url: event.target.value })} />
             <input placeholder="Keywords comma-separated" value={productForm.keywords} onChange={(event) => setProductForm({ ...productForm, keywords: event.target.value })} />
             <label className="checkbox-row">
