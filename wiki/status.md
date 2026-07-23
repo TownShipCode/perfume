@@ -71,7 +71,22 @@ test_admin_services (1), test_catalog_admin (1), test_manufacturer_forwarding (1
 
 ## Known Gaps
 
-- PostgreSQL not yet provisioned on Railway (using SQLite in container)
-- WhatsApp credentials not set
+- WhatsApp credentials not set (user has them, pending entry)
 - No real end-to-end test with WhatsApp sandbox
 - Dashboard not auto-deploying from GitHub
+- Product image hosting not decided yet
+- No error alerting/monitoring (Sentry ready but not configured)
+
+## Pre-Mortem Resolutions (2026-07-23)
+
+| Risk | Status |
+|------|--------|
+| SQLite data loss | Resolved — Railway PostgreSQL provisioned, DATABASE_URL linked |
+| WhatsApp webhook unverified | Pending — user has Meta credentials |
+| DASHBOARD_API_KEY exposed | Resolved — rotated to `bmd-wz9a...` |
+| SHIPPING_FEE not on Railway | Resolved — set to 109.00 |
+| No order cancellation | Resolved — `cancel`/`stop` commands, clears cart, resets session |
+| No POP expiry | Resolved — `POP_EXPIRY_HOURS=24`, auto-expires stale waiting orders |
+| Dashboard missing forward message | Resolved — manufacturer message preview shown in order detail |
+| Hardcoded ADDRESS_STEPS | Deferred — prompt text is content, not logic; all commands env-driven |
+| Rate limiter only on webhook | Accepted — admin API is authenticated, low risk |
