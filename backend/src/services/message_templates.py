@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from src.config import get_settings
 from src.db.connection import Database, execute, fetch_all, fetch_one
 
@@ -13,11 +15,12 @@ DEFAULT_TEMPLATES = {
     "address_request_city": "Thanks. Now send your CITY.",
     "address_confirmation": "Address saved: {full_address}. Is this correct?",
     "address_confirmation_pending": "Please reply YES to use your saved address, or NO to enter a new one.",
-    "order_final": "Order {order_number} confirmed. Total: {total} {currency}. Please send your POP image.",
+    "order_final": "Order {order_number} confirmed.\nSubtotal: {subtotal} {currency}\nDelivery: {shipping_line}\nTotal: {total} {currency}\nPlease send your POP image.",
     "pop_received": "POP received. We will confirm your order shortly.",
     "checkout_blocked": "Your cart is empty. Add a product first, for example: 2 shoes.",
     "unmatched": "I could not match that product. Try something like: 2 shoes or 1 hat.",
     "awaiting_pop": "Your order is waiting for POP. Please send your POP image.",
+    "order_cancelled": "Your order has been cancelled. Reply with anything to start again.",
     "manufacturer_forward": "NEW ORDER {order_number}\nCustomer: {customer_name}\nPhone: {phone_number}\nAddress: {full_address}\nItems:\n{items}\nTotal: {total} {currency}\nPOP: {pop_image_url}",
 }
 
@@ -85,12 +88,17 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
 
     if action == "order_created":
         cart = result.get("cart") or {}
+        shipping_fee = Decimal(result.get("shipping_fee") or "0")
+        subtotal = Decimal(cart.get("total") or "0")
+        shipping_line = "FREE" if shipping_fee == 0 else f"{shipping_fee} {settings.store_currency}"
         return {
             "text": await render_template(
                 database,
                 "order_final",
                 order_number=result.get("order_number", ""),
-                total=cart.get("total", "0.00"),
+                subtotal=str(subtotal),
+                shipping_line=shipping_line,
+                total=str(subtotal + shipping_fee),
                 currency=settings.store_currency,
             )
         }
@@ -106,6 +114,9 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
 
     if action == "awaiting_pop":
         return {"text": await render_template(database, "awaiting_pop")}
+
+    if action == "order_cancelled":
+        return {"text": await render_template(database, "order_cancelled")}
 
     return None
 

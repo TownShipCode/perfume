@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 
@@ -34,11 +35,15 @@ class Settings:
     dashboard_api_key: str | None
     admin_phone: str | None
     manufacturer_phone: str | None
+    shipping_fee: Decimal
+    free_shipping_threshold: Decimal
     whatsapp_greeting_commands: tuple[str, ...]
     whatsapp_catalog_commands: tuple[str, ...]
     whatsapp_checkout_commands: tuple[str, ...]
     whatsapp_confirm_commands: tuple[str, ...]
     whatsapp_reject_commands: tuple[str, ...]
+    whatsapp_cancel_commands: tuple[str, ...]
+    pop_expiry_hours: int
     cors_origins: tuple[str, ...]
     sentry_dsn: str | None
 
@@ -74,6 +79,11 @@ def get_settings() -> Settings:
     whatsapp_confirm_commands = _csv_values(os.getenv("WHATSAPP_CONFIRM_COMMANDS", "yes,y,ok,correct"))
     whatsapp_reject_commands = _csv_values(os.getenv("WHATSAPP_REJECT_COMMANDS", "no,n"))
 
+    shipping_fee = Decimal(os.getenv("SHIPPING_FEE", "109.00") or "109.00")
+    free_shipping_threshold = Decimal(os.getenv("FREE_SHIPPING_THRESHOLD", "2000.00") or "2000.00")
+    whatsapp_cancel_commands = _csv_values(os.getenv("WHATSAPP_CANCEL_COMMANDS", "cancel,stop"))
+    pop_expiry_hours = int(os.getenv("POP_EXPIRY_HOURS", "24") or "24")
+
     settings = Settings(
         app_env=os.getenv("APP_ENV", "development").lower(),
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
@@ -96,6 +106,10 @@ def get_settings() -> Settings:
         whatsapp_checkout_commands=whatsapp_checkout_commands,
         whatsapp_confirm_commands=whatsapp_confirm_commands,
         whatsapp_reject_commands=whatsapp_reject_commands,
+        shipping_fee=shipping_fee,
+        free_shipping_threshold=free_shipping_threshold,
+        whatsapp_cancel_commands=whatsapp_cancel_commands,
+        pop_expiry_hours=pop_expiry_hours,
         cors_origins=cors_origins,
         sentry_dsn=_optional("SENTRY_DSN"),
     )
@@ -139,6 +153,18 @@ def validate_settings(settings: Settings) -> None:
 
     if not settings.whatsapp_reject_commands:
         raise SettingsError("WHATSAPP_REJECT_COMMANDS must include at least one command")
+
+    if settings.shipping_fee < 0:
+        raise SettingsError("SHIPPING_FEE must be >= 0")
+
+    if settings.free_shipping_threshold < 0:
+        raise SettingsError("FREE_SHIPPING_THRESHOLD must be >= 0")
+
+    if not settings.whatsapp_cancel_commands:
+        raise SettingsError("WHATSAPP_CANCEL_COMMANDS must include at least one command")
+
+    if settings.pop_expiry_hours < 1:
+        raise SettingsError("POP_EXPIRY_HOURS must be >= 1")
 
     settings.local_sqlite_path.parent.mkdir(parents=True, exist_ok=True)
 

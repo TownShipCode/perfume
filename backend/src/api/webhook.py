@@ -6,6 +6,7 @@ from src.config import get_settings
 from src.middleware.rate_limit import webhook_rate_limit
 from src.services.message_templates import build_customer_reply
 from src.services.order_flow import handle_image_message, handle_text_message
+from src.services.order_service import expire_stale_pop_orders
 from src.services.whatsapp_sender import deliver_reply
 from src.services.whatsapp_webhook import (
     extract_message_event,
@@ -38,6 +39,8 @@ async def receive_webhook(
     raw_body = await request.body()
     if not verify_signature(raw_body, x_hub_signature_256, settings):
         return {"status": "rejected", "reason": "invalid_signature"}
+
+    await expire_stale_pop_orders(request.app.state.database, settings.pop_expiry_hours)
 
     payload = await request.json()
     event = extract_message_event(payload)

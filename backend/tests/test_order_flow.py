@@ -13,6 +13,8 @@ from src.services.session_service import get_session_by_phone
 
 def test_order_flow_collects_address_and_creates_order(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("LOCAL_SQLITE_PATH", str(tmp_path / "order-flow.db"))
+    monkeypatch.setenv("SHIPPING_FEE", "109.00")
+    monkeypatch.setenv("FREE_SHIPPING_THRESHOLD", "2000.00")
     get_settings.cache_clear()
 
     async def scenario() -> None:
@@ -91,6 +93,8 @@ def test_order_flow_collects_address_and_creates_order(tmp_path, monkeypatch) ->
 
 def test_order_flow_marks_pop_received_and_confirms_session(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("LOCAL_SQLITE_PATH", str(tmp_path / "pop-flow.db"))
+    monkeypatch.setenv("SHIPPING_FEE", "109.00")
+    monkeypatch.setenv("FREE_SHIPPING_THRESHOLD", "2000.00")
     get_settings.cache_clear()
 
     async def scenario() -> None:
@@ -277,6 +281,99 @@ def test_order_flow_returns_welcome_catalogue_for_greeting(tmp_path, monkeypatch
             assert reply is not None
             assert "Hi Alice!" in reply["text"]
             assert "Here is our catalogue:" in reply["text"]
+        finally:
+            await close_database(database)
+
+    asyncio.run(scenario())
+    get_settings.cache_clear()
+
+
+def test_order_flow_calculates_shipping(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("LOCAL_SQLITE_PATH", str(tmp_path / "shipping.db"))
+    monkeypatch.setenv("SHIPPING_FEE", "109.00")
+    monkeypatch.setenv("FREE_SHIPPING_THRESHOLD", "2000.00")
+    get_settings.cache_clear()
+
+    async def scenario() -> None:
+        settings = get_settings()
+        database = await connect_database(settings)
+        try:
+            await initialize_database(database)
+            await create_product(
+                database,
+                ProductInput(
+                    product_number=1, name="Red Shoes", price="350.00",
+                    image_url="https://example.com/red-shoes.jpg",
+                    keywords=["shoe", "shoes", "red shoe"],
+                ),
+            )
+            for message_id, text in [("m1", "2 shoes"), ("m2", "done"), ("m3", "Khayelitsha"), ("m4", "12 Main Road"), ("m5", "Cape Town")]:
+                await handle_text_message(database, {"message_id": message_id, "from": "27820000001", "type": "text", "text": text, "profile_name": "Bob"})
+            order = await fetch_one(database, "SELECT total, shipping_fee FROM orders WHERE customer_id = (SELECT id FROM customers WHERE phone_number = ?)", "27820000001")
+            assert order is not None
+            assert float(order["total"]) == 809.00
+            assert float(order["shipping_fee"]) == 109.00
+        finally:
+            await close_database(database)
+
+    asyncio.run(scenario())
+    get_settings.cache_clear()
+
+
+def test_order_flow_waives_shipping_above_threshold(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("LOCAL_SQLITE_PATH", str(tmp_path / "shipping-free.db"))
+    monkeypatch.setenv("SHIPPING_FEE", "109.00")
+    monkeypatch.setenv("FREE_SHIPPING_THRESHOLD", "500.00")
+    get_settings.cache_clear()
+
+    async def scenario() -> None:
+        settings = get_settings()
+        database = await connect_database(settings)
+        try:
+            await initialize_database(database)
+            await create_product(
+                database,
+                ProductInput(
+                    product_number=1, name="Red Shoes", price="350.00",
+                    image_url="https://example.com/red-shoes.jpg",
+                    keywords=["shoe", "shoes", "red shoe"],
+                ),
+            )
+            for message_id, text in [("m1", "2 shoes"), ("m2", "done"), ("m3", "Khayelitsha"), ("m4", "12 Main Road"), ("m5", "Cape Town")]:
+                await handle_text_message(database, {"message_id": message_id, "from": "27820000002", "type": "text", "text": text, "profile_name": "Carol"})
+            order = await fetch_one(database, "SELECT total, shipping_fee FROM orders WHERE customer_id = (SELECT id FROM customers WHERE phone_number = ?)", "27820000002")
+            assert order is not None
+            assert float(order["total"]) == 700.00
+            assert float(order["shipping_fee"]) == 0
+        finally:
+            await close_database(database)
+
+    asyncio.run(scenario())
+    get_settings.cache_clear()
+
+
+def test_order_flow_cancel_clears_cart_and_session(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("LOCAL_SQLITE_PATH", str(tmp_path / "cancel.db"))
+    monkeypatch.setenv("SHIPPING_FEE", "109.00")
+    monkeypatch.setenv("FREE_SHIPPING_THRESHOLD", "2000.00")
+    get_settings.cache_clear()
+
+    async def scenario() -> None:
+        database = await connect_database(get_settings())
+        try:
+            await initialize_database(database)
+            await create_product(
+                database,
+                ProductInput(product_number=1, name="Red Shoes", price="350.00", image_url="https://example.com/red-shoes.jpg", keywords=["shoe"]),
+            )
+            await handle_text_message(database, {"message_id": "m1", "from": "27820000010", "type": "text", "text": "2 shoes", "profile_name": "Dave"})
+            result = await handle_text_message(database, {"message_id": "m2", "from": "27820000010", "type": "text", "text": "cancel", "profile_name": "Dave"})
+            assert result["action"] == "order_cancelled"
+            assert result["state"] == "idle"
+            session = await get_session_by_phone(database, "27820000010")
+            assert session is not None
+            assert session["state"] == "idle"
+            assert session["cart"] == []
         finally:
             await close_database(database)
 

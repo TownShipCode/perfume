@@ -61,6 +61,8 @@ Invoke-RestMethod http://127.0.0.1:8000/health
 - `WHATSAPP_CHECKOUT_COMMANDS` controls which words trigger checkout from the cart
 - `WHATSAPP_CONFIRM_COMMANDS` controls which words confirm a saved address
 - `WHATSAPP_REJECT_COMMANDS` controls which words trigger new address entry
+- `SHIPPING_FEE` sets the delivery fee added at checkout (default R109)
+- `FREE_SHIPPING_THRESHOLD` waives the fee above this cart subtotal (default R2000)
 
 ## Admin API Auth
 

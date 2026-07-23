@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -12,7 +12,7 @@ from src.models.cart import CartItem
 ORDER_SELECT_COLUMNS = """
 o.id, o.order_number, o.customer_id, o.items, o.total, o.status, o.pop_image_url, o.tracking_info,
 o.forwarded_to, o.forwarded_at, o.forward_delivery_status, o.forward_message_id, o.forward_error,
-o.forward_payload, o.forward_response, o.forward_attempts, o.created_at, o.updated_at,
+o.forward_payload, o.forward_response, o.forward_attempts, o.shipping_fee, o.created_at, o.updated_at,
 c.phone_number, c.full_address, c.name
 """.strip()
 
@@ -29,6 +29,7 @@ async def create_order(
     customer_id: int,
     cart_items: list[CartItem],
     total: Decimal,
+    shipping_fee: Decimal = Decimal("0"),
 ) -> dict:
     order_number = _generate_order_number()
     items_payload = json.dumps([item.model_dump() for item in cart_items])
@@ -37,8 +38,8 @@ async def create_order(
         row = await fetch_one(
             database,
             """
-            INSERT INTO orders (order_number, customer_id, items, total, status)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO orders (order_number, customer_id, items, total, status, shipping_fee)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id, order_number, customer_id, items, total, status, pop_image_url, tracking_info,
                       forwarded_to, forwarded_at, forward_delivery_status, forward_message_id, forward_error,
                       forward_payload, forward_response, forward_attempts, created_at, updated_at
@@ -48,6 +49,7 @@ async def create_order(
             items_payload,
             total,
             "pending",
+            shipping_fee,
         )
         assert row is not None
         return _decode_order(row)
@@ -55,14 +57,15 @@ async def create_order(
     await execute(
         database,
         """
-        INSERT INTO orders (order_number, customer_id, items, total, status)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO orders (order_number, customer_id, items, total, status, shipping_fee)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
         order_number,
         customer_id,
         items_payload,
         str(total),
         "pending",
+        str(shipping_fee),
     )
     row = await fetch_one(
         database,
@@ -270,6 +273,23 @@ async def record_order_forwarding(
             order_id,
         )
     return await get_order_by_id(database, order_id)
+
+
+async def expire_stale_pop_orders(database: Database, pop_expiry_hours: int) -> int:
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=pop_expiry_hours)
+    if database.mode == "postgres":
+        await execute(
+            database,
+            "UPDATE orders SET status = 'expired', updated_at = NOW() WHERE status = 'pop_waiting' AND created_at < $1",
+            cutoff,
+        )
+    else:
+        await execute(
+            database,
+            "UPDATE orders SET status = 'expired', updated_at = CURRENT_TIMESTAMP WHERE status = 'pop_waiting' AND created_at < ?",
+            cutoff.isoformat(),
+        )
+    return 0
 
 
 def _build_list_orders_query(mode: str, status: str | None, forward_status: str | None) -> tuple[str, tuple[object, ...]]:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from src.config import get_settings
+from src.config import Settings, get_settings
 from src.db.connection import Database
 from src.models.cart import CartItem
 from src.services.cart_service import add_item_to_cart, build_cart
@@ -59,6 +59,17 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
 
     if session.get("state") == State.POP_WAITING:
         return {"action": "awaiting_pop", "state": State.POP_WAITING}
+
+    if lowered in settings.whatsapp_cancel_commands:
+        updated_session = await save_session_state(
+            database,
+            phone_number,
+            state=State.IDLE,
+            cart=[],
+            current_step=0,
+            temp_address=None,
+        )
+        return {"action": "order_cancelled", "state": updated_session["state"]}
 
     if lowered in settings.whatsapp_checkout_commands:
         if not cart_items:
@@ -210,7 +221,15 @@ async def _finalize_order(
 ) -> dict[str, object]:
     price_map = await _build_price_map(database)
     cart = build_cart(cart_items, price_map)
-    order = await create_order(database, customer_id=customer_id, cart_items=cart_items, total=cart.total)
+    settings = get_settings()
+    applied_shipping = await _compute_shipping(settings, cart.total)
+    order = await create_order(
+        database,
+        customer_id=customer_id,
+        cart_items=cart_items,
+        total=cart.total + applied_shipping,
+        shipping_fee=applied_shipping,
+    )
     updated_session = await save_session_state(
         database,
         phone_number,
@@ -225,7 +244,14 @@ async def _finalize_order(
         "order_number": order["order_number"],
         "address": full_address,
         "cart": _serialize_cart(cart),
+        "shipping_fee": str(applied_shipping),
     }
+
+
+async def _compute_shipping(settings: Settings, subtotal: Decimal) -> Decimal:
+    if settings.free_shipping_threshold > 0 and subtotal >= settings.free_shipping_threshold:
+        return Decimal("0")
+    return settings.shipping_fee
 
 
 async def _build_price_map(database: Database) -> dict[int, Decimal]:

@@ -307,6 +307,10 @@ export default function App() {
                 )}
               </p>
               <div className="message-preview">
+                <strong>Manufacturer message</strong>
+                <pre>{selectedOrderPreview?.message || 'No preview available.'}</pre>
+              </div>
+              <div className="message-preview">
                 <strong>Order items</strong>
                 <ul className="item-list">
                   {(selectedOrderPreview?.line_items || []).map((item) => (

@@ -36,6 +36,10 @@ def make_settings(**overrides: object) -> Settings:
         "whatsapp_checkout_commands": ("done",),
         "whatsapp_confirm_commands": ("yes",),
         "whatsapp_reject_commands": ("no",),
+        "shipping_fee": __import__("decimal").Decimal("109.00"),
+        "free_shipping_threshold": __import__("decimal").Decimal("2000.00"),
+        "whatsapp_cancel_commands": ("cancel",),
+        "pop_expiry_hours": 24,
         "cors_origins": ("http://localhost:5173",),
         "sentry_dsn": None,
     }
