@@ -372,10 +372,10 @@ export default function App() {
         </div>
 
         {/* ── Sparklines ── */}
-        {analyticsDaily.length > 0 && (
-          <div className="analytics-panel">
-            <div className="chart-box">
-              <h3>Orders — Last 7 Days</h3>
+        <div className="analytics-panel">
+          <div className="chart-box">
+            <h3>Orders — Last 7 Days</h3>
+            {analyticsDaily.length > 0 ? (
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={analyticsDaily}>
                   <Line type="monotone" dataKey="orders" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
@@ -384,9 +384,11 @@ export default function App() {
                   <Tooltip contentStyle={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e5e7eb' }} />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
-            <div className="chart-box">
-              <h3>Revenue — Last 7 Days</h3>
+            ) : <div className="empty-chart">No orders in the last 7 days</div>}
+          </div>
+          <div className="chart-box">
+            <h3>Revenue — Last 7 Days</h3>
+            {analyticsDaily.length > 0 ? (
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={analyticsDaily}>
                   <Line type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} dot={{ r: 3 }} />
@@ -395,41 +397,39 @@ export default function App() {
                   <Tooltip contentStyle={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e5e7eb' }} />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            ) : <div className="empty-chart">No revenue data yet</div>}
           </div>
-        )}
+        </div>
 
         {/* ── Status Donut + Top Products ── */}
-        {(summary.status_breakdown || summary.top_products) && (
-          <div className="analytics-panel">
-            {summary.status_breakdown && summary.status_breakdown.length > 0 && (
-              <div className="chart-box">
-                <h3>Order Status</h3>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie data={summary.status_breakdown} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={70} label={({ status, count }) => `${status}: ${count}`}>
-                      {summary.status_breakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e5e7eb' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-            {summary.top_products && summary.top_products.length > 0 && (
-              <div className="chart-box">
-                <h3>Top Products</h3>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={summary.top_products} layout="vertical">
-                    <XAxis type="number" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                    <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: '#6b7280' }} />
-                    <Tooltip contentStyle={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e5e7eb' }} />
-                    <Bar dataKey="total_qty" fill="#10b981" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+        <div className="analytics-panel">
+          <div className="chart-box">
+            <h3>Order Status</h3>
+            {summary.status_breakdown && summary.status_breakdown.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={summary.status_breakdown} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={70} label={({ status, count }) => `${status}: ${count}`}>
+                    {summary.status_breakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e5e7eb' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : <div className="empty-chart">No orders to show</div>}
           </div>
-        )}
+          <div className="chart-box">
+            <h3>Top Products</h3>
+            {summary.top_products && summary.top_products.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={summary.top_products} layout="vertical">
+                  <XAxis type="number" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <Tooltip contentStyle={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e5e7eb' }} />
+                  <Bar dataKey="total_qty" fill="#10b981" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : <div className="empty-chart">No products sold yet</div>}
+          </div>
+        </div>
 
         {/* ── Orders Panel ── */}
         <section className="panel panel-orders" style={{ display: mobileTab === 'orders' || window.innerWidth > 768 ? '' : 'none' }}>

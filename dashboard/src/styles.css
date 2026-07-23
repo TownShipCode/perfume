@@ -110,8 +110,8 @@ a:hover { text-decoration: underline; }
 .control-rail {
   padding: 24px 20px;
   background: var(--bg-sidebar);
-  backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
@@ -222,6 +222,7 @@ button.danger:hover { background: #dc2626; }
   border: 1px solid var(--glass-border);
   font-size: var(--font-sm);
   color: var(--text-secondary);
+  -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
 }
 
@@ -255,8 +256,8 @@ button.danger:hover { background: #dc2626; }
 
 .panel {
   background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: 20px;
@@ -352,6 +353,7 @@ tr:hover td { background: var(--bg-hover); }
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 16px;
+  -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
 }
 
@@ -418,8 +420,8 @@ tr:hover td { background: var(--bg-hover); }
 
 .kpi-card {
   background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 18px;
@@ -466,8 +468,8 @@ tr:hover td { background: var(--bg-hover); }
 
 .chart-box {
   background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: 20px;
@@ -479,6 +481,17 @@ tr:hover td { background: var(--bg-hover); }
   font-family: 'Space Grotesk', sans-serif;
   font-size: var(--font-base);
   color: var(--text-secondary);
+}
+
+.empty-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 160px;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  border: 1px dashed var(--glass-border);
+  border-radius: var(--radius-md);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -493,8 +506,8 @@ tr:hover td { background: var(--bg-hover); }
   right: 0;
   z-index: 100;
   background: var(--bg-sidebar);
-  backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border-top: 1px solid var(--glass-border);
   padding: 8px 0 env(safe-area-inset-bottom, 0);
 }
@@ -536,8 +549,8 @@ tr:hover td { background: var(--bg-hover); }
 
 .login-card {
   background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: 40px 32px;
@@ -606,7 +619,7 @@ tr:hover td { background: var(--bg-hover); }
     padding-bottom: 80px;
   }
 
-  .panel { min-height: auto; }
+  .panel { min-height: 0; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .analytics-panel { grid-template-columns: 1fr; }
   .mobile-tabs { display: flex; }
