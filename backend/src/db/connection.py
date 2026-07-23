@@ -44,7 +44,7 @@ def _adapt_sql_for_sqlite(sql: str) -> str:
 
 async def connect_database(settings: Settings | None = None) -> Database:
     settings = settings or get_settings()
-    if settings.database_mode == "postgres":
+    if settings.database_mode == "postgres" and settings.database_url and settings.database_url.startswith("postgres"):
         import asyncpg
 
         pool = await asyncpg.create_pool(dsn=settings.database_url, min_size=1, max_size=5)
