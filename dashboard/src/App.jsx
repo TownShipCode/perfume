@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 import { dashboardApi } from './api.js';
 
@@ -43,6 +44,12 @@ export default function App() {
   const [statusFilter, setStatusFilter] = useState('');
   const [forwardStatusFilter, setForwardStatusFilter] = useState('');
   const [message, setMessage] = useState('');
+  const [authenticated, setAuthenticated] = useState(null); // null=loading, true/false
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [analyticsSummary, setAnalyticsSummary] = useState(null);
+  const [analyticsDaily, setAnalyticsDaily] = useState([]);
+  const [mobileTab, setMobileTab] = useState('orders');
 
   async function loadAll() {
     try {
@@ -60,11 +67,53 @@ export default function App() {
         setSelectedTemplateKey(templatesResponse.items[0].template_key);
         setTemplateBody(templatesResponse.items[0].body);
       }
+      loadAnalytics();
       setMessage('Data refreshed.');
     } catch (error) {
       setMessage(error.message);
     }
   }
+
+  async function loadAnalytics() {
+    try {
+      const [summary, daily] = await Promise.all([
+        dashboardApi.getAnalyticsSummary(apiKey, baseUrl),
+        dashboardApi.getAnalyticsDaily(apiKey, baseUrl),
+      ]);
+      setAnalyticsSummary(summary);
+      setAnalyticsDaily(daily.daily || []);
+    } catch { /* analytics optional */ }
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    setLoginError('');
+    try {
+      await dashboardApi.login(loginPassword, baseUrl);
+      setAuthenticated(true);
+      setLoginPassword('');
+    } catch {
+      setLoginError('Invalid password');
+    }
+  }
+
+  async function handleLogout() {
+    try { await dashboardApi.logout(baseUrl); } catch { /* noop */ }
+    setAuthenticated(false);
+    setApiKey('');
+  }
+
+  // Check session on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        await dashboardApi.checkSession(baseUrl);
+        setAuthenticated(true);
+      } catch {
+        setAuthenticated(false);
+      }
+    })();
+  }, [baseUrl]);
 
   async function loadOrderDetail(orderId) {
     try {
@@ -233,6 +282,29 @@ export default function App() {
     setMessage('Editing product. Update keywords and save.');
   }
 
+  // ── Login view ──
+  if (authenticated === false) {
+    return (
+      <div className="login-view">
+        <form className="login-card" onSubmit={handleLogin}>
+          <h1>BioMed</h1>
+          <p>Sign in to the control desk</p>
+          {loginError && <div className="login-error">{loginError}</div>}
+          <label>Password<input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Enter password" autoFocus /></label>
+          <button type="submit">Sign in</button>
+        </form>
+      </div>
+    );
+  }
+
+  if (authenticated === null) {
+    return <div className="login-view"><p style={{ color: 'var(--text-secondary)' }}>Loading...</p></div>;
+  }
+
+  // ── Dashboard ──
+  const summary = analyticsSummary || {};
+  const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#9ca3af'];
+
   return (
     <div className="app-shell">
       <aside className="control-rail">
@@ -273,10 +345,94 @@ export default function App() {
         </label>
 
         <div className="status-card">{message || 'Ready.'}</div>
+
+        <button className="logout-btn" onClick={handleLogout}>Sign out</button>
       </aside>
 
       <main className="board-grid">
-        <section className="panel panel-orders">
+        {/* ── KPI Row ── */}
+        <div className="kpi-row" style={{ gridColumn: '1 / -1' }}>
+          <div className="kpi-card">
+            <div className="kpi-value">{summary.total_orders ?? '—'}</div>
+            <div className="kpi-label">Total Orders</div>
+            <div className="kpi-subtitle">{summary.confirmed ?? 0} confirmed</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-value">{summary.pending_pop ?? '—'}</div>
+            <div className="kpi-label">Pending POP</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-value">R{summary.revenue ?? '0'}</div>
+            <div className="kpi-label">Revenue</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-value">{summary.active_products ?? '—'}</div>
+            <div className="kpi-label">Active Products</div>
+          </div>
+        </div>
+
+        {/* ── Sparklines ── */}
+        {analyticsDaily.length > 0 && (
+          <div className="analytics-panel">
+            <div className="chart-box">
+              <h3>Orders — Last 7 Days</h3>
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart data={analyticsDaily}>
+                  <Line type="monotone" dataKey="orders" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <Tooltip contentStyle={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e5e7eb' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="chart-box">
+              <h3>Revenue — Last 7 Days</h3>
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart data={analyticsDaily}>
+                  <Line type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} dot={{ r: 3 }} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <Tooltip contentStyle={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e5e7eb' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* ── Status Donut + Top Products ── */}
+        {(summary.status_breakdown || summary.top_products) && (
+          <div className="analytics-panel">
+            {summary.status_breakdown && summary.status_breakdown.length > 0 && (
+              <div className="chart-box">
+                <h3>Order Status</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={summary.status_breakdown} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={70} label={({ status, count }) => `${status}: ${count}`}>
+                      {summary.status_breakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e5e7eb' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+            {summary.top_products && summary.top_products.length > 0 && (
+              <div className="chart-box">
+                <h3>Top Products</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={summary.top_products} layout="vertical">
+                    <XAxis type="number" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                    <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                    <Tooltip contentStyle={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e5e7eb' }} />
+                    <Bar dataKey="total_qty" fill="#10b981" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Orders Panel ── */}
+        <section className="panel panel-orders" style={{ display: mobileTab === 'orders' || window.innerWidth > 768 ? '' : 'none' }}>
           <header><h2>Orders</h2></header>
           <div className="table-wrap">
             <table>
@@ -344,7 +500,7 @@ export default function App() {
           )}
         </section>
 
-        <section className="panel panel-products">
+        <section className="panel panel-products" style={{ display: mobileTab === 'products' || window.innerWidth > 768 ? '' : 'none' }}>
           <header><h2>Products</h2></header>
           <form className="stack" onSubmit={submitProduct}>
             <input placeholder="Product number" value={productForm.product_number} onChange={(event) => setProductForm({ ...productForm, product_number: event.target.value })} />
@@ -376,7 +532,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="panel panel-customers">
+        <section className="panel panel-customers" style={{ display: mobileTab === 'customers' || window.innerWidth > 768 ? '' : 'none' }}>
           <header><h2>Customers</h2></header>
           <div className="customer-layout">
             <div className="card-list">
@@ -410,7 +566,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="panel panel-templates">
+        <section className="panel panel-templates" style={{ display: mobileTab === 'templates' || window.innerWidth > 768 ? '' : 'none' }}>
           <header><h2>Templates</h2></header>
           <form className="stack" onSubmit={saveTemplate}>
             <select value={selectedTemplateKey} onChange={(event) => setSelectedTemplateKey(event.target.value)}>
@@ -422,6 +578,20 @@ export default function App() {
             <button type="submit">Save template</button>
           </form>
         </section>
+
+        {/* ── Mobile Tab Bar ── */}
+        <nav className="mobile-tabs">
+          {[
+            { key: 'orders', label: '📋 Orders' },
+            { key: 'products', label: '📦 Products' },
+            { key: 'customers', label: '👥 Customers' },
+            { key: 'templates', label: '📝 Templates' },
+          ].map((tab) => (
+            <button key={tab.key} className={`mobile-tab${mobileTab === tab.key ? ' active' : ''}`} onClick={() => setMobileTab(tab.key)}>
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </main>
     </div>
   );

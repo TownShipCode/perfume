@@ -53,4 +53,9 @@ export const dashboardApi = {
   confirmOrder: (id, apiKey, baseUrl) => request(`/api/orders/${id}/confirm`, { method: 'POST' }, apiKey, baseUrl),
   updateOrderStatus: (id, status, apiKey, baseUrl) => request(`/api/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }, apiKey, baseUrl),
   forwardOrder: (id, apiKey, baseUrl, force = false) => request(`/api/orders/${id}/forward`, { method: 'POST', body: JSON.stringify({ force }) }, apiKey, baseUrl),
+  getAnalyticsSummary: (apiKey, baseUrl) => request('/api/analytics/summary', {}, apiKey, baseUrl),
+  getAnalyticsDaily: (apiKey, baseUrl) => request('/api/analytics/daily', {}, apiKey, baseUrl),
+  login: (password, baseUrl) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ password }), credentials: 'include' }, null, baseUrl),
+  logout: (baseUrl) => request('/api/auth/logout', { method: 'POST', credentials: 'include' }, null, baseUrl),
+  checkSession: (baseUrl) => request('/api/auth/check', { credentials: 'include' }, null, baseUrl),
 };
