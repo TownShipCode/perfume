@@ -7,6 +7,16 @@ from src.config import get_settings
 
 async def require_dashboard_api_key(request: Request) -> None:
     settings = get_settings()
+
+    # Primary: HttpOnly session cookie (wiki auth pattern)
+    session_token = request.cookies.get("session_token")
+    if session_token:
+        from src.api.auth import _validate_token
+        database = request.app.state.database
+        if await _validate_token(database, session_token):
+            return
+
+    # Fallback: x-api-key header (legacy, backward compatible)
     expected = settings.dashboard_api_key
     if not expected:
         if settings.is_production:
