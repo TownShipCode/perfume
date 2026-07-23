@@ -39,9 +39,10 @@ def _new_token() -> str:
 
 
 async def _get_active_hash(database: Database) -> str | None:
+    now_fn = "CURRENT_TIMESTAMP" if database.mode == "sqlite" else "NOW()"
     row = await fetch_one(
         database,
-        "SELECT password_hash FROM _admin_sessions WHERE expires_at > NOW() ORDER BY id DESC LIMIT 1",
+        f"SELECT password_hash FROM _admin_sessions WHERE expires_at > {now_fn} ORDER BY id DESC LIMIT 1",
     )
     return row["password_hash"] if row else None
 
@@ -49,27 +50,43 @@ async def _get_active_hash(database: Database) -> str | None:
 async def _store_session(database: Database, password_hash: str) -> str:
     token = _new_token()
     expires = datetime.now(timezone.utc) + timedelta(hours=SESSION_HOURS)
-    await execute(
-        database,
-        "INSERT INTO _admin_sessions (token, password_hash, expires_at) VALUES ($1, $2, $3)",
-        token,
-        password_hash,
-        expires,
-    )
+    if database.mode == "sqlite":
+        await execute(
+            database,
+            "INSERT INTO _admin_sessions (token, password_hash, expires_at) VALUES (?, ?, ?)",
+            token, password_hash, expires.isoformat(),
+        )
+    else:
+        await execute(
+            database,
+            "INSERT INTO _admin_sessions (token, password_hash, expires_at) VALUES ($1, $2, $3)",
+            token, password_hash, expires,
+        )
     return token
 
 
 async def _validate_token(database: Database, token: str) -> bool:
-    row = await fetch_one(
-        database,
-        "SELECT id FROM _admin_sessions WHERE token = $1 AND expires_at > NOW()",
-        token,
-    )
+    now_fn = "CURRENT_TIMESTAMP" if database.mode == "sqlite" else "NOW()"
+    if database.mode == "sqlite":
+        row = await fetch_one(
+            database,
+            f"SELECT id FROM _admin_sessions WHERE token = ? AND expires_at > {now_fn}",
+            token,
+        )
+    else:
+        row = await fetch_one(
+            database,
+            f"SELECT id FROM _admin_sessions WHERE token = $1 AND expires_at > {now_fn}",
+            token,
+        )
     return row is not None
 
 
 async def _clear_token(database: Database, token: str) -> None:
-    await execute(database, "DELETE FROM _admin_sessions WHERE token = $1", token)
+    if database.mode == "sqlite":
+        await execute(database, "DELETE FROM _admin_sessions WHERE token = ?", token)
+    else:
+        await execute(database, "DELETE FROM _admin_sessions WHERE token = $1", token)
 
 
 @router.post("/login")
