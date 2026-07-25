@@ -224,8 +224,10 @@ def test_order_flow_returns_catalogue_for_menu_command(tmp_path, monkeypatch) ->
                 {"message_id": "m1", "from": "27820000000", "type": "text", "text": "menu", "profile_name": "Alice"},
             )
             assert result["action"] == "catalogue"
-            assert "1. Red Shoes - R350" in result["catalogue"]
-            assert "2. Blue Hat - R120" in result["catalogue"]
+            assert "Red Shoes" in result["catalogue"]
+            assert "R350" in result["catalogue"]
+            assert "Blue Hat" in result["catalogue"]
+            assert "R120" in result["catalogue"]
 
             reply = await build_customer_reply(database, result)
             assert reply is not None

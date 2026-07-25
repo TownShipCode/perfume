@@ -7,8 +7,8 @@ from src.db.connection import Database, execute, fetch_all, fetch_one
 
 
 DEFAULT_TEMPLATES = {
-    "catalogue": "📋 *Available Products*\n\n{catalogue}\n\n_How to order:_\n• Type a product number (e.g. *1*)\n• Then choose your quantity",
-    "welcome_catalogue": "👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_How to order:_\n• Type a product number (e.g. *1*)\n• Then choose your quantity",
+    "catalogue": "📋 *Available Products*\n\n{catalogue}\n\n💡 _How to order:_\n• Pick a product number (e.g. *1*)\n• Choose your quantity\n• Then add more or checkout",
+    "welcome_catalogue": "👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n💡 _How to order:_\n• Pick a product number (e.g. *1*)\n• Choose your quantity\n• Then add more or checkout",
     "product_detail": "{product_name}\n{description}\nPrice: R{price}\n\n_Reply with \"1 {product_name}\" to order._",
     "language_selection": "🌍 Please choose your language:\n🇬🇧 Reply: en for English\n🇿🇦 Reply: zu for isiZulu",
     "language_set": "✅ Language set to {lang}.\n\n👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_Reply with a number to order, e.g. \"1\" for 1x FL 1L._",
@@ -39,6 +39,18 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
 
     settings = get_settings()
     action = result.get("action")
+    if action == "cart_summary":
+        # Interactive buttons: add more items or checkout
+        from src.services.whatsapp_buttons import build_cart_buttons
+        matched = result.get("matched_item") or {}
+        cart = result.get("cart") or {}
+        body = f"🛒 Added {matched.get('quantity', 0)}x *{matched.get('product_name', 'item')}*\nTotal: R{cart.get('total', '0.00')}\n\nWhat would you like to do?"
+        return {
+            "type": "interactive",
+            "payload": build_cart_buttons(body),
+            "fallback_text": f"🛒 Added {matched.get('quantity', 0)}x *{matched.get('product_name', 'item')}*\nTotal: R{cart.get('total', '0.00')}\n\nType CATALOGUE to add more or CHECKOUT to order.",
+        }
+
     if action == "cart_updated":
         matched = result.get("matched_item") or {}
         cart = result.get("cart") or {}

@@ -16,6 +16,7 @@ BUTTON_TO_CMD: dict[str, str] = {
     "help": "help",
     "yes": "yes",
     "no": "no",
+    "add_more": "catalogue",
 }
 
 
@@ -83,5 +84,22 @@ def build_quantity_buttons(body_text: str, quantity_options: tuple[int, ...]) ->
             "type": "button",
             "body": {"text": body_text},
             "action": {"buttons": buttons},
+        },
+    }
+
+
+def build_cart_buttons(body_text: str) -> dict[str, Any]:
+    """Cart summary buttons — add more items or proceed to checkout."""
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body_text},
+            "action": {
+                "buttons": [
+                    {"type": "reply", "reply": {"id": "add_more", "title": "➕ Add More"}},
+                    {"type": "reply", "reply": {"id": "order", "title": "🛒 Checkout"}},
+                ]
+            },
         },
     }

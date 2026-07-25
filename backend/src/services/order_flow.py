@@ -444,7 +444,7 @@ async def _add_pending_to_cart(
     price_map = await _build_price_map(database)
     cart = build_cart(updated_items, price_map)
     return {
-        "action": "cart_updated",
+        "action": "cart_summary",
         "state": updated_session["state"],
         "matched_item": {
             "product_id": pending["id"],

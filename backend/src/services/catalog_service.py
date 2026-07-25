@@ -49,7 +49,16 @@ async def build_catalog_lines(database: Database) -> list[str]:
     products = await list_active_products(database)
     lines: list[str] = []
     for product in products:
-        lines.append(f"{product['product_number']}. {product['name']} - R{product['price']}")
+        num = product["product_number"]
+        name = product["name"]
+        price = product["price"]
+        desc = (product.get("description") or "").strip()
+
+        lines.append(f"*{num}.* {name}")
+        if desc:
+            short_desc = desc[:80] + "…" if len(desc) > 80 else desc
+            lines.append(f"    _{short_desc}_")
+        lines.append(f"    💰 R{price}")
     return lines
 
 
