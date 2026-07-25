@@ -6,6 +6,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from src.api.analytics import router as analytics_routes
 from src.api.auth import router as auth_routes
@@ -53,6 +54,11 @@ app.include_router(order_routes)
 app.include_router(customer_routes)
 app.include_router(template_routes)
 app.include_router(webhook_routes)
+
+# Serve static files (product images, etc.)
+_static_dir = Path(__file__).resolve().parent.parent / "static"
+if _static_dir.is_dir():
+    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
 
 @app.get("/")
