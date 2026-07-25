@@ -182,6 +182,11 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
     if action == "checkout_blocked":
         return {"text": await render_template(database, "checkout_blocked")}
 
+    if action == "product_not_found":
+        attempted = result.get("attempted_number", "?")
+        catalogue = result.get("catalogue", "")
+        return {"text": f"❓ Product #{attempted} not found.\n\nHere's what's available:\n\n{catalogue}\n\n_Type a number to select a product._"}
+
     if action == "unmatched":
         return {"text": await render_template(database, "unmatched")}
 

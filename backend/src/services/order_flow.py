@@ -178,7 +178,14 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
                 "product_name": product["name"],
                 "price": str(product["price"]),
             }
-        # digit didn't match a product — fall through to welcome
+        # Product number doesn't exist — show what IS available
+        lines = await build_catalog_lines(database)
+        return {
+            "action": "product_not_found",
+            "state": session.get("state", State.IDLE),
+            "attempted_number": int(text),
+            "catalogue": "\n".join(lines) if lines else "No products available right now.",
+        }
 
     keyword_map = await get_keyword_map(database)
     parsed = parse_order(text, keyword_map)
