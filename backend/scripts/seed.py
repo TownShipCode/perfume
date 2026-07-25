@@ -21,7 +21,7 @@ PRODUCT_KEYWORDS = {
 }
 
 MESSAGE_TEMPLATES = {
-    "welcome": "Welcome to {store_name}. Reply with a quantity and product name, for example: 2 shoes.",
+    "welcome": "Welcome to {store_name}. Reply with a quantity and product name, for example: 1 FL 1L.",
     "cart_update": "Added {quantity}x {product_name}. Total: {total} {currency}.",
     "address_request": "I need your delivery address. First: what is your area?",
     "address_confirmation": "Address saved: {full_address}. Is this correct?",
@@ -29,8 +29,8 @@ MESSAGE_TEMPLATES = {
     "pop_received": "POP received. We will confirm your order shortly.",
     "address_request_street": "Thanks. Now send your STREET and HOUSE NUMBER.",
     "address_request_city": "Thanks. Now send your CITY.",
-    "checkout_blocked": "Your cart is empty. Add a product first, for example: 2 shoes.",
-    "unmatched": "I could not match that product. Try something like: 2 shoes or 1 hat.",
+    "checkout_blocked": "Your cart is empty. Add a product first, for example: 1 FL 1L.",
+    "unmatched": "I could not match that product. Try something like: 1 FL 1L or 1 focus logic.",
     "awaiting_pop": "Your order is waiting for POP. Please send your POP image.",
     "address_confirmation_pending": "Please reply YES to use your saved address, or NO to enter a new one.",
     "manufacturer_forward": "NEW ORDER {order_number}\nCustomer: {customer_name}\nPhone: {phone_number}\nAddress: {full_address}\nItems:\n{items}\nTotal: {total} {currency}\nPOP: {pop_image_url}",

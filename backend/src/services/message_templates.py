@@ -25,8 +25,8 @@ DEFAULT_TEMPLATES = {
     "address_confirmation_pending": "Please reply YES to use your saved address, or NO to enter a new one.",
     "order_final": "Order {order_number} confirmed.\nSubtotal: {subtotal} {currency}\nDelivery: {shipping_line}\nTotal: {total} {currency}\nPlease send your POP image.",
     "pop_received": "POP received. We will confirm your order shortly.",
-    "checkout_blocked": "Your cart is empty. Add a product first, for example: 2 shoes.",
-    "unmatched": "I could not match that product. Try something like: 2 shoes or 1 hat.",
+    "checkout_blocked": "Your cart is empty. Add a product first, for example: 1 FL 1L.",
+    "unmatched": "I could not match that product. Try something like: 1 FL 1L or 1 focus logic.",
     "awaiting_pop": "Your order is waiting for POP. Please send your POP image.",
     "order_cancelled": "Your order has been cancelled. Reply with anything to start again.",
     "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *ADDRESS:* {full_address}\n➡️ *CELL NO:* {phone_number}\n➡️ *QUANTITY:*\n{items}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *COURIER:* {courier_name}\n\nOrder: {order_number}\nTotal: {total} {currency}\nBioMed payment: R{fl_amount}\nPOP: {fl_pop_url}",
@@ -53,24 +53,30 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         return {"text": text}
 
     if action == "catalogue":
+        image_url = result.get("image_url")
+        text = await render_template(
+            database,
+            "catalogue",
+            catalogue=result.get("catalogue", "No products available right now."),
+        )
         return {
-            "text": await render_template(
-                database,
-                "catalogue",
-                catalogue=result.get("catalogue", "No products available right now."),
-            )
+            "text": text,
+            **({"image_url": image_url} if image_url else {}),
         }
 
     if action == "welcome_catalogue":
         customer_name = result.get("customer_name") or ""
         prefix = f" {customer_name}" if customer_name else ""
+        image_url = result.get("image_url")
+        text = await render_template(
+            database,
+            "welcome_catalogue",
+            customer_name=prefix,
+            catalogue=result.get("catalogue", "No products available right now."),
+        )
         return {
-            "text": await render_template(
-                database,
-                "welcome_catalogue",
-                customer_name=prefix,
-                catalogue=result.get("catalogue", "No products available right now."),
-            )
+            "text": text,
+            **({"image_url": image_url} if image_url else {}),
         }
 
     if action == "address_collection_started":
@@ -157,12 +163,15 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
     if action == "language_set":
         customer_name = result.get("customer_name") or ""
         prefix = f" {customer_name}" if customer_name else ""
-        return {"text": await render_template(
-            database, "language_set",
+        image_url = result.get("image_url")
+        text = await render_template(
+            database,
+            "language_set",
             lang=result.get("language", "en"),
             customer_name=prefix,
             catalogue=result.get("catalogue", "No products available right now."),
-        )}
+        )
+        return {"text": text, **({"image_url": image_url} if image_url else {})}
 
     return None
 

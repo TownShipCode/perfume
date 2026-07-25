@@ -15,6 +15,10 @@ async def deliver_reply(event: dict[str, Any], reply: dict[str, str] | None) -> 
     if not recipient:
         return {"status": "skipped", "reason": "missing_recipient"}
 
+    image_url = reply.get("image_url")
+    if image_url:
+        return await send_image_message(recipient, image_url, caption=reply.get("text"))
+
     return await _send(settings, recipient, reply["text"])
 
 

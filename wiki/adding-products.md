@@ -62,10 +62,11 @@ Images must be publicly accessible URLs (WhatsApp fetches them). Current approac
 - **Production**: Serve from Railway at `https://biomed-production.up.railway.app/static/<filename>`
 - **Add image**: Drop file in `backend/static/`, it auto-deploys with Railway
 - **Alternative**: Vercel Blob (`npx vercel blob put` from `dashboard/`)
+- The catalogue flow now attaches the first available product image to the WhatsApp catalogue reply as a captioned image, so seeding `image_url` is enough for the live flow to show it.
 
 ## Keyword tips
 
-- Keywords are what users type to match products (e.g., "2 shoes" matches keyword "shoes")
+- Keywords are what users type to match products (e.g., "1 FL 1L" matches keyword "fl 1l")
 - Include common misspellings and shorthand
 - Longer keywords are matched first (e.g., "focus logic 1l" before "focus")
 - Add the product number as a keyword if users might order by number

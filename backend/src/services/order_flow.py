@@ -7,7 +7,7 @@ from src.config import Settings, get_settings
 from src.db.connection import Database
 from src.models.cart import CartItem
 from src.services.cart_service import add_item_to_cart, build_cart
-from src.services.catalog_service import build_catalog_lines, get_keyword_map, get_product_by_number
+from src.services.catalog_service import build_catalog_lines, get_keyword_map, get_product_by_number, list_active_products
 from src.services.customer_service import get_customer_by_phone, get_or_create_customer, save_customer_profile, set_customer_language
 from src.services.order_service import create_order, get_latest_open_order, record_pop_received
 from src.services.order_parser import parse_order
@@ -26,6 +26,15 @@ ADDRESS_STEPS = [
 ]
 
 logger = logging.getLogger(__name__)
+
+
+async def _get_catalogue_image_url(database: Database) -> str | None:
+    products = await list_active_products(database)
+    for product in products:
+        image_url = product.get("image_url")
+        if image_url:
+            return str(image_url)
+    return None
 
 
 async def handle_text_message(database: Database, event: dict) -> dict[str, object]:
@@ -55,19 +64,23 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
             updated_session = await save_session_state(database, phone_number, state=State.LANGUAGE_SELECTION, cart=cart_items, current_step=0, temp_address=None)
             return {"action": "language_selection", "state": updated_session["state"]}
         lines = await build_catalog_lines(database)
+        image_url = await _get_catalogue_image_url(database)
         return {
             "action": "welcome_catalogue",
             "state": session.get("state", State.IDLE),
             "customer_name": customer.get("name"),
             "catalogue": "\n".join(lines) if lines else "No products available right now.",
+            "image_url": image_url,
         }
 
     if lowered in settings.whatsapp_catalog_commands:
         lines = await build_catalog_lines(database)
+        image_url = await _get_catalogue_image_url(database)
         return {
             "action": "catalogue",
             "state": session.get("state", State.IDLE),
             "catalogue": "\n".join(lines) if lines else "No products available right now.",
+            "image_url": image_url,
         }
 
     # If the user types a language code outside LANGUAGE_SELECTION state,
@@ -75,13 +88,14 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
     # of falling through to the "unmatched" order parser.
     if lowered in settings.supported_languages:
         lines = await build_catalog_lines(database)
+        image_url = await _get_catalogue_image_url(database)
         customer_name = customer.get("name") or ""
-        prefix = f" {customer_name}" if customer_name else ""
         return {
             "action": "welcome_catalogue",
             "state": session.get("state", State.IDLE),
             "customer_name": customer_name,
             "catalogue": "\n".join(lines) if lines else "No products available right now.",
+            "image_url": image_url,
         }
 
     if session.get("state") == State.ADDRESS_COLLECTION:
@@ -191,6 +205,7 @@ async def _handle_language_selection(
         )
         lines = await build_catalog_lines(database)
         catalogue = "\n".join(lines) if lines else "No products available right now."
+        image_url = await _get_catalogue_image_url(database)
         customer_name = customer.get("name") or ""
         return {
             "action": "language_set",
@@ -198,6 +213,7 @@ async def _handle_language_selection(
             "state": State.IDLE,
             "customer_name": customer_name,
             "catalogue": catalogue,
+            "image_url": image_url,
         }
     return {"action": "language_selection", "state": State.LANGUAGE_SELECTION}
 
