@@ -41,6 +41,16 @@ def verify_signature(body: bytes, signature: str | None, settings: Settings) -> 
 
 
 def extract_message_event(payload: dict[str, Any]) -> dict[str, Any] | None:
+    # Kapso v2 batch format: {"batch": true, "data": [{"message": {...}, "contact": {...}}]}
+    if payload.get("batch") and isinstance(payload.get("data"), list):
+        for item in payload["data"]:
+            message = item.get("message")
+            contact = item.get("contact")
+            if message:
+                return _normalize_message(message, contact)
+        return None
+
+    # Direct format: {"messages": [...], "contacts": [...]}
     direct_messages = payload.get("messages")
     if isinstance(direct_messages, list) and direct_messages:
         message = direct_messages[0]
@@ -50,6 +60,7 @@ def extract_message_event(payload: dict[str, Any]) -> dict[str, Any] | None:
             contact = contacts[0]
         return _normalize_message(message, contact)
 
+    # Meta nested format: {"entry": [{"changes": [{"value": {"messages": [...]}}]}]}
     entries = payload.get("entry")
     if not isinstance(entries, list):
         return None
