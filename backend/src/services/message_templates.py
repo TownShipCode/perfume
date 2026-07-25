@@ -11,11 +11,16 @@ DEFAULT_TEMPLATES = {
     "welcome_catalogue": "Hi{customer_name}! Here is our catalogue:\n{catalogue}\n\nReply with something like: 2 shoes",
     "product_detail": "{product_name}\n{description}\nPrice: {price} {currency}\n\nReply with \"1 {product_name}\" to order.",
     "language_selection": "Please choose your language:\nReply: en for English\nReply: zu for isiZulu",
-    "language_set": "Language set to {language}. Reply to continue.",
+    "language_set": "Language set to {lang}. Reply to continue.",
     "cart_update": "Added {quantity}x {product_name}. Total: {total} {currency}.",
-    "address_request": "I need your delivery address. First: what is your area?",
+    "address_request_surname": "What is your SURNAME?",
+    "address_request": "What is your AREA?",
     "address_request_street": "Thanks. Now send your STREET and HOUSE NUMBER.",
     "address_request_city": "Thanks. Now send your CITY.",
+    "address_request_postal_code": "Thanks. Now send your POSTAL CODE.",
+    "address_request_email": "Thanks. Now send your EMAIL address.",
+    "address_request_province": "Thanks. Now send your PROVINCE.",
+    "profile_confirmation": "Your profile:\nName: {customer_name}\nSurname: {surname}\nAddress: {full_address}\nEmail: {email}\nProvince: {province}\n\nIs this correct?",
     "address_confirmation": "Address saved: {full_address}. Is this correct?",
     "address_confirmation_pending": "Please reply YES to use your saved address, or NO to enter a new one.",
     "order_final": "Order {order_number} confirmed.\nSubtotal: {subtotal} {currency}\nDelivery: {shipping_line}\nTotal: {total} {currency}\nPlease send your POP image.",
@@ -24,7 +29,7 @@ DEFAULT_TEMPLATES = {
     "unmatched": "I could not match that product. Try something like: 2 shoes or 1 hat.",
     "awaiting_pop": "Your order is waiting for POP. Please send your POP image.",
     "order_cancelled": "Your order has been cancelled. Reply with anything to start again.",
-    "manufacturer_forward": "NEW ORDER {order_number}\nCustomer: {customer_name}\nPhone: {phone_number}\nAddress: {full_address}\nItems:\n{items}\nTotal: {total} {currency}\nPOP: {pop_image_url}",
+    "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *ADDRESS:* {full_address}\n➡️ *CELL NO:* {phone_number}\n➡️ *QUANTITY:*\n{items}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *COURIER:* {courier_name}\n\nOrder: {order_number}\nTotal: {total} {currency}\nBioMed payment: R{fl_amount}\nPOP: {fl_pop_url}",
 }
 
 
@@ -69,20 +74,33 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         }
 
     if action == "address_collection_started":
-        prompt = result.get("prompt") or await render_template(database, "address_request")
+        prompt = result.get("prompt") or await render_template(database, "address_request_surname")
         return {"text": prompt}
 
     if action == "address_collection_progress":
         current_step = result.get("current_step")
-        key = "address_request_street" if current_step == 1 else "address_request_city"
+        step_key_map = {
+            0: "address_request_surname",
+            1: "address_request",
+            2: "address_request_street",
+            3: "address_request_city",
+            4: "address_request_postal_code",
+            5: "address_request_email",
+            6: "address_request_province",
+        }
+        key = step_key_map.get(current_step, "address_request")
         return {"text": await render_template(database, key)}
 
     if action == "address_confirmation_requested":
         return {
             "text": await render_template(
                 database,
-                "address_confirmation",
+                "profile_confirmation",
+                customer_name=result.get("customer_name", ""),
+                surname=result.get("surname", ""),
                 full_address=result.get("address", ""),
+                email=result.get("email", ""),
+                province=result.get("province", ""),
             )
         }
 
@@ -137,7 +155,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         return {"text": await render_template(database, "language_selection")}
 
     if action == "language_set":
-        return {"text": await render_template(database, "language_set", language=result.get("language", "en"))}
+        return {"text": await render_template(database, "language_set", lang=result.get("language", "en"))}
 
     return None
 
