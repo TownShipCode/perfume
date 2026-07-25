@@ -27,7 +27,7 @@ DEFAULT_TEMPLATES = {
     "pop_received": "📸 *POP received!* We will confirm your order shortly.",
     "checkout_blocked": "🛒 Your cart is empty. Add a product first — reply with a number like *1*.",
     "unmatched": "❓ I couldn't match that.\n\nType *CATALOGUE* to see products, or a product number like *1* to start ordering.",
-    "awaiting_pop": "⏳ Your order is waiting for POP. Please send your proof of payment.",
+    "awaiting_pop": "⏳ Your order is waiting for POP (proof of payment).\n\n📸 Please send your POP image to confirm.\n🗑️ Type *CANCEL* to cancel this order.\n\n_Your order will expire in {expiry_hours}h if no POP is received._",
     "order_cancelled": "🗑️ Your order has been cancelled. Reply with anything to start again.",
     "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *ADDRESS:* {full_address}\n➡️ *CELL NO:* {phone_number}\n➡️ *QUANTITY:*\n{items}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *COURIER:* {courier_name}\n\nOrder: {order_number}\nTotal: R{total}\nBioMed payment: R{fl_amount}\nPOP: {fl_pop_url}",
 }
@@ -203,7 +203,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         return {"text": await render_template(database, "unmatched")}
 
     if action == "awaiting_pop":
-        return {"text": await render_template(database, "awaiting_pop")}
+        return {"text": await render_template(database, "awaiting_pop", expiry_hours=str(settings.pop_expiry_hours))}
 
     if action == "order_cancelled":
         return {"text": await render_template(database, "order_cancelled")}

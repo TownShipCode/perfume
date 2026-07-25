@@ -108,19 +108,23 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
     if session.get("state") == State.ADDRESS_CONFIRMATION:
         return await _handle_profile_confirmation(database, customer, session, cart_items, lowered)
 
-    if session.get("state") == State.POP_WAITING:
-        return {"action": "awaiting_pop", "state": State.POP_WAITING}
-
     if lowered in settings.whatsapp_cancel_commands:
-        updated_session = await save_session_state(
-            database,
-            phone_number,
-            state=State.IDLE,
-            cart=[],
-            current_step=0,
-            temp_address=None,
-        )
-        return {"action": "order_cancelled", "state": updated_session["state"]}
+        await _cancel_order(database, phone_number)
+        return {"action": "order_cancelled", "state": State.IDLE}
+
+    # In POP_WAITING, allow cancel/checkout above, otherwise remind
+    if session.get("state") == State.POP_WAITING:
+        # Let them browse catalogue while waiting
+        if lowered in settings.whatsapp_catalog_commands:
+            lines = await build_catalog_lines(database)
+            image_url = await _get_catalogue_image_url(database)
+            return {
+                "action": "catalogue",
+                "state": State.POP_WAITING,
+                "catalogue": "\n".join(lines) if lines else "No products available right now.",
+                "image_url": image_url,
+            }
+        return {"action": "awaiting_pop", "state": State.POP_WAITING}
 
     if lowered in settings.whatsapp_checkout_commands:
         if not cart_items:
@@ -455,6 +459,18 @@ async def _add_pending_to_cart(
         },
         "cart": _serialize_cart(cart),
     }
+
+
+async def _cancel_order(database: Database, phone_number: str) -> None:
+    """Cancel any pending POP order and reset session."""
+    from src.services.order_service import cancel_pending_pop_order
+
+    await cancel_pending_pop_order(database, phone_number)
+    await save_session_state(
+        database, phone_number,
+        state=State.IDLE, cart=[],
+        current_step=0, temp_address=None,
+    )
 
 
 async def handle_image_message(database: Database, event: dict) -> dict[str, object]:

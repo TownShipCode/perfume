@@ -275,6 +275,33 @@ async def record_order_forwarding(
     return await get_order_by_id(database, order_id)
 
 
+async def cancel_pending_pop_order(database: Database, phone_number: str) -> None:
+    """Cancel the latest pop_waiting order for a customer, if any."""
+    if database.mode == "postgres":
+        await execute(
+            database,
+            """
+            UPDATE orders SET status = 'cancelled', updated_at = NOW()
+            WHERE customer_id = (SELECT id FROM customers WHERE phone_number = $1)
+              AND status = 'pop_waiting'
+              AND id = (SELECT id FROM orders WHERE customer_id = (SELECT id FROM customers WHERE phone_number = $1) AND status = 'pop_waiting' ORDER BY created_at DESC LIMIT 1)
+            """,
+            phone_number,
+        )
+    else:
+        await execute(
+            database,
+            """
+            UPDATE orders SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP
+            WHERE customer_id = (SELECT id FROM customers WHERE phone_number = ?)
+              AND status = 'pop_waiting'
+              AND id = (SELECT id FROM orders WHERE customer_id = (SELECT id FROM customers WHERE phone_number = ?) AND status = 'pop_waiting' ORDER BY created_at DESC LIMIT 1)
+            """,
+            phone_number,
+            phone_number,
+        )
+
+
 async def expire_stale_pop_orders(database: Database, pop_expiry_hours: int) -> int:
     cutoff = datetime.now(timezone.utc) - timedelta(hours=pop_expiry_hours)
     if database.mode == "postgres":
