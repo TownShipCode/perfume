@@ -7,29 +7,29 @@ from src.db.connection import Database, execute, fetch_all, fetch_one
 
 
 DEFAULT_TEMPLATES = {
-    "catalogue": "Available products:\n{catalogue}\n\nReply with a number to order, e.g. \"1\" for 1x FL 1L.",
-    "welcome_catalogue": "Hi{customer_name}! Here is our catalogue:\n{catalogue}\n\nReply with a number to order, e.g. \"1\" for 1x FL 1L.",
-    "product_detail": "{product_name}\n{description}\nPrice: {price} {currency}\n\nReply with \"1 {product_name}\" to order.",
-    "language_selection": "Please choose your language:\nReply: en for English\nReply: zu for isiZulu",
-    "language_set": "Language set to {lang}.\n\nHi{customer_name}! Here is our catalogue:\n{catalogue}\n\nReply with a number to order, e.g. \"1\" for 1x FL 1L.",
-    "cart_update": "Added {quantity}x {product_name}. Total: {total} {currency}.",
-    "address_request_surname": "What is your SURNAME?",
-    "address_request": "What is your AREA?",
-    "address_request_street": "Thanks. Now send your STREET and HOUSE NUMBER.",
-    "address_request_city": "Thanks. Now send your CITY.",
-    "address_request_postal_code": "Thanks. Now send your POSTAL CODE.",
-    "address_request_email": "Thanks. Now send your EMAIL address.",
-    "address_request_province": "Thanks. Now send your PROVINCE.",
-    "profile_confirmation": "Your profile:\nName: {customer_name}\nSurname: {surname}\nAddress: {full_address}\nEmail: {email}\nProvince: {province}\n\nIs this correct?",
-    "address_confirmation": "Address saved: {full_address}. Is this correct?",
-    "address_confirmation_pending": "Please reply YES to use your saved address, or NO to enter a new one.",
-    "order_final": "Order {order_number} confirmed.\nSubtotal: {subtotal} {currency}\nDelivery: {shipping_line}\nTotal: {total} {currency}\nPlease send your POP image.",
-    "pop_received": "POP received. We will confirm your order shortly.",
-    "checkout_blocked": "Your cart is empty. Add a product first, for example: 1 FL 1L.",
-    "unmatched": "I could not match that product. Try something like: 1 FL 1L or 1 focus logic.",
-    "awaiting_pop": "Your order is waiting for POP. Please send your POP image.",
-    "order_cancelled": "Your order has been cancelled. Reply with anything to start again.",
-    "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *ADDRESS:* {full_address}\n➡️ *CELL NO:* {phone_number}\n➡️ *QUANTITY:*\n{items}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *COURIER:* {courier_name}\n\nOrder: {order_number}\nTotal: {total} {currency}\nBioMed payment: R{fl_amount}\nPOP: {fl_pop_url}",
+    "catalogue": "📋 *Available Products*\n\n{catalogue}\n\n_How to order:_\n• Type a number for 1 unit (e.g. *1*)\n• Or quantity + name (e.g. *3 FL 1L*)",
+    "welcome_catalogue": "👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_How to order:_\n• Type a number for 1 unit (e.g. *1*)\n• Or quantity + name (e.g. *3 FL 1L*)",
+    "product_detail": "{product_name}\n{description}\nPrice: R{price}\n\n_Reply with \"1 {product_name}\" to order._",
+    "language_selection": "🌍 Please choose your language:\n🇬🇧 Reply: en for English\n🇿🇦 Reply: zu for isiZulu",
+    "language_set": "✅ Language set to {lang}.\n\n👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_Reply with a number to order, e.g. \"1\" for 1x FL 1L._",
+    "cart_update": "🛒 Added {quantity}x *{product_name}*\nTotal: R{total}",
+    "address_request_name": "👤 *Step 1/7* — What is your FIRST NAME?",
+    "address_request_surname": "📝 *Step 2/7* — What is your SURNAME?",
+    "address_request": "📍 *Step 3/7* — What is your AREA?",
+    "address_request_street": "🏠 *Step 4/7* — Now send your STREET and HOUSE NUMBER.",
+    "address_request_city": "🏙️ *Step 5/7* — Now send your CITY.",
+    "address_request_postal_code": "📮 *Step 6/7* — Now send your POSTAL CODE.",
+    "address_request_province": "🗺️ *Step 7/7* — Now send your PROVINCE.",
+    "profile_confirmation": "📋 *Your Profile*\n\n👤 Name: {customer_name}\n📝 Surname: {surname}\n📍 Address: {full_address}\n️ Province: {province}\n\nIs this correct?",
+    "address_confirmation": "✅ Address saved: {full_address}. Is this correct?",
+    "address_confirmation_pending": "Please reply *YES* to use your saved address, or *NO* to enter a new one.",
+    "order_final": "✅ *Order #{order_number} Confirmed*\n\nSubtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\n📸 Please send your POP (proof of payment).",
+    "pop_received": "📸 *POP received!* We will confirm your order shortly.",
+    "checkout_blocked": "🛒 Your cart is empty. Add a product first — reply with a number like *1*.",
+    "unmatched": "❓ I couldn't match that.\n\nType *CATALOGUE* to see products, or a number like *1* to add to cart.\nOr order with quantity: e.g. *3 FL 1L*",
+    "awaiting_pop": "⏳ Your order is waiting for POP. Please send your proof of payment.",
+    "order_cancelled": "🗑️ Your order has been cancelled. Reply with anything to start again.",
+    "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *ADDRESS:* {full_address}\n➡️ *CELL NO:* {phone_number}\n➡️ *QUANTITY:*\n{items}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *COURIER:* {courier_name}\n\nOrder: {order_number}\nTotal: R{total}\nBioMed payment: R{fl_amount}\nPOP: {fl_pop_url}",
 }
 
 
@@ -79,23 +79,70 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
             **({"image_url": image_url} if image_url else {}),
         }
 
+    if action == "interactive_welcome":
+        # Send tappable WhatsApp buttons instead of plain text
+        from src.services.whatsapp_buttons import build_welcome_buttons
+        customer_name = result.get("customer_name") or ""
+        greeting = f" {customer_name}" if customer_name else ""
+        body = result.get("greeting") or f"👋 Hi{greeting}! Welcome to BioMed. What would you like to do?"
+        return {
+            "type": "interactive",
+            "payload": build_welcome_buttons(body),
+            "fallback_text": await render_template(
+                database,
+                "welcome_catalogue",
+                customer_name=greeting,
+                catalogue=result.get("catalogue", "No products available right now."),
+            ),
+        }
+
+    if action == "quantity_selection":
+        # Send quantity buttons after product selection
+        from src.services.whatsapp_buttons import build_quantity_buttons
+        settings = get_settings()
+        product_name = result.get("product_name", "item")
+        price = result.get("price", "0")
+        body = f"🛒 *{product_name}* — R{price}\n\nHow many would you like?\nType a number or tap:"
+        return {
+            "type": "interactive",
+            "payload": build_quantity_buttons(body, settings.quantity_options),
+            "fallback_text": f"🛒 *{product_name}* — R{price}\n\nHow many? Type a number (e.g. 2).",
+        }
+
     if action == "address_collection_started":
-        prompt = result.get("prompt") or await render_template(database, "address_request_surname")
+        prompt = result.get("prompt") or await render_template(database, "address_request_name")
         return {"text": prompt}
 
     if action == "address_collection_progress":
         current_step = result.get("current_step")
         step_key_map = {
-            0: "address_request_surname",
-            1: "address_request",
-            2: "address_request_street",
-            3: "address_request_city",
-            4: "address_request_postal_code",
-            5: "address_request_email",
+            0: "address_request_name",
+            1: "address_request_surname",
+            2: "address_request",
+            3: "address_request_street",
+            4: "address_request_city",
+            5: "address_request_postal_code",
             6: "address_request_province",
         }
         key = step_key_map.get(current_step, "address_request")
         return {"text": await render_template(database, key)}
+
+    if action == "interactive_address_confirm":
+        # Send Yes/No buttons for address confirmation (miana pattern)
+        from src.services.whatsapp_buttons import build_confirm_buttons
+        body = await render_template(
+            database,
+            "profile_confirmation",
+            customer_name=result.get("customer_name", ""),
+            surname=result.get("surname", ""),
+            full_address=result.get("address", ""),
+            province=result.get("province", ""),
+        )
+        return {
+            "type": "interactive",
+            "payload": build_confirm_buttons(body),
+            "fallback_text": body + "\n\nReply YES or NO.",
+        }
 
     if action == "address_confirmation_requested":
         return {
@@ -105,7 +152,6 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
                 customer_name=result.get("customer_name", ""),
                 surname=result.get("surname", ""),
                 full_address=result.get("address", ""),
-                email=result.get("email", ""),
                 province=result.get("province", ""),
             )
         }

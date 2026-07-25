@@ -16,13 +16,13 @@ from src.services.state_machine import State
 
 
 ADDRESS_STEPS = [
-    ("surname", "What is your SURNAME?"),
-    ("area", "What is your AREA?"),
-    ("street", "What is your STREET and HOUSE NUMBER?"),
-    ("city", "What is your CITY?"),
-    ("postal_code", "What is your POSTAL CODE?"),
-    ("email", "What is your EMAIL address?"),
-    ("province", "What is your PROVINCE?"),
+    ("name", "👤 *Step 1/7* — What is your FIRST NAME?"),
+    ("surname", "📝 *Step 2/7* — What is your SURNAME?"),
+    ("area", "📍 *Step 3/7* — What is your AREA?"),
+    ("street", "🏠 *Step 4/7* — Now send your STREET and HOUSE NUMBER."),
+    ("city", "🏙️ *Step 5/7* — Now send your CITY."),
+    ("postal_code", "📮 *Step 6/7* — Now send your POSTAL CODE."),
+    ("province", "🗺️ *Step 7/7* — Now send your PROVINCE."),
 ]
 
 logger = logging.getLogger(__name__)
@@ -56,22 +56,16 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
         customer.get("language") or "(none)",
     )
 
+    # ── LANGUAGE_SELECTION disabled — default language auto-assigned ──
+    # Safety net: users who might still have LANGUAGE_SELECTION in DB
+    # get auto-migrated to IDLE with default language.
     if session.get("state") == State.LANGUAGE_SELECTION:
-        return await _handle_language_selection(database, customer, session, lowered)
-
-    if lowered in settings.whatsapp_greeting_commands:
-        if not customer.get("language"):
-            updated_session = await save_session_state(database, phone_number, state=State.LANGUAGE_SELECTION, cart=cart_items, current_step=0, temp_address=None)
-            return {"action": "language_selection", "state": updated_session["state"]}
-        lines = await build_catalog_lines(database)
-        image_url = await _get_catalogue_image_url(database)
-        return {
-            "action": "welcome_catalogue",
-            "state": session.get("state", State.IDLE),
-            "customer_name": customer.get("name"),
-            "catalogue": "\n".join(lines) if lines else "No products available right now.",
-            "image_url": image_url,
-        }
+        await set_customer_language(database, phone_number, settings.default_language)
+        await save_session_state(
+            database, phone_number,
+            state=State.IDLE, cart=session.get("cart", []),
+            current_step=0, temp_address=session.get("temp_address"),
+        )
 
     if lowered in settings.whatsapp_catalog_commands:
         lines = await build_catalog_lines(database)
@@ -83,10 +77,11 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
             "image_url": image_url,
         }
 
-    # If the user types a language code outside LANGUAGE_SELECTION state,
-    # they've likely already set their language — show the catalogue instead
-    # of falling through to the "unmatched" order parser.
+    # Language codes: auto-set language, then show catalogue
     if lowered in settings.supported_languages:
+        if not customer.get("language") or customer.get("language") != lowered:
+            await set_customer_language(database, phone_number, lowered)
+            customer["language"] = lowered
         lines = await build_catalog_lines(database)
         image_url = await _get_catalogue_image_url(database)
         customer_name = customer.get("name") or ""
@@ -145,12 +140,11 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
         cart = build_cart(cart_items, price_map)
         if next_state == State.ADDRESS_CONFIRMATION:
             return {
-                "action": "address_confirmation_requested",
+                "action": "interactive_address_confirm",
                 "state": updated_session["state"],
                 "customer_name": customer.get("name", ""),
                 "surname": customer.get("surname", ""),
                 "address": customer.get("full_address"),
-                "email": customer.get("email", ""),
                 "province": customer.get("province", ""),
                 "cart": _serialize_cart(cart),
             }
@@ -161,42 +155,50 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
             "cart": _serialize_cart(cart),
         }
 
-    # Bare number shortcut: "1" → product #1, "2" → product #2
+    # Bare number shortcut or quantity input
     if text.isdigit():
+        qty = int(text)
+        # Check if user is responding to a quantity prompt
+        pending_raw = session.get("temp_address")
+        if isinstance(pending_raw, dict) and pending_raw.get("__pending_product__"):
+            pending = pending_raw["__pending_product__"]
+            return await _add_pending_to_cart(database, phone_number, session, cart_items, pending, qty)
+
+        # New product selection: save pending, ask for quantity
         product = await get_product_by_number(database, int(text))
         if product:
-            updated_items = add_item_to_cart(cart_items, product["id"], 1)
-            updated_session = await save_session_state(
+            await save_session_state(
                 database, phone_number,
-                state=State.ORDERING, cart=updated_items,
-                current_step=session.get("current_step", 0),
-                temp_address=session.get("temp_address"),
+                state=State.ORDERING, cart=cart_items,
+                current_step=0,
+                temp_address={"__pending_product__": {"id": product["id"], "name": product["name"], "price": str(product["price"])}},
             )
-            price_map = await _build_price_map(database)
-            cart = build_cart(updated_items, price_map)
             return {
-                "action": "cart_updated",
-                "state": updated_session["state"],
-                "matched_item": {
-                    "product_id": product["id"],
-                    "product_number": int(text),
-                    "product_name": product["name"],
-                    "quantity": 1,
-                    "matched_keyword": f"#{text}",
-                    "unit_price": product["price"],
-                },
-                "cart": _serialize_cart(cart),
+                "action": "quantity_selection",
+                "product_name": product["name"],
+                "price": str(product["price"]),
             }
-        # digit didn't match a product — fall through to unmatched
+        # digit didn't match a product — fall through to welcome
 
     keyword_map = await get_keyword_map(database)
     parsed = parse_order(text, keyword_map)
     if parsed is None:
         logger.warning(
-            "handle_text_message | UNMATCHED phone=%s state=%s text=%s",
+            "handle_text_message | UNMATCHED→WELCOME phone=%s state=%s text=%s",
             phone_number[-4:], session.get("state"), text[:60],
         )
-        return {"action": "unmatched", "state": session.get("state", State.IDLE), "text": text}
+        # Any unrecognized text triggers interactive welcome — no gatekeeping
+        if not customer.get("language"):
+            await set_customer_language(database, phone_number, settings.default_language)
+            customer["language"] = settings.default_language
+        customer_name = customer.get("name") or ""
+        greeting = f" {customer_name}" if customer_name else ""
+        return {
+            "action": "interactive_welcome",
+            "state": session.get("state", State.IDLE),
+            "customer_name": customer_name,
+            "greeting": f"👋 Hi{greeting}! Welcome to BioMed. What would you like to do?",
+        }
 
     updated_items = add_item_to_cart(cart_items, parsed["product_id"], parsed["quantity"])
     updated_session = await save_session_state(
@@ -279,11 +281,11 @@ async def _handle_address_collection(
     updated_customer = await save_customer_profile(
         database,
         phone_number,
+        name=temp_address.get("name", ""),
         area=temp_address["area"],
         street=temp_address["street"],
         city=temp_address["city"],
         postal_code=temp_address.get("postal_code", ""),
-        email=temp_address.get("email", ""),
         province=temp_address.get("province", ""),
         surname=temp_address.get("surname", ""),
     )
@@ -401,6 +403,50 @@ def _serialize_cart(cart) -> dict[str, object]:
     return {
         "items": items,
         "total": str(cart.total),
+    }
+
+
+async def _add_pending_to_cart(
+    database: Database,
+    phone_number: str,
+    session: dict,
+    cart_items: list[CartItem],
+    pending: dict,
+    quantity: int,
+) -> dict[str, object]:
+    """Add pending product to cart with specified quantity, then clear pending state."""
+    if quantity <= 0:
+        # Invalid quantity — clear pending, show welcome
+        await save_session_state(
+            database, phone_number,
+            state=State.IDLE, cart=cart_items,
+            current_step=0, temp_address=None,
+        )
+        return {
+            "action": "interactive_welcome",
+            "customer_name": "",
+            "greeting": "👋 Welcome to BioMed. What would you like to do?",
+        }
+
+    updated_items = add_item_to_cart(cart_items, pending["id"], quantity)
+    updated_session = await save_session_state(
+        database, phone_number,
+        state=State.ORDERING, cart=updated_items,
+        current_step=0, temp_address=None,
+    )
+    price_map = await _build_price_map(database)
+    cart = build_cart(updated_items, price_map)
+    return {
+        "action": "cart_updated",
+        "state": updated_session["state"],
+        "matched_item": {
+            "product_id": pending["id"],
+            "product_name": pending["name"],
+            "quantity": quantity,
+            "matched_keyword": "quantity_select",
+            "unit_price": pending["price"],
+        },
+        "cart": _serialize_cart(cart),
     }
 
 

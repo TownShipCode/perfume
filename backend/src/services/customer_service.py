@@ -39,6 +39,7 @@ async def save_customer_profile(
     database: Database,
     phone_number: str,
     *,
+    name: str = "",
     area: str,
     street: str,
     city: str,
@@ -54,10 +55,12 @@ async def save_customer_profile(
             database,
             """
             UPDATE customers
-            SET area = $1, street = $2, city = $3, postal_code = $4, email = $5,
-                province = $6, surname = $7, full_address = $8, address_verified = TRUE, updated_at = NOW()
-            WHERE phone_number = $9
+            SET name = COALESCE(NULLIF($1, ''), name),
+                area = $2, street = $3, city = $4, postal_code = $5, email = $6,
+                province = $7, surname = $8, full_address = $9, address_verified = TRUE, updated_at = NOW()
+            WHERE phone_number = $10
             """,
+            name,
             area,
             street,
             city,
@@ -73,10 +76,13 @@ async def save_customer_profile(
             database,
             """
             UPDATE customers
-            SET area = ?, street = ?, city = ?, postal_code = ?, email = ?,
+            SET name = CASE WHEN ? != '' THEN ? ELSE name END,
+                area = ?, street = ?, city = ?, postal_code = ?, email = ?,
                 province = ?, surname = ?, full_address = ?, address_verified = 1, updated_at = CURRENT_TIMESTAMP
             WHERE phone_number = ?
             """,
+            name,
+            name,
             area,
             street,
             city,

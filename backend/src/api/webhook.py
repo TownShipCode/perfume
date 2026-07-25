@@ -66,6 +66,15 @@ async def receive_webhook(
                 logger.warning("WEBHOOK status_update | msg=%s status=%s", s.get("id"), s.get("status"))
         return JSONResponse(status_code=200, content={"status": "acknowledged", "reason": "status_update"})
 
+    # Map interactive button replies to text commands (miana's _BUTTON_TO_CMD pattern)
+    if event.get("interactive_id"):
+        from src.services.whatsapp_buttons import BUTTON_TO_CMD
+        mapped = BUTTON_TO_CMD.get(event["interactive_id"])
+        if mapped:
+            event["text"] = mapped
+            event["type"] = "text"
+            logger.warning("WEBHOOK button_mapped | id=%s → cmd=%s", event["interactive_id"], mapped)
+
     # Idempotency: atomically claim this message_id.
     # try_claim_message inserts + checks in a single DB round-trip so
     # concurrent duplicate requests cannot both slip through the gate.

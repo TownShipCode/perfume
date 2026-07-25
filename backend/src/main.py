@@ -26,6 +26,11 @@ async def lifespan(app: FastAPI):
     await initialize_database(database)
     app.state.settings = settings
     app.state.database = database
+
+    # Register quantity button → command mappings
+    from src.services.whatsapp_buttons import register_quantity_mappings
+    register_quantity_mappings(settings.quantity_options)
+
     try:
         yield
     finally:

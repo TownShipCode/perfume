@@ -25,7 +25,7 @@ def test_build_customer_reply_uses_defaults_when_templates_missing(tmp_path, mon
                 },
             )
             assert reply is not None
-            assert "2x Red Shoes" in reply["text"]
+            assert "2x *Red Shoes*" in reply["text"]
             assert "700.00" in reply["text"]
         finally:
             await close_database(database)

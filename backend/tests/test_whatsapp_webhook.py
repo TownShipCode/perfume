@@ -50,6 +50,7 @@ def make_settings(**overrides: object) -> Settings:
         "courier_fee": __import__("decimal").Decimal("150.00"),
         "courier_name": "The Courier Guy",
         "fl_username": "BioMed_SA",
+        "quantity_options": (1, 2, 3, 4, 5, 6),
     }
     values.update(overrides)
     return Settings(**values)

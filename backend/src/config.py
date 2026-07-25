@@ -54,6 +54,7 @@ class Settings:
     courier_fee: Decimal
     courier_name: str
     fl_username: str
+    quantity_options: tuple[int, ...]
 
     @property
     def is_production(self) -> bool:
@@ -98,6 +99,9 @@ def get_settings() -> Settings:
     courier_name = os.getenv("COURIER_NAME", "The Courier Guy").strip()
     fl_username = os.getenv("FL_USERNAME", "BioMed_SA").strip()
     auto_forward = os.getenv("AUTO_FORWARD_TO_MANUFACTURER", "true").strip().lower() in ("true", "1", "yes")
+    quantity_options = tuple(
+        int(v.strip()) for v in os.getenv("WHATSAPP_QUANTITY_OPTIONS", "1,2,3,4,5,6").split(",") if v.strip().isdigit()
+    )
 
     settings = Settings(
         app_env=os.getenv("APP_ENV", "development").lower(),
@@ -135,6 +139,7 @@ def get_settings() -> Settings:
         courier_fee=courier_fee,
         courier_name=courier_name,
         fl_username=fl_username,
+        quantity_options=quantity_options,
     )
     validate_settings(settings)
     return settings

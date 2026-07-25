@@ -36,12 +36,12 @@ def test_admin_service_queries_and_status_update(tmp_path, monkeypatch) -> None:
             for message_id, text in [
                 ("m1", "2 shoes"),
                 ("m2", "done"),
-                ("m3", "Dlamini"),
-                ("m4", "Khayelitsha"),
-                ("m5", "12 Main Road"),
-                ("m6", "Cape Town"),
-                ("m7", "7784"),
-                ("m8", "alice@email.com"),
+                ("m3", "Alice"),
+                ("m4", "Dlamini"),
+                ("m5", "Khayelitsha"),
+                ("m6", "12 Main Road"),
+                ("m7", "Cape Town"),
+                ("m8", "7784"),
                 ("m9", "Western Cape"),
             ]:
                 await handle_text_message(

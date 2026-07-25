@@ -1,0 +1,87 @@
+"""
+WhatsApp interactive button builders for BioMed.
+Adopts miana's _build_help_buttons / _BUTTON_TO_CMD pattern.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+# ── Button ID → internal command mapping ──
+# When a user taps a button, the webhook receives a button_reply with an ID.
+# We map that ID to a text command that the existing order_flow handlers understand.
+BUTTON_TO_CMD: dict[str, str] = {
+    "catalogue": "catalogue",
+    "order": "checkout",
+    "help": "help",
+    "yes": "yes",
+    "no": "no",
+}
+
+
+def register_quantity_mappings(quantity_options: tuple[int, ...]) -> None:
+    """Register quantity button IDs → quantity values in BUTTON_TO_CMD.
+
+    Called at startup so the webhook knows that tapping [3] means quantity 3.
+    """
+    for qty in quantity_options:
+        BUTTON_TO_CMD[f"qty_{qty}"] = str(qty)
+
+
+def build_welcome_buttons(body_text: str) -> dict[str, Any]:
+    """
+    Welcome buttons shown when a customer says "hi" / "hello".
+    WhatsApp allows up to 3 buttons per interactive message.
+    """
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body_text},
+            "action": {
+                "buttons": [
+                    {"type": "reply", "reply": {"id": "catalogue", "title": "📋 Catalogue"}},
+                    {"type": "reply", "reply": {"id": "order", "title": "🛒 Order"}},
+                    {"type": "reply", "reply": {"id": "help", "title": "ℹ️ Help"}},
+                ]
+            },
+        },
+    }
+
+
+def build_confirm_buttons(body_text: str) -> dict[str, Any]:
+    """
+    Yes/No confirmation buttons for address/profile confirmation.
+    """
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body_text},
+            "action": {
+                "buttons": [
+                    {"type": "reply", "reply": {"id": "yes", "title": "✅ Yes"}},
+                    {"type": "reply", "reply": {"id": "no", "title": "❌ No"}},
+                ]
+            },
+        },
+    }
+
+
+def build_quantity_buttons(body_text: str, quantity_options: tuple[int, ...]) -> dict[str, Any]:
+    """
+    Quantity selection buttons shown after a customer picks a product.
+    WhatsApp allows up to 3 buttons — we show the first 3 quantity options.
+    """
+    buttons = [
+        {"type": "reply", "reply": {"id": f"qty_{qty}", "title": str(qty)}}
+        for qty in quantity_options[:3]
+    ]
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body_text},
+            "action": {"buttons": buttons},
+        },
+    }
