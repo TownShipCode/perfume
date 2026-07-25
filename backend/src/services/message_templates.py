@@ -7,11 +7,11 @@ from src.db.connection import Database, execute, fetch_all, fetch_one
 
 
 DEFAULT_TEMPLATES = {
-    "catalogue": "Available products:\n{catalogue}\n\nReply with something like: 2 shoes",
-    "welcome_catalogue": "Hi{customer_name}! Here is our catalogue:\n{catalogue}\n\nReply with something like: 2 shoes",
+    "catalogue": "Available products:\n{catalogue}\n\nReply with a number to order, e.g. \"1\" for 1x FL 1L.",
+    "welcome_catalogue": "Hi{customer_name}! Here is our catalogue:\n{catalogue}\n\nReply with a number to order, e.g. \"1\" for 1x FL 1L.",
     "product_detail": "{product_name}\n{description}\nPrice: {price} {currency}\n\nReply with \"1 {product_name}\" to order.",
     "language_selection": "Please choose your language:\nReply: en for English\nReply: zu for isiZulu",
-    "language_set": "Language set to {lang}. Reply to continue.",
+    "language_set": "Language set to {lang}.\n\nHi{customer_name}! Here is our catalogue:\n{catalogue}\n\nReply with a number to order, e.g. \"1\" for 1x FL 1L.",
     "cart_update": "Added {quantity}x {product_name}. Total: {total} {currency}.",
     "address_request_surname": "What is your SURNAME?",
     "address_request": "What is your AREA?",
@@ -155,7 +155,14 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         return {"text": await render_template(database, "language_selection")}
 
     if action == "language_set":
-        return {"text": await render_template(database, "language_set", lang=result.get("language", "en"))}
+        customer_name = result.get("customer_name") or ""
+        prefix = f" {customer_name}" if customer_name else ""
+        return {"text": await render_template(
+            database, "language_set",
+            lang=result.get("language", "en"),
+            customer_name=prefix,
+            catalogue=result.get("catalogue", "No products available right now."),
+        )}
 
     return None
 

@@ -7,7 +7,7 @@ from src.db.connection import Database
 from src.models.cart import CartItem
 from src.services.cart_service import add_item_to_cart, build_cart
 from src.services.catalog_service import build_catalog_lines, get_keyword_map, get_product_by_number
-from src.services.customer_service import get_customer_by_phone, get_or_create_customer, save_customer_address, set_customer_language
+from src.services.customer_service import get_customer_by_phone, get_or_create_customer, save_customer_profile, set_customer_language
 from src.services.order_service import create_order, get_latest_open_order, record_pop_received
 from src.services.order_parser import parse_order
 from src.services.session_service import get_or_create_session, get_session_by_phone, save_session_state
@@ -15,9 +15,13 @@ from src.services.state_machine import State
 
 
 ADDRESS_STEPS = [
+    ("surname", "What is your SURNAME?"),
     ("area", "What is your AREA?"),
     ("street", "What is your STREET and HOUSE NUMBER?"),
     ("city", "What is your CITY?"),
+    ("postal_code", "What is your POSTAL CODE?"),
+    ("email", "What is your EMAIL address?"),
+    ("province", "What is your PROVINCE?"),
 ]
 
 
@@ -70,7 +74,7 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
         return {"action": "unmatched", "state": session.get("state", State.IDLE), "text": text}
 
     if session.get("state") == State.ADDRESS_CONFIRMATION:
-        return await _handle_address_confirmation(database, customer, session, cart_items, lowered)
+        return await _handle_profile_confirmation(database, customer, session, cart_items, lowered)
 
     if session.get("state") == State.POP_WAITING:
         return {"action": "awaiting_pop", "state": State.POP_WAITING}
@@ -106,7 +110,11 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
             return {
                 "action": "address_confirmation_requested",
                 "state": updated_session["state"],
+                "customer_name": customer.get("name", ""),
+                "surname": customer.get("surname", ""),
                 "address": customer.get("full_address"),
+                "email": customer.get("email", ""),
+                "province": customer.get("province", ""),
                 "cart": _serialize_cart(cart),
             }
         return {
@@ -154,7 +162,16 @@ async def _handle_language_selection(
             state=State.IDLE, cart=session.get("cart", []),
             current_step=0, temp_address=session.get("temp_address"),
         )
-        return {"action": "language_set", "language": lowered, "state": State.IDLE}
+        lines = await build_catalog_lines(database)
+        catalogue = "\n".join(lines) if lines else "No products available right now."
+        customer_name = customer.get("name") or ""
+        return {
+            "action": "language_set",
+            "language": lowered,
+            "state": State.IDLE,
+            "customer_name": customer_name,
+            "catalogue": catalogue,
+        }
     return {"action": "language_selection", "state": State.LANGUAGE_SELECTION}
 
 
@@ -188,12 +205,16 @@ async def _handle_address_collection(
             "prompt": ADDRESS_STEPS[next_step][1],
         }
 
-    updated_customer = await save_customer_address(
+    updated_customer = await save_customer_profile(
         database,
         phone_number,
         area=temp_address["area"],
         street=temp_address["street"],
         city=temp_address["city"],
+        postal_code=temp_address.get("postal_code", ""),
+        email=temp_address.get("email", ""),
+        province=temp_address.get("province", ""),
+        surname=temp_address.get("surname", ""),
     )
     return await _finalize_order(
         database,
@@ -204,7 +225,7 @@ async def _handle_address_collection(
     )
 
 
-async def _handle_address_confirmation(
+async def _handle_profile_confirmation(
     database: Database,
     customer: dict,
     session: dict,
