@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import logging
+import sys
 
 from fastapi import APIRouter, Depends, Header, Query, Request
 from fastapi.encoders import jsonable_encoder
@@ -48,6 +50,7 @@ async def receive_webhook(
 
     # Parse the webhook payload
     payload = await request.json()
+    print(f"WEBHOOK_RAW payload_keys={list(payload.keys())} batch={payload.get('batch')} statuses={'statuses' in str(payload)[:500]} messages={'messages' in str(payload)[:500]}", flush=True)
     # Log the raw payload structure for debugging
     has_messages = bool(payload.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {}).get("messages"))
     has_statuses = bool(payload.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {}).get("statuses"))
