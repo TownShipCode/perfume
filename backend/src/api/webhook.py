@@ -48,8 +48,11 @@ async def receive_webhook(
 
     # Parse the webhook payload
     payload = await request.json()
-    logger.info("WEBHOOK raw_payload_keys | keys=%s batch=%s",
-                list(payload.keys()), payload.get("batch"))
+    # Log the raw payload structure for debugging
+    has_messages = bool(payload.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {}).get("messages"))
+    has_statuses = bool(payload.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {}).get("statuses"))
+    logger.info("WEBHOOK payload_structure | keys=%s batch=%s messages=%s statuses=%s",
+                list(payload.keys()), payload.get("batch"), has_messages, has_statuses)
     event = extract_message_event(payload)
 
     # Status update callbacks (delivered/read/sent receipts) — log and acknowledge
