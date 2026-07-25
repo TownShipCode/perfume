@@ -161,6 +161,34 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
             "cart": _serialize_cart(cart),
         }
 
+    # Bare number shortcut: "1" → product #1, "2" → product #2
+    if text.isdigit():
+        product = await get_product_by_number(database, int(text))
+        if product:
+            updated_items = add_item_to_cart(cart_items, product["id"], 1)
+            updated_session = await save_session_state(
+                database, phone_number,
+                state=State.ORDERING, cart=updated_items,
+                current_step=session.get("current_step", 0),
+                temp_address=session.get("temp_address"),
+            )
+            price_map = await _build_price_map(database)
+            cart = build_cart(updated_items, price_map)
+            return {
+                "action": "cart_updated",
+                "state": updated_session["state"],
+                "matched_item": {
+                    "product_id": product["id"],
+                    "product_number": int(text),
+                    "product_name": product["name"],
+                    "quantity": 1,
+                    "matched_keyword": f"#{text}",
+                    "unit_price": product["price"],
+                },
+                "cart": _serialize_cart(cart),
+            }
+        # digit didn't match a product — fall through to unmatched
+
     keyword_map = await get_keyword_map(database)
     parsed = parse_order(text, keyword_map)
     if parsed is None:
