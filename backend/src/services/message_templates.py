@@ -7,8 +7,8 @@ from src.db.connection import Database, execute, fetch_all, fetch_one
 
 
 DEFAULT_TEMPLATES = {
-    "catalogue": "📋 *Available Products*\n\n{catalogue}\n\n_How to order:_\n• Type a number for 1 unit (e.g. *1*)\n• Or quantity + name (e.g. *3 FL 1L*)",
-    "welcome_catalogue": "👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_How to order:_\n• Type a number for 1 unit (e.g. *1*)\n• Or quantity + name (e.g. *3 FL 1L*)",
+    "catalogue": "📋 *Available Products*\n\n{catalogue}\n\n_How to order:_\n• Type a product number (e.g. *1*)\n• Then choose your quantity",
+    "welcome_catalogue": "👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_How to order:_\n• Type a product number (e.g. *1*)\n• Then choose your quantity",
     "product_detail": "{product_name}\n{description}\nPrice: R{price}\n\n_Reply with \"1 {product_name}\" to order._",
     "language_selection": "🌍 Please choose your language:\n🇬🇧 Reply: en for English\n🇿🇦 Reply: zu for isiZulu",
     "language_set": "✅ Language set to {lang}.\n\n👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_Reply with a number to order, e.g. \"1\" for 1x FL 1L._",
@@ -26,7 +26,7 @@ DEFAULT_TEMPLATES = {
     "order_final": "✅ *Order #{order_number} Confirmed*\n\nSubtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\n📸 Please send your POP (proof of payment).",
     "pop_received": "📸 *POP received!* We will confirm your order shortly.",
     "checkout_blocked": "🛒 Your cart is empty. Add a product first — reply with a number like *1*.",
-    "unmatched": "❓ I couldn't match that.\n\nType *CATALOGUE* to see products, or a number like *1* to add to cart.\nOr order with quantity: e.g. *3 FL 1L*",
+    "unmatched": "❓ I couldn't match that.\n\nType *CATALOGUE* to see products, or a product number like *1* to start ordering.",
     "awaiting_pop": "⏳ Your order is waiting for POP. Please send your proof of payment.",
     "order_cancelled": "🗑️ Your order has been cancelled. Reply with anything to start again.",
     "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *ADDRESS:* {full_address}\n➡️ *CELL NO:* {phone_number}\n➡️ *QUANTITY:*\n{items}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *COURIER:* {courier_name}\n\nOrder: {order_number}\nTotal: R{total}\nBioMed payment: R{fl_amount}\nPOP: {fl_pop_url}",
