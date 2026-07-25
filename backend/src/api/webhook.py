@@ -80,6 +80,10 @@ async def receive_webhook(
             result = await handle_image_message(request.app.state.database, event)
         reply = await build_customer_reply(request.app.state.database, result)
         delivery = await deliver_reply(event, reply)
+        logger.info("WEBHOOK processed | action=%s reply=%s delivery=%s",
+                    result.get("action") if result else "none",
+                    "yes" if reply else "no",
+                    delivery.get("status") if delivery else "none")
         return JSONResponse(status_code=200, content=jsonable_encoder({
             "status": "accepted", "event": event, "result": result,
             "reply": reply, "delivery": delivery,
