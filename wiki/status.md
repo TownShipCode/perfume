@@ -1,6 +1,6 @@
 # BioMed — Project Status
 
-**2026-07-24** · 25 tests passing · 11 migrations · Phases 1–4 deployed
+**2026-07-25** · 25 tests passing · 11 migrations · Phases 1–4 deployed · Live testing
 
 ## Wiki Index
 
@@ -41,6 +41,10 @@
 | Language infrastructure (en/zu, DB-backed templates) | Done |
 | Railway deploy (Docker + PostgreSQL) | Done |
 | Vercel dashboard deploy | Done |
+| Atomic idempotency (race condition fix) | Done |
+| Language code guard (en/zu outside selection state) | Done |
+| Product image serving (/static via FastAPI) | Done |
+| Railway Railpack config (Root Directory = backend) | Done |
 
 ## Config
 
@@ -61,10 +65,9 @@ FL_USERNAME=BioMed_SA
 
 ## Pending
 
-- WhatsApp credentials + MANUFACTURER_PHONE (set in Railway Dashboard)
-- Seed products into DB (run `backend/scripts/seed.py` against Railway)
-- Deploy dashboard (`cd dashboard && npx vercel --prod --yes`)
+- WhatsApp credentials + `MANUFACTURER_PHONE` + `WHATSAPP_APP_SECRET` (set in Railway Dashboard)
+- **Live test**: verify the atomic dedup + language guard fixes work end-to-end
 - isiZulu template translations (17 templates need text)
-- Product image upload (Vercel Blob recommended)
 - Sentry error tracking (DSN available, not configured)
+- `APP_ENV=production` (after MANUFACTURER_PHONE and APP_SECRET are set)
 
