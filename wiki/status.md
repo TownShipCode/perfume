@@ -9,7 +9,8 @@
 | [status.md](status.md) | Project overview, features, config |
 | [e2e-test-results.md](e2e-test-results.md) | End-to-end API test results against live Railway |
 | [security-review.md](security-review.md) | Auth, rate limiting, endpoint coverage, recommendations |
-| [retrospective.md](retrospective.md) | What worked, challenges, questions we should have asked |
+| [retrospective.md](retrospective.md) | What worked, challenges, questions we should have asked, Kapso debugging post-mortem |
+| [kapso-debugging.md](kapso-debugging.md) | Kapso webhook format guide, common mistakes, CLI reference |
 | [adding-products.md](adding-products.md) | How to add products: seed script, dashboard, or API |
 
 ## URLs
