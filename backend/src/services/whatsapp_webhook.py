@@ -138,3 +138,35 @@ async def mark_message_processed(database: Database, message_id: str | None) -> 
         "INSERT OR IGNORE INTO processed_messages (message_id) VALUES (?)",
         message_id,
     )
+
+
+async def try_claim_message(database: Database, message_id: str | None) -> bool:
+    """Atomically insert a message_id and return True if it was newly claimed.
+
+    Combines the check + mark into a single atomic operation so that
+    concurrent webhook requests for the same message_id cannot both
+    proceed past the deduplication gate.
+    """
+    if not message_id:
+        return False
+
+    if database.mode == "postgres":
+        # INSERT ... ON CONFLICT DO NOTHING RETURNING — the row only
+        # comes back when the insert actually happened (i.e., first claim).
+        row = await fetch_one(
+            database,
+            "INSERT INTO processed_messages (message_id) VALUES ($1) ON CONFLICT (message_id) DO NOTHING RETURNING message_id",
+            message_id,
+        )
+        return row is not None
+
+    # SQLite: INSERT OR IGNORE + rowcount to detect whether the row was
+    # actually inserted or silently skipped due to the UNIQUE constraint.
+    connection = database.connection
+    assert connection is not None
+    cursor = connection.execute(
+        "INSERT OR IGNORE INTO processed_messages (message_id) VALUES (?)",
+        (message_id,),
+    )
+    connection.commit()
+    return cursor.rowcount > 0

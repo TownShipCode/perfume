@@ -14,8 +14,7 @@ from src.services.order_service import expire_stale_pop_orders
 from src.services.whatsapp_sender import deliver_reply
 from src.services.whatsapp_webhook import (
     extract_message_event,
-    is_message_processed,
-    mark_message_processed,
+    try_claim_message,
     verify_signature,
     verify_webhook_challenge,
 )
@@ -59,20 +58,14 @@ async def receive_webhook(
                 logger.info("WEBHOOK status_update | msg=%s status=%s", s.get("id"), s.get("status"))
         return JSONResponse(status_code=200, content={"status": "acknowledged", "reason": "status_update"})
 
-    # Idempotency: deduplicate by message_id
+    # Idempotency: atomically claim this message_id.
+    # try_claim_message inserts + checks in a single DB round-trip so
+    # concurrent duplicate requests cannot both slip through the gate.
     try:
-        if await is_message_processed(request.app.state.database, event["message_id"]):
+        if not await try_claim_message(request.app.state.database, event["message_id"]):
             return JSONResponse(status_code=200, content={"status": "duplicate", "message_id": event["message_id"]})
     except Exception as exc:
-        # DB error during idempotency check → transient, Kapso should retry
-        logger.error("WEBHOOK idempotency_check_failed | %s", exc)
-        return JSONResponse(status_code=503, content={"status": "retry", "reason": "db_unavailable"})
-
-    # Mark as processed BEFORE handling (prevent double-processing on retry)
-    try:
-        await mark_message_processed(request.app.state.database, event["message_id"])
-    except Exception as exc:
-        logger.error("WEBHOOK mark_processed_failed | %s", exc)
+        logger.error("WEBHOOK claim_message_failed | %s", exc)
         return JSONResponse(status_code=503, content={"status": "retry", "reason": "db_unavailable"})
 
     # Process message with transient/permanent error classification

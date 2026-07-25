@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 
 from src.config import Settings, get_settings
@@ -24,6 +25,8 @@ ADDRESS_STEPS = [
     ("province", "What is your PROVINCE?"),
 ]
 
+logger = logging.getLogger(__name__)
+
 
 async def handle_text_message(database: Database, event: dict) -> dict[str, object]:
     phone_number = event.get("from")
@@ -37,6 +40,12 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
     text = (event.get("text") or "").strip()
     lowered = text.lower()
     settings = get_settings()
+
+    logger.info(
+        "handle_text_message | phone=%s state=%s text=%s lang=%s",
+        phone_number[-4:], session.get("state"), text[:60],
+        customer.get("language") or "(none)",
+    )
 
     if session.get("state") == State.LANGUAGE_SELECTION:
         return await _handle_language_selection(database, customer, session, lowered)
@@ -58,6 +67,20 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
         return {
             "action": "catalogue",
             "state": session.get("state", State.IDLE),
+            "catalogue": "\n".join(lines) if lines else "No products available right now.",
+        }
+
+    # If the user types a language code outside LANGUAGE_SELECTION state,
+    # they've likely already set their language — show the catalogue instead
+    # of falling through to the "unmatched" order parser.
+    if lowered in settings.supported_languages:
+        lines = await build_catalog_lines(database)
+        customer_name = customer.get("name") or ""
+        prefix = f" {customer_name}" if customer_name else ""
+        return {
+            "action": "welcome_catalogue",
+            "state": session.get("state", State.IDLE),
+            "customer_name": customer_name,
             "catalogue": "\n".join(lines) if lines else "No products available right now.",
         }
 
@@ -127,6 +150,10 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
     keyword_map = await get_keyword_map(database)
     parsed = parse_order(text, keyword_map)
     if parsed is None:
+        logger.warning(
+            "handle_text_message | UNMATCHED phone=%s state=%s text=%s",
+            phone_number[-4:], session.get("state"), text[:60],
+        )
         return {"action": "unmatched", "state": session.get("state", State.IDLE), "text": text}
 
     updated_items = add_item_to_cart(cart_items, parsed["product_id"], parsed["quantity"])
