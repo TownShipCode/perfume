@@ -390,8 +390,16 @@ async def _build_price_map(database: Database) -> dict[int, Decimal]:
 
 
 def _serialize_cart(cart) -> dict[str, object]:
+    items = []
+    for item in cart.items:
+        if hasattr(item, "model_dump"):
+            items.append(item.model_dump())
+        elif isinstance(item, dict):
+            items.append(item)
+        else:
+            items.append(str(item))
     return {
-        "items": [item.model_dump() for item in cart.items],
+        "items": items,
         "total": str(cart.total),
     }
 
