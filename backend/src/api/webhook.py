@@ -48,6 +48,8 @@ async def receive_webhook(
 
     # Parse the webhook payload
     payload = await request.json()
+    logger.info("WEBHOOK raw_payload_keys | keys=%s batch=%s",
+                list(payload.keys()), payload.get("batch"))
     event = extract_message_event(payload)
 
     # Status update callbacks (delivered/read/sent receipts) — log and acknowledge
