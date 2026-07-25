@@ -36,9 +36,13 @@ def test_admin_service_queries_and_status_update(tmp_path, monkeypatch) -> None:
             for message_id, text in [
                 ("m1", "2 shoes"),
                 ("m2", "done"),
-                ("m3", "Khayelitsha"),
-                ("m4", "12 Main Road"),
-                ("m5", "Cape Town"),
+                ("m3", "Dlamini"),
+                ("m4", "Khayelitsha"),
+                ("m5", "12 Main Road"),
+                ("m6", "Cape Town"),
+                ("m7", "7784"),
+                ("m8", "alice@email.com"),
+                ("m9", "Western Cape"),
             ]:
                 await handle_text_message(
                     database,
@@ -47,7 +51,7 @@ def test_admin_service_queries_and_status_update(tmp_path, monkeypatch) -> None:
 
             await handle_image_message(
                 database,
-                {"message_id": "m6", "from": "27820000000", "type": "image", "image_id": "media-123", "image_url": None},
+                {"message_id": "m10", "from": "27820000000", "type": "image", "image_id": "media-123", "image_url": None},
             )
 
             orders = await list_orders(database)

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, Query, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from src.config import get_settings
@@ -26,9 +27,9 @@ router = APIRouter(tags=["webhook"])
 
 @router.get("/webhook")
 async def verify_webhook(
-    hub_mode: str | None = None,
-    hub_verify_token: str | None = None,
-    hub_challenge: str | None = None,
+    hub_mode: str | None = Query(default=None, alias="hub.mode"),
+    hub_verify_token: str | None = Query(default=None, alias="hub.verify_token"),
+    hub_challenge: str | None = Query(default=None, alias="hub.challenge"),
 ) -> str:
     settings = get_settings()
     return verify_webhook_challenge(hub_mode, hub_verify_token, hub_challenge, settings)
@@ -84,10 +85,10 @@ async def receive_webhook(
             result = await handle_image_message(request.app.state.database, event)
         reply = await build_customer_reply(request.app.state.database, result)
         delivery = await deliver_reply(event, reply)
-        return JSONResponse(status_code=200, content={
+        return JSONResponse(status_code=200, content=jsonable_encoder({
             "status": "accepted", "event": event, "result": result,
             "reply": reply, "delivery": delivery,
-        })
+        }))
     except Exception as exc:
         logger.error("WEBHOOK processing_error | %s", exc)
         if _is_transient(exc):

@@ -49,26 +49,54 @@ def test_order_flow_collects_address_and_creates_order(tmp_path, monkeypatch) ->
 
             area = await handle_text_message(
                 database,
-                {"message_id": "m3", "from": "27820000000", "type": "text", "text": "Khayelitsha", "profile_name": "Alice"},
+                {"message_id": "m3", "from": "27820000000", "type": "text", "text": "Dlamini", "profile_name": "Alice"},
             )
             assert area["action"] == "address_collection_progress"
             assert area["current_step"] == 1
 
             street = await handle_text_message(
                 database,
-                {"message_id": "m4", "from": "27820000000", "type": "text", "text": "12 Main Road", "profile_name": "Alice"},
+                {"message_id": "m4", "from": "27820000000", "type": "text", "text": "Khayelitsha", "profile_name": "Alice"},
             )
             assert street["action"] == "address_collection_progress"
             assert street["current_step"] == 2
 
             city = await handle_text_message(
                 database,
-                {"message_id": "m5", "from": "27820000000", "type": "text", "text": "Cape Town", "profile_name": "Alice"},
+                {"message_id": "m5", "from": "27820000000", "type": "text", "text": "12 Main Road", "profile_name": "Alice"},
             )
-            assert city["action"] == "order_created"
-            assert city["state"] == "pop_waiting"
-            assert city["address"] == "12 Main Road, Khayelitsha, Cape Town"
-            assert city["order_number"].startswith("ORD-")
+            assert city["action"] == "address_collection_progress"
+            assert city["current_step"] == 3
+
+            postal = await handle_text_message(
+                database,
+                {"message_id": "m6", "from": "27820000000", "type": "text", "text": "Cape Town", "profile_name": "Alice"},
+            )
+            assert postal["action"] == "address_collection_progress"
+            assert postal["current_step"] == 4
+
+            email = await handle_text_message(
+                database,
+                {"message_id": "m7", "from": "27820000000", "type": "text", "text": "7784", "profile_name": "Alice"},
+            )
+            assert email["action"] == "address_collection_progress"
+            assert email["current_step"] == 5
+
+            prov = await handle_text_message(
+                database,
+                {"message_id": "m8", "from": "27820000000", "type": "text", "text": "alice@email.com", "profile_name": "Alice"},
+            )
+            assert prov["action"] == "address_collection_progress"
+            assert prov["current_step"] == 6
+
+            final = await handle_text_message(
+                database,
+                {"message_id": "m9", "from": "27820000000", "type": "text", "text": "Western Cape", "profile_name": "Alice"},
+            )
+            assert final["action"] == "order_created"
+            assert final["state"] == "pop_waiting"
+            assert final["address"] == "12 Main Road, Khayelitsha, Cape Town, 7784"
+            assert final["order_number"].startswith("ORD-")
 
             session = await get_session_by_phone(database, "27820000000")
             assert session is not None
@@ -78,7 +106,7 @@ def test_order_flow_collects_address_and_creates_order(tmp_path, monkeypatch) ->
             customer = await get_customer_by_phone(database, "27820000000")
             assert customer is not None
             assert customer["address_verified"] in (1, True)
-            assert customer["full_address"] == "12 Main Road, Khayelitsha, Cape Town"
+            assert customer["full_address"] == "12 Main Road, Khayelitsha, Cape Town, 7784"
 
             query = "SELECT order_number, status, total FROM orders WHERE customer_id = ?"
             order = await fetch_one(database, query, customer["id"])
@@ -116,9 +144,13 @@ def test_order_flow_marks_pop_received_and_confirms_session(tmp_path, monkeypatc
             for message_id, text in [
                 ("m1", "2 shoes"),
                 ("m2", "done"),
-                ("m3", "Khayelitsha"),
-                ("m4", "12 Main Road"),
-                ("m5", "Cape Town"),
+                ("m3", "Dlamini"),
+                ("m4", "Khayelitsha"),
+                ("m5", "12 Main Road"),
+                ("m6", "Cape Town"),
+                ("m7", "7784"),
+                ("m8", "alice@email.com"),
+                ("m9", "Western Cape"),
             ]:
                 await handle_text_message(
                     database,
@@ -128,7 +160,7 @@ def test_order_flow_marks_pop_received_and_confirms_session(tmp_path, monkeypatc
             result = await handle_image_message(
                 database,
                 {
-                    "message_id": "m6",
+                    "message_id": "m10",
                     "from": "27820000000",
                     "type": "image",
                     "image_id": "media-123",
@@ -198,7 +230,7 @@ def test_order_flow_returns_catalogue_for_menu_command(tmp_path, monkeypatch) ->
             reply = await build_customer_reply(database, result)
             assert reply is not None
             assert "Available products:" in reply["text"]
-            assert "Reply with something like: 2 shoes" in reply["text"]
+            assert "Reply with a number to order" in reply["text"]
 
             session = await get_session_by_phone(database, "27820000000")
             assert session is not None
@@ -321,7 +353,7 @@ def test_order_flow_calculates_shipping(tmp_path, monkeypatch) -> None:
                     keywords=["shoe", "shoes", "red shoe"],
                 ),
             )
-            for message_id, text in [("m1", "2 shoes"), ("m2", "done"), ("m3", "Khayelitsha"), ("m4", "12 Main Road"), ("m5", "Cape Town")]:
+            for message_id, text in [("m1", "2 shoes"), ("m2", "done"), ("m3", "Sithole"), ("m4", "Khayelitsha"), ("m5", "12 Main Road"), ("m6", "Cape Town"), ("m7", "7784"), ("m8", "bob@email.com"), ("m9", "Western Cape")]:
                 await handle_text_message(database, {"message_id": message_id, "from": "27820000001", "type": "text", "text": text, "profile_name": "Bob"})
             order = await fetch_one(database, "SELECT total, shipping_fee FROM orders WHERE customer_id = (SELECT id FROM customers WHERE phone_number = ?)", "27820000001")
             assert order is not None
@@ -353,7 +385,7 @@ def test_order_flow_waives_shipping_above_threshold(tmp_path, monkeypatch) -> No
                     keywords=["shoe", "shoes", "red shoe"],
                 ),
             )
-            for message_id, text in [("m1", "2 shoes"), ("m2", "done"), ("m3", "Khayelitsha"), ("m4", "12 Main Road"), ("m5", "Cape Town")]:
+            for message_id, text in [("m1", "2 shoes"), ("m2", "done"), ("m3", "Zulu"), ("m4", "Khayelitsha"), ("m5", "12 Main Road"), ("m6", "Cape Town"), ("m7", "7784"), ("m8", "carol@email.com"), ("m9", "Western Cape")]:
                 await handle_text_message(database, {"message_id": message_id, "from": "27820000002", "type": "text", "text": text, "profile_name": "Carol"})
             order = await fetch_one(database, "SELECT total, shipping_fee FROM orders WHERE customer_id = (SELECT id FROM customers WHERE phone_number = ?)", "27820000002")
             assert order is not None

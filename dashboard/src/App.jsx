@@ -50,6 +50,10 @@ export default function App() {
   const [analyticsSummary, setAnalyticsSummary] = useState(null);
   const [analyticsDaily, setAnalyticsDaily] = useState([]);
   const [mobileTab, setMobileTab] = useState('orders');
+  const [flPopUrl, setFlPopUrl] = useState('');
+  const [flAmount, setFlAmount] = useState('');
+  const [flPopPreview, setFlPopPreview] = useState(null);
+  const [flPopLoading, setFlPopLoading] = useState(false);
 
   async function loadAll() {
     try {
@@ -120,6 +124,9 @@ export default function App() {
       const response = await dashboardApi.getOrder(orderId, apiKey, baseUrl);
       setSelectedOrder(response.item);
       setSelectedOrderPreview(response.manufacturer_forward_preview || null);
+      setFlPopPreview(null);
+      setFlPopUrl('');
+      setFlAmount('');
     } catch (error) {
       setMessage(error.message);
     }
@@ -235,6 +242,52 @@ export default function App() {
       }
     } catch (error) {
       setMessage(error.message);
+    }
+  }
+
+  async function previewFlPop() {
+    if (!selectedOrder || !flPopUrl) {
+      setMessage('Enter FL POP URL.');
+      return;
+    }
+    setFlPopLoading(true);
+    try {
+      const amount = flAmount ? parseFloat(flAmount) : null;
+      const response = await dashboardApi.uploadFlPop(selectedOrder.id, flPopUrl, amount, apiKey, baseUrl);
+      setFlPopPreview(response.fl_pop_preview);
+      if (selectedOrderPreview?.message) {
+        setMessage('Preview loaded. Review and confirm to forward.');
+      }
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setFlPopLoading(false);
+    }
+  }
+
+  async function confirmFlPop() {
+    if (!selectedOrder || !flPopUrl) {
+      setMessage('Enter FL POP URL.');
+      return;
+    }
+    setFlPopLoading(true);
+    try {
+      const amount = flAmount ? parseFloat(flAmount) : null;
+      const response = await dashboardApi.confirmFlPop(selectedOrder.id, flPopUrl, amount, apiKey, baseUrl);
+      if (response.forward_result?.action === 'forwarded') {
+        setMessage(`FL POP saved. Order forwarded to ${response.forward_result.recipient} (${response.forward_result.delivery.status}).`);
+      } else {
+        setMessage('FL POP saved. Forward skipped (check manufacturer phone).');
+      }
+      setFlPopPreview(null);
+      setFlPopUrl('');
+      setFlAmount('');
+      await loadAll();
+      await loadOrderDetail(selectedOrder.id);
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setFlPopLoading(false);
     }
   }
 
@@ -480,6 +533,48 @@ export default function App() {
                   'Not received'
                 )}
               </p>
+              <p>
+                FL POP:{' '}
+                {selectedOrder.fl_pop_image_url ? (
+                  <a href={selectedOrder.fl_pop_image_url} target="_blank" rel="noreferrer">{selectedOrder.fl_pop_image_url}</a>
+                ) : (
+                  'Not uploaded'
+                )}
+                {selectedOrder.fl_amount ? <> · R{selectedOrder.fl_amount}</> : null}
+              </p>
+              <div className="message-preview">
+                <strong>Pay FL & Auto-Forward</strong>
+                <div className="stack">
+                  <input
+                    placeholder="FL POP image URL (BioMed payment screenshot)"
+                    value={flPopUrl}
+                    onChange={(event) => setFlPopUrl(event.target.value)}
+                  />
+                  <input
+                    placeholder="FL amount (e.g., 410.00)"
+                    value={flAmount}
+                    onChange={(event) => setFlAmount(event.target.value)}
+                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={previewFlPop} disabled={flPopLoading}>
+                      {flPopLoading ? 'Loading...' : 'Preview'}
+                    </button>
+                    {flPopPreview && (
+                      <button onClick={confirmFlPop} disabled={flPopLoading} style={{ background: '#d32f2f' }}>
+                        {flPopLoading ? 'Sending...' : 'Confirm & Forward to FL'}
+                      </button>
+                    )}
+                  </div>
+                  {flPopPreview && (
+                    <div className="message-preview" style={{ marginTop: '8px' }}>
+                      <strong>FL message preview</strong>
+                      <pre>{flPopPreview.forward_preview || 'No preview.'}</pre>
+                      <p>Recipient: {flPopPreview.recipient || 'Not configured'}</p>
+                      <p>FL amount: R{flPopPreview.fl_amount}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="message-preview">
                 <strong>Manufacturer message</strong>
                 <pre>{selectedOrderPreview?.message || 'No preview available.'}</pre>

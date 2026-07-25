@@ -11,6 +11,7 @@ class Product(BaseModel):
     product_number: int = Field(gt=0)
     name: str
     price: Decimal
+    bio_med_margin: Decimal = Decimal("0")
     image_url: str | None = None
     is_active: bool = True
     created_at: datetime | None = None

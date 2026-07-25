@@ -49,6 +49,11 @@ class Settings:
     supported_languages: tuple[str, ...]
     cors_origins: tuple[str, ...]
     sentry_dsn: str | None
+    auto_forward_to_manufacturer: bool
+    default_margin: Decimal
+    courier_fee: Decimal
+    courier_name: str
+    fl_username: str
 
     @property
     def is_production(self) -> bool:
@@ -88,6 +93,11 @@ def get_settings() -> Settings:
     pop_expiry_hours = int(os.getenv("POP_EXPIRY_HOURS", "24") or "24")
     default_language = os.getenv("DEFAULT_LANGUAGE", "en").strip().lower() or "en"
     supported_languages = _csv_values(os.getenv("SUPPORTED_LANGUAGES", "en,zu"))
+    default_margin = Decimal(os.getenv("DEFAULT_MARGIN", "70.00") or "70.00")
+    courier_fee = Decimal(os.getenv("COURIER_FEE", "150.00") or "150.00")
+    courier_name = os.getenv("COURIER_NAME", "The Courier Guy").strip()
+    fl_username = os.getenv("FL_USERNAME", "BioMed_SA").strip()
+    auto_forward = os.getenv("AUTO_FORWARD_TO_MANUFACTURER", "true").strip().lower() in ("true", "1", "yes")
 
     settings = Settings(
         app_env=os.getenv("APP_ENV", "development").lower(),
@@ -120,6 +130,11 @@ def get_settings() -> Settings:
         supported_languages=supported_languages,
         cors_origins=cors_origins,
         sentry_dsn=_optional("SENTRY_DSN"),
+        auto_forward_to_manufacturer=auto_forward,
+        default_margin=default_margin,
+        courier_fee=courier_fee,
+        courier_name=courier_name,
+        fl_username=fl_username,
     )
     validate_settings(settings)
     return settings

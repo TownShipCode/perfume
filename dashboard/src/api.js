@@ -53,6 +53,8 @@ export const dashboardApi = {
   confirmOrder: (id, apiKey, baseUrl) => request(`/api/orders/${id}/confirm`, { method: 'POST' }, apiKey, baseUrl),
   updateOrderStatus: (id, status, apiKey, baseUrl) => request(`/api/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }, apiKey, baseUrl),
   forwardOrder: (id, apiKey, baseUrl, force = false) => request(`/api/orders/${id}/forward`, { method: 'POST', body: JSON.stringify({ force }) }, apiKey, baseUrl),
+  uploadFlPop: (id, flPopImageUrl, flAmount, apiKey, baseUrl) => request(`/api/orders/${id}/fl-pop`, { method: 'POST', body: JSON.stringify({ fl_pop_image_url: flPopImageUrl, fl_amount: flAmount }) }, apiKey, baseUrl),
+  confirmFlPop: (id, flPopImageUrl, flAmount, apiKey, baseUrl) => request(`/api/orders/${id}/fl-pop/confirm`, { method: 'POST', body: JSON.stringify({ fl_pop_image_url: flPopImageUrl, fl_amount: flAmount, confirm: true }) }, apiKey, baseUrl),
   getAnalyticsSummary: (apiKey, baseUrl) => request('/api/analytics/summary', {}, apiKey, baseUrl),
   getAnalyticsDaily: (apiKey, baseUrl) => request('/api/analytics/daily', {}, apiKey, baseUrl),
   login: (password, baseUrl) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ password }), credentials: 'include' }, null, baseUrl),

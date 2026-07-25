@@ -5,7 +5,7 @@ from src.db.connection import Database
 from src.services.catalog_service import get_products_by_ids
 from src.services.message_templates import render_template
 from src.services.order_service import get_order_by_id, record_order_forwarding
-from src.services.whatsapp_sender import send_text_message
+from src.services.whatsapp_sender import send_image_message, send_text_message
 
 
 async def get_manufacturer_forward_preview(database: Database, order_id: int) -> dict[str, object] | None:
@@ -47,6 +47,10 @@ async def forward_order_to_manufacturer(database: Database, order_id: int, *, fo
 
     message = preview["message"]
     delivery = await send_text_message(recipient, message)
+    image_delivery = None
+    fl_pop_url = order.get("fl_pop_image_url")
+    if fl_pop_url:
+        image_delivery = await send_image_message(recipient, str(fl_pop_url), caption=f"POP for order {order.get('order_number')}")
     status = str(delivery.get("status", "unknown"))
     updated = await record_order_forwarding(
         database,
@@ -64,6 +68,7 @@ async def forward_order_to_manufacturer(database: Database, order_id: int, *, fo
         "message": message,
         "line_items": preview.get("line_items", []),
         "delivery": delivery,
+        "image_delivery": image_delivery,
         "order": updated,
     }
 
@@ -76,17 +81,32 @@ async def _build_forward_message(database: Database, order: dict[str, object]) -
         [int(item.get("product_id", 0)) for item in order.get("items") or []],
     )
     line_items = _build_line_items(order.get("items") or [], products_by_id)
+    customer_name = order.get("name") or order.get("phone_number") or "Customer"
+    phone_number = order.get("phone_number") or ""
+    full_address = order.get("full_address") or ""
+    # Default: new membership. Admin updates after first order if needed.
+    is_new = True
+    quantities = _format_items(line_items)
+    fl_pop = order.get("fl_pop_image_url") or "not provided"
+    fl_amount = order.get("fl_amount") or "0.00"
+
     message = await render_template(
         database,
         "manufacturer_forward",
         order_number=order["order_number"],
-        customer_name=order.get("name") or order.get("phone_number") or "Customer",
-        phone_number=order.get("phone_number") or "",
-        full_address=order.get("full_address") or "",
-        items=_format_items(line_items),
+        customer_name=customer_name,
+        phone_number=phone_number,
+        full_address=full_address,
+        items=quantities,
         total=order.get("total") or "0.00",
         currency=settings.store_currency,
-        pop_image_url=order.get("pop_image_url") or "not provided",
+        fl_pop_url=fl_pop,
+        fl_username=settings.fl_username,
+        fl_amount=str(fl_amount),
+        new_membership="YES" if is_new else "NO",
+        repurchase="NO" if is_new else "YES",
+        courier_name=settings.courier_name,
+        courier_fee=str(settings.courier_fee),
     )
     return recipient, message, line_items
 

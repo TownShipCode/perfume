@@ -34,9 +34,13 @@ def test_forward_order_to_manufacturer_records_audit_fields(tmp_path, monkeypatc
             for message_id, text in [
                 ("m1", "2 shoes"),
                 ("m2", "done"),
-                ("m3", "Khayelitsha"),
-                ("m4", "12 Main Road"),
-                ("m5", "Cape Town"),
+                ("m3", "Dlamini"),
+                ("m4", "Khayelitsha"),
+                ("m5", "12 Main Road"),
+                ("m6", "Cape Town"),
+                ("m7", "7784"),
+                ("m8", "alice@email.com"),
+                ("m9", "Western Cape"),
             ]:
                 await handle_text_message(
                     database,
@@ -44,14 +48,14 @@ def test_forward_order_to_manufacturer_records_audit_fields(tmp_path, monkeypatc
                 )
             await handle_image_message(
                 database,
-                {"message_id": "m6", "from": "27820000000", "type": "image", "image_id": "media-123", "image_url": None},
+                {"message_id": "m10", "from": "27820000000", "type": "image", "image_id": "media-123", "image_url": None},
             )
 
             preview = await get_manufacturer_forward_preview(database, 1)
             assert preview is not None
             assert preview["recipient"] == "27829990000"
             assert "2x Red Shoes" in preview["message"]
-            assert "media-123" in preview["message"]
+            assert "FOCUS LOGIC" in preview["message"]
             assert preview["line_items"] == [{"product_id": 1, "product_name": "Red Shoes", "quantity": 2}]
 
             result = await forward_order_to_manufacturer(database, 1)
@@ -59,7 +63,7 @@ def test_forward_order_to_manufacturer_records_audit_fields(tmp_path, monkeypatc
             assert result["action"] == "forwarded"
             assert result["recipient"] == "27829990000"
             assert result["delivery"]["status"] == "dry_run"
-            assert "NEW ORDER" in result["message"]
+            assert "FOCUS LOGIC" in result["message"]
             assert "2x Red Shoes" in result["message"]
             assert result["order"]["forwarded_to"] == "27829990000"
             assert result["order"]["forward_delivery_status"] == "dry_run"

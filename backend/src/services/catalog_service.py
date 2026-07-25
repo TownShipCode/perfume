@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -11,6 +12,7 @@ class ProductInput(BaseModel):
     product_number: int = Field(gt=0)
     name: str
     price: Decimal = Field(ge=0)
+    bio_med_margin: Decimal = Field(default=Decimal("0"), ge=0)
     image_url: str | None = None
     description: str | None = None
     is_active: bool = True
@@ -21,6 +23,7 @@ class ProductUpdateInput(BaseModel):
     product_number: int = Field(gt=0)
     name: str
     price: Decimal = Field(ge=0)
+    bio_med_margin: Decimal = Field(default=Decimal("0"), ge=0)
     image_url: str | None = None
     description: str | None = None
     is_active: bool = True
@@ -28,12 +31,14 @@ class ProductUpdateInput(BaseModel):
 
 
 async def list_active_products(database: Database) -> list[dict]:
+    mode = database.mode
+    where_clause = "WHERE is_active = TRUE" if mode == "postgres" else "WHERE is_active = 1"
     rows = await fetch_all(
         database,
-        """
-        SELECT id, product_number, name, price, image_url, description, is_active, created_at, updated_at
+        f"""
+        SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
         FROM products
-        WHERE is_active = 1 OR is_active = TRUE
+        {where_clause}
         ORDER BY product_number
         """,
     )
@@ -52,7 +57,7 @@ async def list_all_products(database: Database) -> list[dict]:
     rows = await fetch_all(
         database,
         """
-        SELECT id, product_number, name, price, image_url, description, is_active, created_at, updated_at
+        SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
         FROM products
         ORDER BY product_number
         """,
@@ -85,14 +90,16 @@ async def _attach_keywords(database: Database, products: list[dict]) -> list[dic
     return products
 
 
-async def get_keyword_map(database: Database) -> dict[str, dict]:
+async def get_keyword_map(database: Database) -> dict[str, dict[str, Any]]:
+    mode = database.mode
+    where_clause = "WHERE p.is_active = TRUE" if mode == "postgres" else "WHERE p.is_active = 1"
     rows = await fetch_all(
         database,
-        """
-        SELECT pk.keyword, p.id AS product_id, p.product_number, p.name, p.price, p.image_url, p.description, p.is_active
+        f"""
+        SELECT pk.keyword, p.id AS product_id, p.product_number, p.name, p.price, p.bio_med_margin, p.image_url, p.description, p.is_active
         FROM product_keywords pk
         JOIN products p ON p.id = pk.product_id
-        WHERE p.is_active = 1 OR p.is_active = TRUE
+        {where_clause}
         ORDER BY LENGTH(pk.keyword) DESC, pk.keyword ASC
         """,
     )
@@ -110,20 +117,21 @@ async def get_keyword_map(database: Database) -> dict[str, dict]:
     }
 
 
-async def create_product(database: Database, payload: ProductInput) -> dict:
+async def create_product(database: Database, payload: ProductInput) -> dict[str, Any]:
     normalized_keywords = _normalize_keywords(payload.keywords)
 
     if database.mode == "postgres":
         row = await fetch_one(
             database,
             """
-            INSERT INTO products (product_number, name, price, image_url, description, is_active)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id, product_number, name, price, image_url, description, is_active, created_at, updated_at
+            INSERT INTO products (product_number, name, price, bio_med_margin, image_url, description, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
             """,
             payload.product_number,
             payload.name,
             payload.price,
+            payload.bio_med_margin,
             payload.image_url,
             payload.description,
             payload.is_active,
@@ -141,12 +149,13 @@ async def create_product(database: Database, payload: ProductInput) -> dict:
     await execute(
         database,
         """
-        INSERT INTO products (product_number, name, price, image_url, description, is_active)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO products (product_number, name, price, bio_med_margin, image_url, description, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         payload.product_number,
         payload.name,
         str(payload.price),
+        str(payload.bio_med_margin),
         payload.image_url,
         payload.description,
         1 if payload.is_active else 0,
@@ -154,7 +163,7 @@ async def create_product(database: Database, payload: ProductInput) -> dict:
     row = await fetch_one(
         database,
         """
-        SELECT id, product_number, name, price, image_url, is_active, created_at, updated_at
+        SELECT id, product_number, name, price, bio_med_margin, image_url, is_active, created_at, updated_at
         FROM products
         WHERE product_number = ?
         """,
@@ -175,12 +184,12 @@ async def get_product_by_number(database: Database, product_number: int) -> dict
     if database.mode == "postgres":
         return await fetch_one(
             database,
-            "SELECT id, product_number, name, price, image_url, description, is_active FROM products WHERE product_number = $1 AND is_active = TRUE",
+            "SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active FROM products WHERE product_number = $1 AND is_active = TRUE",
             product_number,
         )
     return await fetch_one(
         database,
-        "SELECT id, product_number, name, price, image_url, description, is_active FROM products WHERE product_number = ? AND is_active = 1",
+        "SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active FROM products WHERE product_number = ? AND is_active = 1",
         product_number,
     )
 
@@ -190,7 +199,7 @@ async def get_product_by_id(database: Database, product_id: int) -> dict | None:
         return await fetch_one(
             database,
             """
-            SELECT id, product_number, name, price, image_url, description, is_active, created_at, updated_at
+            SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
             FROM products
             WHERE id = $1
             """,
@@ -200,7 +209,7 @@ async def get_product_by_id(database: Database, product_id: int) -> dict | None:
     return await fetch_one(
         database,
         """
-        SELECT id, product_number, name, price, image_url, description, is_active, created_at, updated_at
+        SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
         FROM products
         WHERE id = ?
         """,
@@ -218,7 +227,7 @@ async def get_products_by_ids(database: Database, product_ids: list[int]) -> dic
         rows = await fetch_all(
             database,
             f"""
-            SELECT id, product_number, name, price, image_url, description, is_active, created_at, updated_at
+            SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
             FROM products
             WHERE id IN ({placeholders})
             ORDER BY product_number
@@ -230,7 +239,7 @@ async def get_products_by_ids(database: Database, product_ids: list[int]) -> dic
         rows = await fetch_all(
             database,
             f"""
-            SELECT id, product_number, name, price, image_url, description, is_active, created_at, updated_at
+            SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
             FROM products
             WHERE id IN ({placeholders})
             ORDER BY product_number
@@ -241,7 +250,7 @@ async def get_products_by_ids(database: Database, product_ids: list[int]) -> dic
     return {row["id"]: row for row in rows}
 
 
-async def update_product(database: Database, product_id: int, payload: ProductUpdateInput) -> dict | None:
+async def update_product(database: Database, product_id: int, payload: ProductUpdateInput) -> dict[str, Any] | None:
     existing = await get_product_by_id(database, product_id)
     if existing is None:
         return None
@@ -253,12 +262,13 @@ async def update_product(database: Database, product_id: int, payload: ProductUp
             database,
             """
             UPDATE products
-            SET product_number = $1, name = $2, price = $3, image_url = $4, description = $5, is_active = $6, updated_at = NOW()
-            WHERE id = $7
+            SET product_number = $1, name = $2, price = $3, bio_med_margin = $4, image_url = $5, description = $6, is_active = $7, updated_at = NOW()
+            WHERE id = $8
             """,
             payload.product_number,
             payload.name,
             payload.price,
+            payload.bio_med_margin,
             payload.image_url,
             payload.description,
             payload.is_active,
@@ -277,12 +287,13 @@ async def update_product(database: Database, product_id: int, payload: ProductUp
             database,
             """
             UPDATE products
-            SET product_number = ?, name = ?, price = ?, image_url = ?, description = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+            SET product_number = ?, name = ?, price = ?, bio_med_margin = ?, image_url = ?, description = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
             """,
             payload.product_number,
             payload.name,
             str(payload.price),
+            str(payload.bio_med_margin),
             payload.image_url,
             payload.description,
             1 if payload.is_active else 0,

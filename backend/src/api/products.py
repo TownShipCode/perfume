@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from asyncpg.exceptions import UniqueViolationError
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from src.middleware.auth import require_dashboard_api_key
@@ -25,7 +26,10 @@ async def get_products(request: Request) -> dict[str, object]:
 
 @router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_dashboard_api_key)])
 async def post_product(request: Request, payload: ProductInput) -> dict[str, object]:
-    product = await create_product(request.app.state.database, payload)
+    try:
+        product = await create_product(request.app.state.database, payload)
+    except UniqueViolationError:
+        raise HTTPException(status_code=409, detail=f"Product number {payload.product_number} already exists")
     return {"item": product}
 
 

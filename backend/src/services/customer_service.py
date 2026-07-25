@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+from typing import Any
+
 from src.db.connection import Database, fetch_all, execute, fetch_one
 
 
-async def get_customer_by_phone(database: Database, phone_number: str) -> dict | None:
+async def get_customer_by_phone(database: Database, phone_number: str) -> dict[str, Any] | None:
     query = "SELECT * FROM customers WHERE phone_number = $1" if database.mode == "postgres" else "SELECT * FROM customers WHERE phone_number = ?"
     return await fetch_one(database, query, phone_number)
 
 
-async def get_or_create_customer(database: Database, phone_number: str, name: str | None = None) -> dict:
+async def get_or_create_customer(database: Database, phone_number: str, name: str | None = None) -> dict[str, Any]:
     existing = await get_customer_by_phone(database, phone_number)
     if existing is not None:
         return existing
@@ -33,26 +35,36 @@ async def get_or_create_customer(database: Database, phone_number: str, name: st
     return created
 
 
-async def save_customer_address(
+async def save_customer_profile(
     database: Database,
     phone_number: str,
     *,
     area: str,
     street: str,
     city: str,
+    postal_code: str = "",
+    email: str = "",
+    province: str = "",
+    surname: str = "",
 ) -> dict:
-    full_address = f"{street}, {area}, {city}"
+    parts = [street, area, city, postal_code] if postal_code else [street, area, city]
+    full_address = ", ".join(p for p in parts if p)
     if database.mode == "postgres":
         await execute(
             database,
             """
             UPDATE customers
-            SET area = $1, street = $2, city = $3, full_address = $4, address_verified = TRUE, updated_at = NOW()
-            WHERE phone_number = $5
+            SET area = $1, street = $2, city = $3, postal_code = $4, email = $5,
+                province = $6, surname = $7, full_address = $8, address_verified = TRUE, updated_at = NOW()
+            WHERE phone_number = $9
             """,
             area,
             street,
             city,
+            postal_code,
+            email,
+            province,
+            surname,
             full_address,
             phone_number,
         )
@@ -61,12 +73,17 @@ async def save_customer_address(
             database,
             """
             UPDATE customers
-            SET area = ?, street = ?, city = ?, full_address = ?, address_verified = 1, updated_at = CURRENT_TIMESTAMP
+            SET area = ?, street = ?, city = ?, postal_code = ?, email = ?,
+                province = ?, surname = ?, full_address = ?, address_verified = 1, updated_at = CURRENT_TIMESTAMP
             WHERE phone_number = ?
             """,
             area,
             street,
             city,
+            postal_code,
+            email,
+            province,
+            surname,
             full_address,
             phone_number,
         )
@@ -74,6 +91,23 @@ async def save_customer_address(
     updated = await get_customer_by_phone(database, phone_number)
     assert updated is not None
     return updated
+
+
+async def save_customer_address(
+    database: Database,
+    phone_number: str,
+    *,
+    area: str,
+    street: str,
+    city: str,
+) -> dict:
+    return await save_customer_profile(
+        database,
+        phone_number,
+        area=area,
+        street=street,
+        city=city,
+    )
 
 
 async def list_customers(database: Database) -> list[dict]:
@@ -139,7 +173,7 @@ async def update_customer_address(
     area: str,
     street: str,
     city: str,
-) -> dict | None:
+) -> dict[str, Any] | None:
     existing = await get_customer_by_phone(database, phone_number)
     if existing is None:
         return None

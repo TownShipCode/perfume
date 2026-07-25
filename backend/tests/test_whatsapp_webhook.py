@@ -45,6 +45,11 @@ def make_settings(**overrides: object) -> Settings:
         "supported_languages": ("en", "zu"),
         "cors_origins": ("http://localhost:5173",),
         "sentry_dsn": None,
+        "auto_forward_to_manufacturer": True,
+        "default_margin": __import__("decimal").Decimal("70.00"),
+        "courier_fee": __import__("decimal").Decimal("150.00"),
+        "courier_name": "The Courier Guy",
+        "fl_username": "BioMed_SA",
     }
     values.update(overrides)
     return Settings(**values)

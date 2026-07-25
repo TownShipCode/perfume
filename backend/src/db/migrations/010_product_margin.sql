@@ -1,0 +1,1 @@
+ALTER TABLE products ADD COLUMN bio_med_margin DECIMAL(10,2) NOT NULL DEFAULT 0;

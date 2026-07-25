@@ -334,3 +334,56 @@ def _decode_order(row: dict | None) -> dict | None:
         if isinstance(raw_value, str) and raw_value:
             decoded[key] = json.loads(raw_value)
     return decoded
+
+
+async def record_fl_pop(
+    database: Database,
+    order_id: int,
+    fl_pop_url: str,
+    fl_amount: Decimal | None = None,
+) -> dict | None:
+    """Record BioMed's POP paid to Focus Logic."""
+    now = datetime.now(timezone.utc)
+    if database.mode == "postgres":
+        row = await fetch_one(
+            database,
+            """
+            UPDATE orders
+            SET fl_pop_image_url = $1, fl_pop_uploaded_at = $2, fl_amount = $3, updated_at = $4
+            WHERE id = $5
+            RETURNING id, order_number, customer_id, items, total, status, pop_image_url, tracking_info,
+                      forwarded_to, forwarded_at, forward_delivery_status, forward_message_id, forward_error,
+                      forward_payload, forward_response, forward_attempts,
+                      fl_pop_image_url, fl_pop_uploaded_at, fl_amount,
+                      created_at, updated_at
+            """,
+            fl_pop_url,
+            now,
+            fl_amount,
+            now,
+            order_id,
+        )
+    else:
+        now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        await execute(
+            database,
+            """
+            UPDATE orders
+            SET fl_pop_image_url = ?, fl_pop_uploaded_at = ?, fl_amount = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            fl_pop_url,
+            now_str,
+            str(fl_amount) if fl_amount else None,
+            now_str,
+            order_id,
+        )
+        row = await fetch_one(
+            database,
+            "SELECT id, order_number, customer_id, items, total, status, pop_image_url, tracking_info, forwarded_to, forwarded_at, forward_delivery_status, forward_message_id, forward_error, forward_payload, forward_response, forward_attempts, fl_pop_image_url, fl_pop_uploaded_at, fl_amount, created_at, updated_at FROM orders WHERE id = ?",
+            order_id,
+        )
+
+    if row is None:
+        return None
+    return _decode_order(row)
