@@ -1,0 +1,10 @@
+# Railway config
+# IMPORTANT: Also set Root Directory = "backend" in Railway dashboard
+# (Settings → Root Directory) for Railpack to find the Python app.
+
+[deploy]
+numReplicas = 1
+healthcheckPath = "/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
