@@ -51,7 +51,7 @@ async def receive_webhook(
     # Log the raw payload structure for debugging
     has_messages = bool(payload.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {}).get("messages"))
     has_statuses = bool(payload.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {}).get("statuses"))
-    logger.info("WEBHOOK payload_structure | keys=%s batch=%s messages=%s statuses=%s",
+    logger.warning("WEBHOOK payload_structure | keys=%s batch=%s messages=%s statuses=%s",
                 list(payload.keys()), payload.get("batch"), has_messages, has_statuses)
     event = extract_message_event(payload)
 
@@ -60,7 +60,7 @@ async def receive_webhook(
         statuses = payload.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {}).get("statuses", [])
         if statuses:
             for s in statuses:
-                logger.info("WEBHOOK status_update | msg=%s status=%s", s.get("id"), s.get("status"))
+                logger.warning("WEBHOOK status_update | msg=%s status=%s", s.get("id"), s.get("status"))
         return JSONResponse(status_code=200, content={"status": "acknowledged", "reason": "status_update"})
 
     # Idempotency: atomically claim this message_id.
@@ -83,7 +83,7 @@ async def receive_webhook(
             result = await handle_image_message(request.app.state.database, event)
         reply = await build_customer_reply(request.app.state.database, result)
         delivery = await deliver_reply(event, reply)
-        logger.info("WEBHOOK processed | action=%s reply=%s delivery=%s",
+        logger.warning("WEBHOOK processed | action=%s reply=%s delivery=%s",
                     result.get("action") if result else "none",
                     "yes" if reply else "no",
                     delivery.get("status") if delivery else "none")
