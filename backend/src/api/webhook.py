@@ -58,6 +58,13 @@ async def receive_webhook(
                 list(payload.keys()), payload.get("batch"), has_messages, has_statuses)
     event = extract_message_event(payload)
 
+    # Validate phone number — reject malformed senders
+    if event and event.get("from"):
+        import re
+        if not re.match(r'^\+\d{10,15}$', str(event["from"])):
+            logger.warning("WEBHOOK invalid_phone | from=%s", event["from"])
+            return JSONResponse(status_code=200, content={"status": "rejected", "reason": "invalid_phone"})
+
     # Status update callbacks (delivered/read/sent receipts) — log and acknowledge
     if event is None:
         statuses = payload.get("entry", [{}])[0].get("changes", [{}])[0].get("value", {}).get("statuses", [])

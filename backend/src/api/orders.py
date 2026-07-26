@@ -154,7 +154,7 @@ async def confirm_fl_pop_and_forward(request: Request, order_id: int, payload: F
     if get_settings().auto_forward_to_manufacturer:
         forward_result = await forward_order_to_manufacturer(request.app.state.database, order_id)
 
-    # Notify customer their order is confirmed
+    # Notify customer — only if forwarding succeeded
     customer_phone = updated.get("phone_number")
     if customer_phone and forward_result and forward_result.get("action") == "forwarded":
         items = updated.get("items") or []

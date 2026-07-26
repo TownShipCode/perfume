@@ -52,6 +52,7 @@ def make_settings(**overrides: object) -> Settings:
         "courier_tracking_url": "https://thecourierguy.co.za/track",
         "fl_username": "BioMed_SA",
         "quantity_options": (1, 2, 3, 4, 5, 6),
+        "max_quantity": 99,
         "bio_med_email": "orders@biomed.co.za",
         "default_membership": "NO",
         "default_repurchase": "YES",

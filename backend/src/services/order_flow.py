@@ -270,7 +270,10 @@ async def _handle_address_collection(
     step_index = int(session.get("current_step", 0))
     temp_address = dict(session.get("temp_address") or {})
     key, _prompt = ADDRESS_STEPS[min(step_index, len(ADDRESS_STEPS) - 1)]
-    temp_address[key] = text.strip()
+    value = text.strip()
+    if len(value) < 2:
+        return {"action": "address_collection_progress", "state": session.get("state"), "current_step": step_index, "prompt": f"⚠️ Please enter a valid {key.replace('_', ' ')}.\n\n{_prompt}"}
+    temp_address[key] = value
 
     if step_index < len(ADDRESS_STEPS) - 1:
         next_step = step_index + 1
@@ -426,8 +429,8 @@ async def _add_pending_to_cart(
     quantity: int,
 ) -> dict[str, object]:
     """Add pending product to cart with specified quantity, then clear pending state."""
+    settings = get_settings()
     if quantity <= 0:
-        # Invalid quantity — clear pending, show welcome
         await save_session_state(
             database, phone_number,
             state=State.IDLE, cart=cart_items,
@@ -436,7 +439,14 @@ async def _add_pending_to_cart(
         return {
             "action": "interactive_welcome",
             "customer_name": "",
-            "greeting": "👋 *Welcome to BioMed!* 🫖\n\nYour natural health store on WhatsApp.\nWhat would you like to do?",
+            "greeting": f"👋 *Welcome to {settings.store_name}!* 🫖\n\nYour natural health store on WhatsApp.\nWhat would you like to do?",
+        }
+
+    if quantity > settings.max_quantity:
+        return {
+            "action": "quantity_selection",
+            "product_name": pending["name"],
+            "price": pending["price"],
         }
 
     updated_items = add_item_to_cart(cart_items, pending["id"], quantity)

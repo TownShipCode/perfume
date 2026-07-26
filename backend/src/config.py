@@ -56,6 +56,7 @@ class Settings:
     courier_tracking_url: str
     fl_username: str
     quantity_options: tuple[int, ...]
+    max_quantity: int
     bio_med_email: str
     default_membership: str
     default_repurchase: str
@@ -108,6 +109,7 @@ def get_settings() -> Settings:
     quantity_options = tuple(
         int(v.strip()) for v in os.getenv("WHATSAPP_QUANTITY_OPTIONS", "1,2,3,4,5,6").split(",") if v.strip().isdigit()
     )
+    max_quantity = int(os.getenv("MAX_QUANTITY", "99") or "99")
     bio_med_email = os.getenv("BIO_MED_EMAIL", "orders@biomed.co.za").strip()
     default_membership = os.getenv("DEFAULT_MEMBERSHIP", "NO").strip()
     default_repurchase = os.getenv("DEFAULT_REPURCHASE", "YES").strip()
@@ -151,6 +153,7 @@ def get_settings() -> Settings:
         courier_tracking_url=courier_tracking_url,
         fl_username=fl_username,
         quantity_options=quantity_options,
+        max_quantity=max_quantity,
         bio_med_email=bio_med_email,
         default_membership=default_membership,
         default_repurchase=default_repurchase,
