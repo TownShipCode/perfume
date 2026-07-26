@@ -6,10 +6,11 @@ import os
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from src.db.connection import Database, execute, fetch_one
+from src.middleware.auth import require_dashboard_api_key
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
