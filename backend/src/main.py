@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import logging
 import subprocess
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -18,6 +20,19 @@ from src.api.webhook import router as webhook_routes
 from src.config import get_settings
 from src.db.connection import close_database, connect_database, initialize_database
 
+logger = logging.getLogger(__name__)
+
+
+async def _expire_stale_orders_loop(database, pop_expiry_hours: int, interval: int = 600):
+    """Background task: expire stale POP orders every `interval` seconds."""
+    from src.services.order_service import expire_stale_pop_orders
+    while True:
+        try:
+            await expire_stale_pop_orders(database, pop_expiry_hours)
+        except Exception as exc:
+            logger.warning("background_expiry_error | %s", exc)
+        await asyncio.sleep(interval)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,9 +46,15 @@ async def lifespan(app: FastAPI):
     from src.services.whatsapp_buttons import register_quantity_mappings
     register_quantity_mappings(settings.quantity_options)
 
+    # Background task: expire stale POP orders every 10 minutes
+    expiry_task = asyncio.create_task(
+        _expire_stale_orders_loop(database, settings.pop_expiry_hours)
+    )
+
     try:
         yield
     finally:
+        expiry_task.cancel()
         await close_database(database)
 
 

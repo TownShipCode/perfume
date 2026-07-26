@@ -4,7 +4,7 @@ import json
 import logging
 import sys
 
-from fastapi import APIRouter, Depends, Header, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
@@ -12,7 +12,6 @@ from src.config import get_settings
 from src.middleware.rate_limit import webhook_rate_limit
 from src.services.message_templates import build_customer_reply
 from src.services.order_flow import handle_image_message, handle_text_message
-from src.services.order_service import expire_stale_pop_orders
 from src.services.whatsapp_sender import deliver_reply
 from src.services.whatsapp_webhook import (
     extract_message_event,
@@ -39,6 +38,7 @@ async def verify_webhook(
 @router.post("/webhook", dependencies=[Depends(webhook_rate_limit())])
 async def receive_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     x_hub_signature_256: str | None = Header(default=None),
 ) -> JSONResponse:
     settings = get_settings()
@@ -98,21 +98,27 @@ async def receive_webhook(
 
     # Process message with transient/permanent error classification
     try:
-        await expire_stale_pop_orders(request.app.state.database, settings.pop_expiry_hours)
         result: dict[str, object] | None = None
         if event.get("type") == "text":
             result = await handle_text_message(request.app.state.database, event)
         elif event.get("type") == "image":
             result = await handle_image_message(request.app.state.database, event)
         reply = await build_customer_reply(request.app.state.database, result)
-        delivery = await deliver_reply(event, reply)
-        logger.warning("WEBHOOK processed | action=%s reply=%s delivery=%s",
+
+        # Fire-and-forget: send reply in background so webhook returns 200 instantly.
+        # The customer gets acknowledgment immediately; Kapso delivers the reply async.
+        background_tasks.add_task(
+            _deliver_reply_safe,
+            request.app.state.database,
+            event,
+            reply,
+        )
+
+        logger.warning("WEBHOOK accepted | action=%s reply=%s",
                     result.get("action") if result else "none",
-                    "yes" if reply else "no",
-                    delivery.get("status") if delivery else "none")
+                    "yes" if reply else "no")
         return JSONResponse(status_code=200, content=jsonable_encoder({
             "status": "accepted", "event": event, "result": result,
-            "reply": reply, "delivery": delivery,
         }))
     except Exception as exc:
         logger.error("WEBHOOK processing_error | %s", exc)
@@ -130,4 +136,14 @@ def _is_transient(exc: Exception) -> bool:
         "server closed", "cannot connect", "connection refused",
     ]
     return any(marker in error_str for marker in transient_markers)
+
+
+async def _deliver_reply_safe(database, event: dict, reply: dict | None) -> None:
+    """Fire-and-forget wrapper: deliver reply in background, logging any failures."""
+    try:
+        delivery = await deliver_reply(event, reply)
+        if delivery and delivery.get("status") not in ("sent", "dry_run", "skipped"):
+            logger.warning("WEBHOOK bg_delivery_failed | status=%s", delivery.get("status"))
+    except Exception as exc:
+        logger.error("WEBHOOK bg_delivery_error | %s", exc)
 
