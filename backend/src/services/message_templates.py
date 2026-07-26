@@ -10,8 +10,8 @@ from src.db.connection import Database, execute, fetch_all, fetch_one
 
 
 DEFAULT_TEMPLATES = {
-    "catalogue": "📋 *Available Products*\n\n{catalogue}\n\n💡 Type a number to order, e.g. *1*",
-    "welcome_catalogue": "👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n💡 Type a number to order, e.g. *1*",
+    "catalogue": "📋 *Available Products*\n\n{catalogue}\n\n💡 Type a number to order, or *info 1* for details & image.",
+    "welcome_catalogue": "👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n💡 Type a number to order, or *info 1* for details & image.",
     "product_detail": "{product_name}\n{description}\nPrice: R{price}\n\n_Reply with \"1 {product_name}\" to order._",
     "language_selection": "🌍 Please choose your language:\n🇬🇧 Reply: en for English\n🇿🇦 Reply: zu for isiZulu",
     "language_set": "✅ Language set to {lang}.\n\n👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_Reply with a number to order, e.g. \"1\" for 1x FL 1L._",
@@ -115,11 +115,27 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         }
 
     if action == "quantity_selection":
-        # Send quantity buttons after product selection
+        # Send quantity buttons after product selection.
+        # If image_url is present, send two messages: image + description, then buttons.
         from src.services.whatsapp_buttons import build_quantity_buttons
         settings = get_settings()
         product_name = result.get("product_name", "item")
         price = result.get("price", "0")
+        description = result.get("description", "")
+        image_url = result.get("image_url")
+
+        if image_url and description:
+            caption = f"🛒 *{product_name}* — R{price}\n\n{description}"
+            buttons_body = f"How many {product_name}?"
+            return [
+                {"image_url": image_url, "text": caption},
+                {
+                    "type": "interactive",
+                    "payload": build_quantity_buttons(buttons_body, settings.quantity_options),
+                    "fallback_text": f"🛒 *{product_name}* — R{price}\n\nHow many? Type a number (e.g. 2).",
+                },
+            ]
+
         body = f"🛒 *{product_name}* — R{price}\n\nHow many would you like?\nType a number or tap:"
         return {
             "type": "interactive",

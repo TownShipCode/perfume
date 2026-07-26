@@ -103,20 +103,21 @@ async def receive_webhook(
             result = await handle_text_message(request.app.state.database, event)
         elif event.get("type") == "image":
             result = await handle_image_message(request.app.state.database, event)
-        reply = await build_customer_reply(request.app.state.database, result)
+        replies = await build_customer_reply(request.app.state.database, result)
 
-        # Fire-and-forget: send reply in background so webhook returns 200 instantly.
-        # The customer gets acknowledgment immediately; Kapso delivers the reply async.
-        background_tasks.add_task(
-            _deliver_reply_safe,
-            request.app.state.database,
-            event,
-            reply,
-        )
+        # Fire-and-forget: send replies in background.
+        # Supports single reply or list (e.g. image + buttons as two messages).
+        if replies is None:
+            pass
+        elif isinstance(replies, list):
+            for r in replies:
+                background_tasks.add_task(_deliver_reply_safe, request.app.state.database, event, r)
+        else:
+            background_tasks.add_task(_deliver_reply_safe, request.app.state.database, event, replies)
 
         logger.warning("WEBHOOK accepted | action=%s reply=%s",
                     result.get("action") if result else "none",
-                    "yes" if reply else "no")
+                    "yes" if replies else "no")
         return JSONResponse(status_code=200, content=jsonable_encoder({
             "status": "accepted", "event": event, "result": result,
         }))

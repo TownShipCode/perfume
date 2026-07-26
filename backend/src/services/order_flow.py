@@ -71,12 +71,10 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
 
     if lowered in settings.whatsapp_catalog_commands:
         lines = await build_catalog_lines(database)
-        image_url = await _get_catalogue_image_url(database)
         return {
             "action": "catalogue",
             "state": session.get("state", State.IDLE),
             "catalogue": "\n".join(lines) if lines else "No products available right now.",
-            "image_url": image_url,
         }
 
     # Language codes: auto-set language, then show catalogue
@@ -85,14 +83,12 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
             await set_customer_language(database, phone_number, lowered)
             customer["language"] = lowered
         lines = await build_catalog_lines(database)
-        image_url = await _get_catalogue_image_url(database)
         customer_name = customer.get("name") or ""
         return {
             "action": "welcome_catalogue",
             "state": session.get("state", State.IDLE),
             "customer_name": customer_name,
             "catalogue": "\n".join(lines) if lines else "No products available right now.",
-            "image_url": image_url,
         }
 
     if session.get("state") == State.ADDRESS_COLLECTION:
@@ -119,12 +115,10 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
         # Let them browse catalogue while waiting
         if lowered in settings.whatsapp_catalog_commands:
             lines = await build_catalog_lines(database)
-            image_url = await _get_catalogue_image_url(database)
             return {
                 "action": "catalogue",
                 "state": State.POP_WAITING,
                 "catalogue": "\n".join(lines) if lines else "No products available right now.",
-                "image_url": image_url,
             }
         return {"action": "awaiting_pop", "state": State.POP_WAITING}
 
@@ -193,6 +187,8 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
                 "action": "quantity_selection",
                 "product_name": product["name"],
                 "price": str(product["price"]),
+                "description": product.get("description", ""),
+                "image_url": product.get("image_url"),
             }
         # Product number doesn't exist — show what IS available
         lines = await build_catalog_lines(database)
@@ -258,7 +254,6 @@ async def _handle_language_selection(
         )
         lines = await build_catalog_lines(database)
         catalogue = "\n".join(lines) if lines else "No products available right now."
-        image_url = await _get_catalogue_image_url(database)
         customer_name = customer.get("name") or ""
         return {
             "action": "language_set",
@@ -266,7 +261,6 @@ async def _handle_language_selection(
             "state": State.IDLE,
             "customer_name": customer_name,
             "catalogue": catalogue,
-            "image_url": image_url,
         }
     return {"action": "language_selection", "state": State.LANGUAGE_SELECTION}
 
