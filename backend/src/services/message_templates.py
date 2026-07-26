@@ -24,11 +24,13 @@ DEFAULT_TEMPLATES = {
     "address_confirmation": "✅ Address saved: {full_address}. Is this correct?",
     "address_confirmation_pending": "Please reply *YES* to use your saved address, or *NO* to enter a new one.",
     "order_final": "✅ *Order #{order_number} Confirmed*\n\nSubtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\n📸 Please send your POP (proof of payment).",
-    "pop_received": "📸 *POP received!* We will confirm your order shortly.",
+    "pop_received": "📸 *POP received — thank you!* 🙏\n\nWe'll review your payment and confirm your order shortly.\nYou'll receive a notification once your order is on the way.",
+    "order_confirmed": "✅ *Order #{order_number} Confirmed!* 🎉\n\nHi {customer_name}, your order has been processed and sent to our fulfilment team.\n\n🛒 {items}\n💰 Total: R{total}\n🚚 Delivery: {courier}\n\nWe'll notify you once your order is on the way. Thank you for choosing BioMed! 🫖",
+    "order_shipped": "🚚 *Your order is on the way!*\n\nOrder #{order_number}\n📦 Waybill: {tracking_info}\n🔗 Track your order: {tracking_url}\n\n📍 Delivery to:\n{full_address}\n\nThank you for choosing BioMed! 🫖",
     "checkout_blocked": "🛒 Your cart is empty. Add a product first — reply with a number like *1*.",
     "unmatched": "❓ I couldn't match that.\n\nType *CATALOGUE* to see products, or a product number like *1* to start ordering.",
     "awaiting_pop": "⏳ Your order is waiting for POP (proof of payment).\n\n📸 Please send your POP image to confirm.\n🗑️ Type *CANCEL* to cancel this order.\n\n_Your order will expire in {expiry_hours}h if no POP is received._",
-    "order_cancelled": "🗑️ Your order has been cancelled. Reply with anything to start again.",
+    "order_cancelled": "🗑️ Order cancelled.\n\nWhenever you're ready, just say *Hi* to start a new order. We're here for you! 🫖",
     "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *SURNAME:* {surname}\n➡️ *ADDRESS:* {full_address}\n➡️ *POSTAL CODE:* {postal_code}\n➡️ *EMAIL:* {email}\n➡️ *PROVINCE /CITY:* {province}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *QUANTITY:*\n{items}\n➡️ *DATE OF PAYMENT:* {date_of_payment}\n➡️ *CELL NO:* {phone_number}\n➡️ *COURIER:* {courier_name}\n➡️ *SELF PICK UP:* {self_pickup}",
 }
 
@@ -96,7 +98,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         from src.services.whatsapp_buttons import build_welcome_buttons
         customer_name = result.get("customer_name") or ""
         greeting = f" {customer_name}" if customer_name else ""
-        body = result.get("greeting") or f"👋 Hi{greeting}! Welcome to BioMed. What would you like to do?"
+        body = result.get("greeting") or f"👋 *Welcome to BioMed!* 🫖\n\nYour natural health store on WhatsApp.\nWhat would you like to do?"
         return {
             "type": "interactive",
             "payload": build_welcome_buttons(body),

@@ -49,6 +49,7 @@ def make_settings(**overrides: object) -> Settings:
         "default_margin": __import__("decimal").Decimal("70.00"),
         "courier_fee": __import__("decimal").Decimal("150.00"),
         "courier_name": "The Courier Guy",
+        "courier_tracking_url": "https://thecourierguy.co.za/track",
         "fl_username": "BioMed_SA",
         "quantity_options": (1, 2, 3, 4, 5, 6),
         "bio_med_email": "orders@biomed.co.za",

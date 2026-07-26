@@ -44,6 +44,7 @@ export default function App() {
   const [statusFilter, setStatusFilter] = useState('');
   const [forwardStatusFilter, setForwardStatusFilter] = useState('');
   const [message, setMessage] = useState('');
+  const [shipTracking, setShipTracking] = useState('');
   const [authenticated, setAuthenticated] = useState(null); // null=loading, true/false
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -197,10 +198,11 @@ export default function App() {
     }
   }
 
-  async function changeOrderStatus(orderId, status) {
+  async function changeOrderStatus(orderId, status, trackingInfo) {
     try {
-      await dashboardApi.updateOrderStatus(orderId, status, apiKey, baseUrl);
-      setMessage(`Order ${orderId} updated to ${status}.`);
+      await dashboardApi.updateOrderStatus(orderId, status, trackingInfo, apiKey, baseUrl);
+      setMessage(`Order ${orderId} ${status}.`);
+      setShipTracking('');
       await loadAll();
       if (selectedOrder?.id === orderId) {
         await loadOrderDetail(orderId);
@@ -504,7 +506,8 @@ export default function App() {
                       <button onClick={() => loadOrderDetail(order.id)}>Open</button>
                       <button onClick={() => confirmOrder(order.id)}>Confirm</button>
                       <button onClick={() => forwardOrder(order)}>{order.forward_delivery_status ? 'Retry' : 'Forward'}</button>
-                      <button onClick={() => changeOrderStatus(order.id, 'shipped')}>Ship</button>
+                      <input placeholder="Waybill #" value={shipTracking} onChange={e => setShipTracking(e.target.value)} style={{width:100,padding:'2px 6px',marginRight:4,fontSize:13}} />
+                      <button onClick={() => changeOrderStatus(order.id, 'shipped', shipTracking)}>Ship</button>
                       <button onClick={() => changeOrderStatus(order.id, 'delivered')}>Deliver</button>
                     </td>
                   </tr>

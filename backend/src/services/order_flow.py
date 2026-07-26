@@ -436,7 +436,7 @@ async def _add_pending_to_cart(
         return {
             "action": "interactive_welcome",
             "customer_name": "",
-            "greeting": "👋 Welcome to BioMed. What would you like to do?",
+            "greeting": "👋 *Welcome to BioMed!* 🫖\n\nYour natural health store on WhatsApp.\nWhat would you like to do?",
         }
 
     updated_items = add_item_to_cart(cart_items, pending["id"], quantity)

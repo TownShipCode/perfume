@@ -51,7 +51,7 @@ export const dashboardApi = {
   deleteProduct: (id, apiKey, baseUrl) => request(`/api/products/${id}`, { method: 'DELETE' }, apiKey, baseUrl),
   updateTemplate: (templateKey, body, apiKey, baseUrl) => request(`/api/templates/${encodeURIComponent(templateKey)}`, { method: 'PUT', body: JSON.stringify({ body }) }, apiKey, baseUrl),
   confirmOrder: (id, apiKey, baseUrl) => request(`/api/orders/${id}/confirm`, { method: 'POST' }, apiKey, baseUrl),
-  updateOrderStatus: (id, status, apiKey, baseUrl) => request(`/api/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }, apiKey, baseUrl),
+  updateOrderStatus: (id, status, trackingInfo, apiKey, baseUrl) => request(`/api/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status, tracking_info: trackingInfo || null }) }, apiKey, baseUrl),
   forwardOrder: (id, apiKey, baseUrl, force = false) => request(`/api/orders/${id}/forward`, { method: 'POST', body: JSON.stringify({ force }) }, apiKey, baseUrl),
   uploadFlPop: (id, flPopImageUrl, flAmount, apiKey, baseUrl) => request(`/api/orders/${id}/fl-pop`, { method: 'POST', body: JSON.stringify({ fl_pop_image_url: flPopImageUrl, fl_amount: flAmount }) }, apiKey, baseUrl),
   confirmFlPop: (id, flPopImageUrl, flAmount, apiKey, baseUrl) => request(`/api/orders/${id}/fl-pop/confirm`, { method: 'POST', body: JSON.stringify({ fl_pop_image_url: flPopImageUrl, fl_amount: flAmount, confirm: true }) }, apiKey, baseUrl),

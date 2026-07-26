@@ -53,6 +53,7 @@ class Settings:
     default_margin: Decimal
     courier_fee: Decimal
     courier_name: str
+    courier_tracking_url: str
     fl_username: str
     quantity_options: tuple[int, ...]
     bio_med_email: str
@@ -101,6 +102,7 @@ def get_settings() -> Settings:
     default_margin = Decimal(os.getenv("DEFAULT_MARGIN", "70.00") or "70.00")
     courier_fee = Decimal(os.getenv("COURIER_FEE", "150.00") or "150.00")
     courier_name = os.getenv("COURIER_NAME", "The Courier Guy").strip()
+    courier_tracking_url = os.getenv("COURIER_TRACKING_URL", "https://thecourierguy.co.za/track").strip()
     fl_username = os.getenv("FL_USERNAME", "BioMed_SA").strip()
     auto_forward = os.getenv("AUTO_FORWARD_TO_MANUFACTURER", "true").strip().lower() in ("true", "1", "yes")
     quantity_options = tuple(
@@ -146,6 +148,7 @@ def get_settings() -> Settings:
         default_margin=default_margin,
         courier_fee=courier_fee,
         courier_name=courier_name,
+        courier_tracking_url=courier_tracking_url,
         fl_username=fl_username,
         quantity_options=quantity_options,
         bio_med_email=bio_med_email,

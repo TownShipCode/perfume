@@ -22,6 +22,7 @@ class ParseOrderRequest(BaseModel):
 
 class UpdateOrderStatusRequest(BaseModel):
     status: str
+    tracking_info: str | None = None
 
 
 class ForwardOrderRequest(BaseModel):
@@ -69,9 +70,31 @@ async def get_order(request: Request, order_id: int) -> dict[str, object]:
 
 @router.put("/{order_id}/status", dependencies=[Depends(require_dashboard_api_key)])
 async def put_order_status(request: Request, order_id: int, payload: UpdateOrderStatusRequest) -> dict[str, object]:
+    from src.services.order_service import update_order_tracking
+    from src.services.whatsapp_sender import send_text_message
+    from src.services.message_templates import render_template
+
+    if payload.tracking_info:
+        await update_order_tracking(request.app.state.database, order_id, payload.tracking_info)
+
     order = await update_order_status(request.app.state.database, order_id, payload.status)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    # Notify customer when shipped
+    if payload.status == "shipped" and order.get("phone_number"):
+        settings = get_settings()
+        tracking = order.get("tracking_info") or payload.tracking_info or "Pending"
+        message = await render_template(
+            request.app.state.database,
+            "order_shipped",
+            order_number=order["order_number"],
+            tracking_info=tracking,
+            tracking_url=settings.courier_tracking_url,
+            full_address=order.get("full_address") or "Your address",
+        )
+        await send_text_message(order["phone_number"], message)
+
     return {"item": order}
 
 
@@ -114,7 +137,10 @@ async def upload_fl_pop(request: Request, order_id: int, payload: FlPopRequest) 
 
 @router.post("/{order_id}/fl-pop/confirm", dependencies=[Depends(require_dashboard_api_key)])
 async def confirm_fl_pop_and_forward(request: Request, order_id: int, payload: FlPopConfirmRequest) -> dict[str, object]:
-    """Save FL POP, then auto-forward to manufacturer."""
+    """Save FL POP, auto-forward to manufacturer, then notify customer."""
+    from src.services.whatsapp_sender import send_text_message
+    from src.services.message_templates import render_template
+
     order = await get_order_by_id(request.app.state.database, order_id)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -127,6 +153,22 @@ async def confirm_fl_pop_and_forward(request: Request, order_id: int, payload: F
     forward_result = None
     if get_settings().auto_forward_to_manufacturer:
         forward_result = await forward_order_to_manufacturer(request.app.state.database, order_id)
+
+    # Notify customer their order is confirmed
+    customer_phone = updated.get("phone_number")
+    if customer_phone and forward_result and forward_result.get("action") == "forwarded":
+        items = updated.get("items") or []
+        item_lines = "\n".join(f"• {i.get('quantity', 0)}x {i.get('product_name', 'item')}" for i in items)
+        confirmation = await render_template(
+            request.app.state.database,
+            "order_confirmed",
+            order_number=updated["order_number"],
+            customer_name=updated.get("name") or "Customer",
+            items=item_lines or "Your order",
+            total=str(updated.get("total", "0.00")),
+            courier=get_settings().courier_name,
+        )
+        await send_text_message(customer_phone, confirmation)
 
     return {
         "order": updated,

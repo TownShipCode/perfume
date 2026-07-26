@@ -222,6 +222,24 @@ async def update_order_status(database: Database, order_id: int, status: str) ->
     return await get_order_by_id(database, order_id)
 
 
+async def update_order_tracking(database: Database, order_id: int, tracking_info: str) -> dict | None:
+    if database.mode == "postgres":
+        await execute(
+            database,
+            "UPDATE orders SET tracking_info = $1, updated_at = NOW() WHERE id = $2",
+            tracking_info,
+            order_id,
+        )
+    else:
+        await execute(
+            database,
+            "UPDATE orders SET tracking_info = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            tracking_info,
+            order_id,
+        )
+    return await get_order_by_id(database, order_id)
+
+
 async def record_order_forwarding(
     database: Database,
     order_id: int,
