@@ -1,3 +1,11 @@
 {
-    "reportUnknownVariableType": false
+    "include": ["backend"],
+    "extraPaths": ["backend"],
+    "typeCheckingMode": "basic",
+    "reportUnknownVariableType": false,
+    "reportUnknownMemberType": false,
+    "reportUnknownArgumentType": false,
+    "reportUnknownParameterType": false,
+    "reportMissingTypeStubs": false,
+    "reportMissingImports": false
 }

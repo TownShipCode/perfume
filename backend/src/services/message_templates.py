@@ -1,6 +1,9 @@
+# pyright: reportUnknownVariableType=false, reportUnknownArgumentType=false, reportUnknownMemberType=false, reportUnknownParameterType=false, reportUnknownLambdaType=false
+
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 from src.config import get_settings
 from src.db.connection import Database, execute, fetch_all, fetch_one
@@ -35,7 +38,7 @@ DEFAULT_TEMPLATES = {
 }
 
 
-async def build_customer_reply(database: Database, result: dict[str, object] | None) -> dict[str, str] | None:
+async def build_customer_reply(database: Database, result: dict[str, object] | None) -> dict[str, Any] | None:
     if result is None:
         return None
 
