@@ -232,7 +232,7 @@ def test_order_flow_returns_catalogue_for_menu_command(tmp_path, monkeypatch) ->
             reply = await build_customer_reply(database, result)
             assert reply is not None
             assert "*Available Products*" in reply["text"]
-            assert "How to order" in reply["text"]
+            assert "Type a number to order" in reply["text"]
 
             session = await get_session_by_phone(database, "27820000000")
             assert session is not None

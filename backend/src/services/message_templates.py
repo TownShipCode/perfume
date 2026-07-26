@@ -10,8 +10,8 @@ from src.db.connection import Database, execute, fetch_all, fetch_one
 
 
 DEFAULT_TEMPLATES = {
-    "catalogue": "📋 *Available Products*\n\n{catalogue}\n\n💡 _How to order:_\n• Pick a product number (e.g. *1*)\n• Choose your quantity\n• Then add more or checkout",
-    "welcome_catalogue": "👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n💡 _How to order:_\n• Pick a product number (e.g. *1*)\n• Choose your quantity\n• Then add more or checkout",
+    "catalogue": "📋 *Available Products*\n\n{catalogue}\n\n💡 Type a number to order, e.g. *1*",
+    "welcome_catalogue": "👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n💡 Type a number to order, e.g. *1*",
     "product_detail": "{product_name}\n{description}\nPrice: R{price}\n\n_Reply with \"1 {product_name}\" to order._",
     "language_selection": "🌍 Please choose your language:\n🇬🇧 Reply: en for English\n🇿🇦 Reply: zu for isiZulu",
     "language_set": "✅ Language set to {lang}.\n\n👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_Reply with a number to order, e.g. \"1\" for 1x FL 1L._",
@@ -207,7 +207,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
                     "body": {"text": body},
                     "action": {
                         "buttons": [
-                            {"type": "reply", "reply": {"id": "browse", "title": "📋 Browse Products"}},
+                            {"type": "reply", "reply": {"id": "browse", "title": "�️ Browse Products"}},
                             {"type": "reply", "reply": {"id": "help", "title": "ℹ️ Help"}},
                         ]
                     },
@@ -231,6 +231,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         return {"text": await render_template(database, "order_cancelled")}
 
     if action == "product_detail":
+        image_url = result.get("image_url")
         return {
             "text": await render_template(
                 database,
@@ -239,7 +240,8 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
                 description=result.get("description", ""),
                 price=result.get("price", "0"),
                 currency=settings.store_currency,
-            )
+            ),
+            **(({"image_url": image_url} if image_url else {})),
         }
 
     if action == "language_selection":

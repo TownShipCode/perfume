@@ -52,14 +52,13 @@ async def build_catalog_lines(database: Database) -> list[str]:
         num = product["product_number"]
         name = product["name"]
         price = product["price"]
-        desc = (product.get("description") or "").strip()
-
-        lines.append(f"*{num}.* {name}")
-        if desc:
-            short_desc = desc[:80] + "…" if len(desc) > 80 else desc
-            lines.append(f"    _{short_desc}_")
-        lines.append(f"    💰 R{price}")
+        emoji = _product_emoji(num)
+        lines.append(f"{emoji} *{num}.* {name} — R{price}")
     return lines
+
+
+def _product_emoji(product_number: int) -> str:
+    return {1: "🫖", 2: "🛡️", 3: "🍵", 4: "🦴"}.get(product_number, "📦")
 
 
 async def list_all_products(database: Database) -> list[dict]:

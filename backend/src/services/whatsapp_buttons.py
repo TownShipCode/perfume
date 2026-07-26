@@ -42,7 +42,7 @@ def build_welcome_buttons(body_text: str) -> dict[str, Any]:
             "body": {"text": body_text},
             "action": {
                 "buttons": [
-                    {"type": "reply", "reply": {"id": "catalogue", "title": "📋 Catalogue"}},
+                    {"type": "reply", "reply": {"id": "catalogue", "title": "�️ View Catalogue"}},
                     {"type": "reply", "reply": {"id": "order", "title": "🛒 Order"}},
                     {"type": "reply", "reply": {"id": "help", "title": "ℹ️ Help"}},
                 ]

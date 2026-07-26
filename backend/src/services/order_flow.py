@@ -104,7 +104,7 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
         if num_text.isdigit():
             product = await get_product_by_number(database, int(num_text))
             if product:
-                return {"action": "product_detail", "product_name": product["name"], "description": product.get("description") or "No description available.", "price": str(product["price"])}
+                return {"action": "product_detail", "product_name": product["name"], "description": product.get("description") or "No description available.", "price": str(product["price"]), "image_url": product.get("image_url")}
         return {"action": "unmatched", "state": session.get("state", State.IDLE), "text": text}
 
     if session.get("state") == State.ADDRESS_CONFIRMATION:
