@@ -1,6 +1,6 @@
 # BioMed — Project Status
 
-**2026-07-25** · 25 tests passing · 11 migrations · Phases 1–4 deployed · Live testing
+**2026-07-26** · 25 tests passing · 11 migrations · Interactive WhatsApp UX deployed
 
 ## Wiki Index
 
@@ -29,7 +29,19 @@
 | Product catalog + keyword matching + description | Done |
 | Order parsing + cart + shipping (R109, free over R2000) | Done |
 | WhatsApp webhook + signature + idempotency + rate limiter | Done |
-| Address collection (7-step: surname, area, street, city, postal_code, email, province) | Done |
+| Address collection (7-step: name, surname, area, street, city, postal_code, province) | Done |
+| Interactive WhatsApp buttons (welcome, quantity, cart, confirm) | Done |
+| Quantity selection (configurable via WHATSAPP_QUANTITY_OPTIONS) | Done |
+| Cart summary buttons [➕ Add More] [🛒 Checkout] | Done |
+| Visual catalogue with product descriptions | Done |
+| Language selection removed — default en auto-assigned | Done |
+| Any text triggers welcome (no "hi" gate) | Done |
+| Warmer branding messages (welcome, POP, cancel, confirmed, shipped) | Done |
+| 14-field FL manufacturer forward format | Done |
+| Order confirmed notification on admin forward | Done |
+| Order shipped notification with waybill + tracking URL | Done |
+| Dashboard waybill input for Ship action | Done |
+| Error handling: phone validation, quantity cap, address validation | Done |
 | POP handling + expiry (24h) + order cancellation | Done |
 | Admin API (orders, customers, products, templates) | Done |
 | Dashboard (React/Vite) with manufacturer msg display | Done |
