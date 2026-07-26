@@ -29,6 +29,7 @@ def make_settings(**overrides: object) -> Settings:
         "whatsapp_phone_number_id": None,
         "whatsapp_verify_token": "verify-token",
         "whatsapp_app_secret": "secret-key",
+        "whatsapp_catalog_id": None,
         "dashboard_api_key": None,
         "admin_phone": None,
         "manufacturer_phone": None,

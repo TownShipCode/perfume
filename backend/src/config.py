@@ -33,6 +33,7 @@ class Settings:
     whatsapp_phone_number_id: str | None
     whatsapp_verify_token: str | None
     whatsapp_app_secret: str | None
+    whatsapp_catalog_id: str | None
     dashboard_api_key: str | None
     admin_phone: str | None
     manufacturer_phone: str | None
@@ -130,6 +131,7 @@ def get_settings() -> Settings:
         whatsapp_phone_number_id=_optional("WHATSAPP_PHONE_NUMBER_ID"),
         whatsapp_verify_token=_optional("WHATSAPP_VERIFY_TOKEN"),
         whatsapp_app_secret=_optional("WHATSAPP_APP_SECRET"),
+        whatsapp_catalog_id=_optional("WHATSAPP_CATALOG_ID"),
         dashboard_api_key=_optional("DASHBOARD_API_KEY"),
         admin_phone=_optional("ADMIN_PHONE"),
         manufacturer_phone=_optional("MANUFACTURER_PHONE"),
