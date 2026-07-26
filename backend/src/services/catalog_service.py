@@ -14,6 +14,7 @@ class ProductInput(BaseModel):
     price: Decimal = Field(ge=0)
     bio_med_margin: Decimal = Field(default=Decimal("0"), ge=0)
     image_url: str | None = None
+    thumbnail_url: str | None = None
     description: str | None = None
     is_active: bool = True
     keywords: list[str] = Field(default_factory=list)
@@ -25,6 +26,7 @@ class ProductUpdateInput(BaseModel):
     price: Decimal = Field(ge=0)
     bio_med_margin: Decimal = Field(default=Decimal("0"), ge=0)
     image_url: str | None = None
+    thumbnail_url: str | None = None
     description: str | None = None
     is_active: bool = True
     keywords: list[str] = Field(default_factory=list)
@@ -132,15 +134,16 @@ async def create_product(database: Database, payload: ProductInput) -> dict[str,
         row = await fetch_one(
             database,
             """
-            INSERT INTO products (product_number, name, price, bio_med_margin, image_url, description, is_active)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
+            INSERT INTO products (product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING id, product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, is_active, created_at, updated_at
             """,
             payload.product_number,
             payload.name,
             payload.price,
             payload.bio_med_margin,
             payload.image_url,
+            payload.thumbnail_url,
             payload.description,
             payload.is_active,
         )
@@ -157,14 +160,15 @@ async def create_product(database: Database, payload: ProductInput) -> dict[str,
     await execute(
         database,
         """
-        INSERT INTO products (product_number, name, price, bio_med_margin, image_url, description, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO products (product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
         payload.product_number,
         payload.name,
         str(payload.price),
         str(payload.bio_med_margin),
         payload.image_url,
+        payload.thumbnail_url,
         payload.description,
         1 if payload.is_active else 0,
     )
@@ -270,14 +274,15 @@ async def update_product(database: Database, product_id: int, payload: ProductUp
             database,
             """
             UPDATE products
-            SET product_number = $1, name = $2, price = $3, bio_med_margin = $4, image_url = $5, description = $6, is_active = $7, updated_at = NOW()
-            WHERE id = $8
+            SET product_number = $1, name = $2, price = $3, bio_med_margin = $4, image_url = $5, thumbnail_url = $6, description = $7, is_active = $8, updated_at = NOW()
+            WHERE id = $9
             """,
             payload.product_number,
             payload.name,
             payload.price,
             payload.bio_med_margin,
             payload.image_url,
+            payload.thumbnail_url,
             payload.description,
             payload.is_active,
             product_id,
@@ -295,7 +300,7 @@ async def update_product(database: Database, product_id: int, payload: ProductUp
             database,
             """
             UPDATE products
-            SET product_number = ?, name = ?, price = ?, bio_med_margin = ?, image_url = ?, description = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+            SET product_number = ?, name = ?, price = ?, bio_med_margin = ?, image_url = ?, thumbnail_url = ?, description = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
             """,
             payload.product_number,
@@ -303,6 +308,7 @@ async def update_product(database: Database, product_id: int, payload: ProductUp
             str(payload.price),
             str(payload.bio_med_margin),
             payload.image_url,
+            payload.thumbnail_url,
             payload.description,
             1 if payload.is_active else 0,
             product_id,

@@ -182,5 +182,7 @@ def _sqlite_compat(sql: str) -> str:
     sql = re.sub(r'INTEGER\s+GENERATED\s+BY\s+DEFAULT\s+AS\s+IDENTITY\s+PRIMARY\s+KEY', 'INTEGER PRIMARY KEY AUTOINCREMENT', sql)
     # DECIMAL → REAL (SQLite has no DECIMAL, use REAL for float-like storage)
     sql = re.sub(r'\bDECIMAL\(\d+,\s*\d+\)', 'REAL', sql)
+    # Strip IF NOT EXISTS from ALTER TABLE ADD COLUMN (SQLite doesn't support it)
+    sql = re.sub(r'ALTER TABLE (\w+) ADD COLUMN IF NOT EXISTS', r'ALTER TABLE \1 ADD COLUMN', sql)
     return sql
 

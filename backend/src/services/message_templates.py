@@ -207,7 +207,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
                     "body": {"text": body},
                     "action": {
                         "buttons": [
-                            {"type": "reply", "reply": {"id": "browse", "title": "�️ Browse Products"}},
+                            {"type": "reply", "reply": {"id": "browse", "title": "\U0001f6cd\ufe0f Browse Products"}},
                             {"type": "reply", "reply": {"id": "help", "title": "ℹ️ Help"}},
                         ]
                     },
