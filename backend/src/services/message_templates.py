@@ -197,7 +197,24 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         return {"text": await render_template(database, "pop_received")}
 
     if action == "checkout_blocked":
-        return {"text": await render_template(database, "checkout_blocked")}
+        body = "🛒 *Your cart is empty!*\n\nBrowse our products and pick something you like."
+        return {
+            "type": "interactive",
+            "payload": {
+                "type": "interactive",
+                "interactive": {
+                    "type": "button",
+                    "body": {"text": body},
+                    "action": {
+                        "buttons": [
+                            {"type": "reply", "reply": {"id": "browse", "title": "📋 Browse Products"}},
+                            {"type": "reply", "reply": {"id": "help", "title": "ℹ️ Help"}},
+                        ]
+                    },
+                },
+            },
+            "fallback_text": "🛒 Your cart is empty. Type CATALOGUE to browse products.",
+        }
 
     if action == "product_not_found":
         attempted = result.get("attempted_number", "?")

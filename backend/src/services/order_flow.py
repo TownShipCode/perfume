@@ -161,6 +161,15 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
             "cart": _serialize_cart(cart),
         }
 
+    # Help command — show useful info instead of re-triggering welcome
+    if lowered in ("help", "?"):
+        return {
+            "action": "interactive_welcome",
+            "state": session.get("state", State.IDLE),
+            "customer_name": customer.get("name") or "",
+            "greeting": f"ℹ️ *How to use {settings.store_name}*\n\n📋 Send *CATALOGUE* to browse products\n🔢 Send a number like *1* to order\n🛒 Send *CHECKOUT* to complete order\n📸 Send your POP image to confirm\n🗑️ Send *CANCEL* to cancel\n\nWe're here for you! 🫖",
+        }
+
     # Bare number shortcut or quantity input
     if text.isdigit():
         qty = int(text)

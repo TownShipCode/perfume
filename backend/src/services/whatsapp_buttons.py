@@ -17,6 +17,7 @@ BUTTON_TO_CMD: dict[str, str] = {
     "yes": "yes",
     "no": "no",
     "add_more": "catalogue",
+    "browse": "catalogue",
 }
 
 
