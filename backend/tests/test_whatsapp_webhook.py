@@ -51,6 +51,10 @@ def make_settings(**overrides: object) -> Settings:
         "courier_name": "The Courier Guy",
         "fl_username": "BioMed_SA",
         "quantity_options": (1, 2, 3, 4, 5, 6),
+        "bio_med_email": "orders@biomed.co.za",
+        "default_membership": "NO",
+        "default_repurchase": "YES",
+        "self_pickup_default": "NO",
     }
     values.update(overrides)
     return Settings(**values)

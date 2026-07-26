@@ -29,7 +29,7 @@ DEFAULT_TEMPLATES = {
     "unmatched": "❓ I couldn't match that.\n\nType *CATALOGUE* to see products, or a product number like *1* to start ordering.",
     "awaiting_pop": "⏳ Your order is waiting for POP (proof of payment).\n\n📸 Please send your POP image to confirm.\n🗑️ Type *CANCEL* to cancel this order.\n\n_Your order will expire in {expiry_hours}h if no POP is received._",
     "order_cancelled": "🗑️ Your order has been cancelled. Reply with anything to start again.",
-    "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *ADDRESS:* {full_address}\n➡️ *CELL NO:* {phone_number}\n➡️ *QUANTITY:*\n{items}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *COURIER:* {courier_name}\n\nOrder: {order_number}\nTotal: R{total}\nBioMed payment: R{fl_amount}\nPOP: {fl_pop_url}",
+    "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *SURNAME:* {surname}\n➡️ *ADDRESS:* {full_address}\n➡️ *POSTAL CODE:* {postal_code}\n➡️ *EMAIL:* {email}\n➡️ *PROVINCE /CITY:* {province}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *QUANTITY:*\n{items}\n➡️ *DATE OF PAYMENT:* {date_of_payment}\n➡️ *CELL NO:* {phone_number}\n➡️ *COURIER:* {courier_name}\n➡️ *SELF PICK UP:* {self_pickup}",
 }
 
 

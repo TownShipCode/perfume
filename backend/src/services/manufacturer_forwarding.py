@@ -74,6 +74,8 @@ async def forward_order_to_manufacturer(database: Database, order_id: int, *, fo
 
 
 async def _build_forward_message(database: Database, order: dict[str, object]) -> tuple[str | None, str, list[dict[str, object]]]:
+    from datetime import date
+
     settings = get_settings()
     recipient = settings.manufacturer_phone
     products_by_id = await get_products_by_ids(
@@ -81,32 +83,36 @@ async def _build_forward_message(database: Database, order: dict[str, object]) -
         [int(item.get("product_id", 0)) for item in order.get("items") or []],
     )
     line_items = _build_line_items(order.get("items") or [], products_by_id)
-    customer_name = order.get("name") or order.get("phone_number") or "Customer"
+
+    customer_name = order.get("name") or ""
     phone_number = order.get("phone_number") or ""
     full_address = order.get("full_address") or ""
-    # Default: new membership. Admin updates after first order if needed.
-    is_new = True
+
+    from src.services.customer_service import get_customer_by_phone
+    customer = await get_customer_by_phone(database, phone_number)
+    surname = (customer.get("surname") or "") if customer else ""
+    postal_code = (customer.get("postal_code") or "") if customer else ""
+    province = (customer.get("province") or "") if customer else ""
+
     quantities = _format_items(line_items)
-    fl_pop = order.get("fl_pop_image_url") or "not provided"
-    fl_amount = order.get("fl_amount") or "0.00"
 
     message = await render_template(
         database,
         "manufacturer_forward",
-        order_number=order["order_number"],
         customer_name=customer_name,
-        phone_number=phone_number,
+        surname=surname,
         full_address=full_address,
+        postal_code=postal_code,
+        email=settings.bio_med_email,
+        province=province,
+        phone_number=phone_number,
         items=quantities,
-        total=order.get("total") or "0.00",
-        currency=settings.store_currency,
-        fl_pop_url=fl_pop,
         fl_username=settings.fl_username,
-        fl_amount=str(fl_amount),
-        new_membership="YES" if is_new else "NO",
-        repurchase="NO" if is_new else "YES",
+        new_membership=settings.default_membership,
+        repurchase=settings.default_repurchase,
+        date_of_payment=date.today().strftime("%d %b %Y"),
         courier_name=settings.courier_name,
-        courier_fee=str(settings.courier_fee),
+        self_pickup=settings.self_pickup_default,
     )
     return recipient, message, line_items
 

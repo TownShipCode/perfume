@@ -55,6 +55,10 @@ class Settings:
     courier_name: str
     fl_username: str
     quantity_options: tuple[int, ...]
+    bio_med_email: str
+    default_membership: str
+    default_repurchase: str
+    self_pickup_default: str
 
     @property
     def is_production(self) -> bool:
@@ -102,6 +106,10 @@ def get_settings() -> Settings:
     quantity_options = tuple(
         int(v.strip()) for v in os.getenv("WHATSAPP_QUANTITY_OPTIONS", "1,2,3,4,5,6").split(",") if v.strip().isdigit()
     )
+    bio_med_email = os.getenv("BIO_MED_EMAIL", "orders@biomed.co.za").strip()
+    default_membership = os.getenv("DEFAULT_MEMBERSHIP", "NO").strip()
+    default_repurchase = os.getenv("DEFAULT_REPURCHASE", "YES").strip()
+    self_pickup_default = os.getenv("SELF_PICKUP_DEFAULT", "NO").strip()
 
     settings = Settings(
         app_env=os.getenv("APP_ENV", "development").lower(),
@@ -140,6 +148,10 @@ def get_settings() -> Settings:
         courier_name=courier_name,
         fl_username=fl_username,
         quantity_options=quantity_options,
+        bio_med_email=bio_med_email,
+        default_membership=default_membership,
+        default_repurchase=default_repurchase,
+        self_pickup_default=self_pickup_default,
     )
     validate_settings(settings)
     return settings
