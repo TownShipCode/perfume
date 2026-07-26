@@ -61,9 +61,13 @@ async def receive_webhook(
     # Validate phone number — reject malformed senders
     if event and event.get("from"):
         import re
-        if not re.match(r'^\+\d{10,15}$', str(event["from"])):
-            logger.warning("WEBHOOK invalid_phone | from=%s", event["from"])
+        raw_phone = str(event["from"])
+        if not re.match(r'^\+?\d{10,15}$', raw_phone):
+            logger.warning("WEBHOOK invalid_phone | from=%s", raw_phone)
             return JSONResponse(status_code=200, content={"status": "rejected", "reason": "invalid_phone"})
+        # Normalize: ensure + prefix for DB consistency (Kapso v2 sometimes omits it)
+        if not raw_phone.startswith("+"):
+            event["from"] = "+" + raw_phone
 
     # Status update callbacks (delivered/read/sent receipts) — log and acknowledge
     if event is None:
