@@ -184,5 +184,7 @@ def _sqlite_compat(sql: str) -> str:
     sql = re.sub(r'\bDECIMAL\(\d+,\s*\d+\)', 'REAL', sql)
     # Strip IF NOT EXISTS from ALTER TABLE ADD COLUMN (SQLite doesn't support it)
     sql = re.sub(r'ALTER TABLE (\w+) ADD COLUMN IF NOT EXISTS', r'ALTER TABLE \1 ADD COLUMN', sql)
+    # Strip UNIQUE from ALTER TABLE ADD COLUMN (SQLite doesn't support it)
+    sql = re.sub(r'ADD COLUMN\s+(\w+)\s+TEXT UNIQUE', r'ADD COLUMN \1 TEXT', sql)
     return sql
 

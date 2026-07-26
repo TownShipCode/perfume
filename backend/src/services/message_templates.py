@@ -27,7 +27,12 @@ DEFAULT_TEMPLATES = {
     "profile_confirmation": "📋 *Your Profile*\n\n👤 Name: {customer_name}\n📝 Surname: {surname}\n📍 Address: {full_address}\n📧 Email: {email}\n🗺️ Province: {province}\n\nIs this correct?",
     "address_confirmation": "✅ Address saved: {full_address}. Is this correct?",
     "address_confirmation_pending": "Please reply *YES* to use your saved address, or *NO* to enter a new one.",
-    "order_final": "✅ *Order #{order_number} Confirmed*\n\nSubtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\n📸 Please send your POP (proof of payment).",
+    "order_final": "✅ *Order #{order_number}*\n\nSubtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\nHow would you like to pay?",
+    "payment_selection": "",
+    "bank_details": "🏦 *EFT / Bank Deposit*\n\nBank: {bank_name}\nAccount: {account_number}\nHolder: {account_holder}\nBranch: {branch_code}\nReference: *{order_number}*\n\n📸 Please send your POP once paid.\n🗑️ Type *CANCEL* to cancel.",
+    "yoco_payment_link": "💳 *Pay securely with Yoco*\n\nTap the link to complete your payment:\n{checkout_url}\n\nYour order will be confirmed automatically.",
+    "payment_received": "✅ *Payment received — thank you!* 🙏\n\nOrder #{order_number} is confirmed. We'll notify you once your order is on the way.",
+    "payment_declined": "❌ *Payment declined*\n\nPlease try again or use EFT / Bank Deposit instead.\n\nType *CATALOGUE* to browse or *CHECKOUT* to try again.",
     "pop_received": "📸 *POP received — thank you!* 🙏\n\nWe'll review your payment and confirm your order shortly.\nYou'll receive a notification once your order is on the way.",
     "order_confirmed": "✅ *Order #{order_number} Confirmed!* 🎉\n\nHi {customer_name}, your order has been processed and sent to our fulfilment team.\n\n🛒 {items}\n💰 Total: R{total}\n🚚 Delivery: {courier}\n\nWe'll notify you once your order is on the way. Thank you for choosing BioMed! 🫖",
     "order_shipped": "🚚 *Your order is on the way!*\n\nOrder #{order_number}\n📦 Waybill: {tracking_info}\n🔗 Track your order: {tracking_url}\n\n📍 Delivery to:\n{full_address}\n\nThank you for choosing BioMed! 🫖",
@@ -201,17 +206,18 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         cart = result.get("cart") or {}
         shipping_fee = Decimal(result.get("shipping_fee") or "0")
         subtotal = Decimal(cart.get("total") or "0")
-        shipping_line = "FREE" if shipping_fee == 0 else f"{shipping_fee} {settings.store_currency}"
+        shipping_line = "FREE" if shipping_fee == 0 else f"R{shipping_fee}"
+        total = str(subtotal + shipping_fee)
+        order_number = result.get("order_number", "")
+
+        # Send payment selection buttons
+        from src.services.whatsapp_buttons import build_payment_buttons
+        settings = get_settings()
+        body = f"✅ *Order #{order_number}*\n\nSubtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\nHow would you like to pay?"
         return {
-            "text": await render_template(
-                database,
-                "order_final",
-                order_number=result.get("order_number", ""),
-                subtotal=str(subtotal),
-                shipping_line=shipping_line,
-                total=str(subtotal + shipping_fee),
-                currency=settings.store_currency,
-            )
+            "type": "interactive",
+            "payload": build_payment_buttons(body, settings.payment_methods_enabled),
+            "fallback_text": f"✅ Order #{order_number} — R{total}. Reply YOCO to pay online or EFT for bank details.",
         }
 
     if action == "pop_received":
@@ -280,6 +286,51 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
             catalogue=result.get("catalogue", "No products available right now."),
         )
         return {"text": text, **({"image_url": image_url} if image_url else {})}
+
+    if action == "payment_selection":
+        from src.services.whatsapp_buttons import build_payment_buttons
+        settings = get_settings()
+        body = f"✅ *Order #{result.get('order_number', '')}*\n\nSubtotal: R{result.get('subtotal', '0')}\nDelivery: {result.get('shipping_line', '')}\n*Total: R{result.get('total', '0')}*\n\nHow would you like to pay?"
+        return {
+            "type": "interactive",
+            "payload": build_payment_buttons(body, settings.payment_methods_enabled),
+            "fallback_text": f"✅ Order #{result.get('order_number', '')} confirmed — R{result.get('total', '0')}. Reply YOCO to pay online or EFT for bank details.",
+        }
+
+    if action == "bank_details":
+        settings = get_settings()
+        return {
+            "text": await render_template(
+                database,
+                "bank_details",
+                bank_name=settings.bank_name,
+                account_number=settings.account_number,
+                account_holder=settings.account_holder,
+                branch_code=settings.branch_code,
+                order_number=result.get("order_number", ""),
+            ),
+        }
+
+    if action == "yoco_payment_link":
+        return {
+            "text": await render_template(
+                database,
+                "yoco_payment_link",
+                checkout_url=result.get("checkout_url", ""),
+            ),
+        }
+
+    if action == "payment_received":
+        return {
+            "text": await render_template(
+                database,
+                "payment_received",
+                order_number=result.get("order_number", ""),
+            ),
+        }
+
+    if action == "payment_declined":
+        return {"text": await render_template(database, "payment_declined")}
 
     return None
 

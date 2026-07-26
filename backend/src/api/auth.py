@@ -146,7 +146,7 @@ async def check(request: Request) -> dict:
     return {"authenticated": valid}
 
 
-@router.post("/set-password")
+@router.post("/set-password", dependencies=[Depends(require_dashboard_api_key)])
 async def set_password(request: Request) -> JSONResponse:
     body = await request.json()
     current = (body or {}).get("current", "")

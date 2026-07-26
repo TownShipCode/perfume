@@ -6,7 +6,7 @@ import logging
 from decimal import Decimal
 
 from src.config import Settings, get_settings
-from src.db.connection import Database
+from src.db.connection import Database, execute, fetch_one
 from src.models.cart import CartItem
 from src.services.cart_service import add_item_to_cart, build_cart
 from src.services.catalog_service import build_catalog_lines, get_keyword_map, get_product_by_number, list_active_products
@@ -110,8 +110,12 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
         await _cancel_order(database, phone_number)
         return {"action": "order_cancelled", "state": State.IDLE}
 
-    # In POP_WAITING, allow cancel/checkout above, otherwise remind
+    # In POP_WAITING, handle payment method selection + cancel/checkout
     if session.get("state") == State.POP_WAITING:
+        if lowered == "yoco" and "yoco" in settings.payment_methods_enabled:
+            return await _handle_yoco_payment(database, session, settings)
+        if lowered == "eft" and "eft" in settings.payment_methods_enabled:
+            return await _handle_eft_payment(session)
         # Let them browse catalogue while waiting
         if lowered in settings.whatsapp_catalog_commands:
             lines = await build_catalog_lines(database)
@@ -420,7 +424,7 @@ async def _finalize_order(
         state=State.POP_WAITING,
         cart=[],
         current_step=0,
-        temp_address=None,
+        temp_address={"order_number": order["order_number"]},
     )
     return {
         "action": "order_created",
@@ -429,6 +433,47 @@ async def _finalize_order(
         "address": full_address,
         "cart": _serialize_cart(cart),
         "shipping_fee": str(applied_shipping),
+    }
+
+
+async def _handle_yoco_payment(database: Database, session: dict, settings) -> dict[str, object]:
+    """Create Yoco checkout session and return payment link."""
+    from src.services.order_service import get_latest_order
+    from src.services.yoco_payment import create_checkout_session
+
+    phone = session.get("phone_number", "")
+    order = await get_latest_order(database, phone)
+    if not order:
+        return {"action": "payment_selection", "state": State.POP_WAITING}
+
+    total = order.get("total", 0)
+    amount_cents = int(float(str(total)) * 100)
+    result = await create_checkout_session(str(order.get("order_number", "")), amount_cents)
+
+    if result:
+        # Store payment method
+        await execute(
+            database,
+            "UPDATE orders SET payment_method = 'yoco', yoco_checkout_id = $1, updated_at = NOW() WHERE id = $2",
+            result["checkout_id"],
+            order["id"],
+        )
+        return {
+            "action": "yoco_payment_link",
+            "checkout_url": result["checkout_url"],
+        }
+    return {
+        "action": "bank_details",
+        "order_number": order.get("order_number", ""),
+    }
+
+
+async def _handle_eft_payment(session: dict) -> dict[str, object]:
+    """Show bank details for EFT payment."""
+    temp = session.get("temp_address") or {}
+    return {
+        "action": "bank_details",
+        "order_number": str(temp.get("order_number", "")),
     }
 
 

@@ -35,6 +35,8 @@ class Settings:
     whatsapp_app_secret: str | None
     whatsapp_catalog_id: str | None
     dashboard_api_key: str | None
+    yoco_secret_key: str | None
+    yoco_webhook_secret: str | None
     admin_phone: str | None
     manufacturer_phone: str | None
     shipping_fee: Decimal
@@ -62,6 +64,12 @@ class Settings:
     default_membership: str
     default_repurchase: str
     self_pickup_default: str
+    yoco_base_url: str
+    bank_name: str
+    account_holder: str
+    account_number: str
+    branch_code: str
+    payment_methods_enabled: tuple[str, ...]
 
     @property
     def is_production(self) -> bool:
@@ -115,6 +123,12 @@ def get_settings() -> Settings:
     default_membership = os.getenv("DEFAULT_MEMBERSHIP", "NO").strip()
     default_repurchase = os.getenv("DEFAULT_REPURCHASE", "YES").strip()
     self_pickup_default = os.getenv("SELF_PICKUP_DEFAULT", "NO").strip()
+    yoco_base_url = os.getenv("YOCO_BASE_URL", "https://online.yoco.com/v1").strip()
+    bank_name = os.getenv("BANK_NAME", "Standard Bank").strip()
+    account_holder = os.getenv("ACCOUNT_HOLDER", "BioMed").strip()
+    account_number = os.getenv("ACCOUNT_NUMBER", "").strip()
+    branch_code = os.getenv("BRANCH_CODE", "").strip()
+    payment_methods_enabled = _csv_values(os.getenv("PAYMENT_METHODS_ENABLED", "yoco,eft"))
 
     settings = Settings(
         app_env=os.getenv("APP_ENV", "development").lower(),
@@ -132,6 +146,8 @@ def get_settings() -> Settings:
         whatsapp_verify_token=_optional("WHATSAPP_VERIFY_TOKEN"),
         whatsapp_app_secret=_optional("WHATSAPP_APP_SECRET"),
         whatsapp_catalog_id=_optional("WHATSAPP_CATALOG_ID"),
+        yoco_secret_key=_optional("YOCO_SECRET_KEY"),
+        yoco_webhook_secret=_optional("YOCO_WEBHOOK_SECRET"),
         dashboard_api_key=_optional("DASHBOARD_API_KEY"),
         admin_phone=_optional("ADMIN_PHONE"),
         manufacturer_phone=_optional("MANUFACTURER_PHONE"),
@@ -160,6 +176,12 @@ def get_settings() -> Settings:
         default_membership=default_membership,
         default_repurchase=default_repurchase,
         self_pickup_default=self_pickup_default,
+        yoco_base_url=yoco_base_url,
+        bank_name=bank_name,
+        account_holder=account_holder,
+        account_number=account_number,
+        branch_code=branch_code,
+        payment_methods_enabled=payment_methods_enabled,
     )
     validate_settings(settings)
     return settings
@@ -168,6 +190,13 @@ def get_settings() -> Settings:
 def validate_settings(settings: Settings) -> None:
     if settings.whatsapp_provider not in {"meta", "kapso"}:
         raise SettingsError("WHATSAPP_PROVIDER must be 'meta' or 'kapso'")
+    if settings.is_production:
+        if settings.whatsapp_send_mode == "live" and not settings.whatsapp_api_key:
+            raise SettingsError("WHATSAPP_API_KEY is required when send_mode=live in production")
+        if "yoco" in settings.payment_methods_enabled and not settings.yoco_secret_key:
+            raise SettingsError("YOCO_SECRET_KEY is required when yoco payment method is enabled in production")
+        if not settings.account_number:
+            raise SettingsError("ACCOUNT_NUMBER is required in production")
 
     if settings.is_production:
         required = {

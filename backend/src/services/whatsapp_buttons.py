@@ -18,6 +18,8 @@ BUTTON_TO_CMD: dict[str, str] = {
     "no": "no",
     "add_more": "catalogue",
     "browse": "catalogue",
+    "pay_yoco": "yoco",
+    "pay_eft": "eft",
 }
 
 
@@ -102,5 +104,22 @@ def build_cart_buttons(body_text: str) -> dict[str, Any]:
                     {"type": "reply", "reply": {"id": "order", "title": "🛒 Checkout"}},
                 ]
             },
+        },
+    }
+
+
+def build_payment_buttons(body_text: str, methods_enabled: tuple[str, ...]) -> dict[str, Any]:
+    """Payment selection buttons — Yoco or EFT based on config."""
+    buttons: list[dict[str, Any]] = []
+    if "yoco" in methods_enabled:
+        buttons.append({"type": "reply", "reply": {"id": "pay_yoco", "title": "💳 Pay with Yoco"}})
+    if "eft" in methods_enabled:
+        buttons.append({"type": "reply", "reply": {"id": "pay_eft", "title": "🏦 EFT / Deposit"}})
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body_text},
+            "action": {"buttons": buttons},
         },
     }

@@ -58,6 +58,14 @@ def make_settings(**overrides: object) -> Settings:
         "default_membership": "NO",
         "default_repurchase": "YES",
         "self_pickup_default": "NO",
+        "yoco_secret_key": None,
+        "yoco_webhook_secret": None,
+        "yoco_base_url": "https://online.yoco.com/v1",
+        "bank_name": "Test Bank",
+        "account_holder": "Test",
+        "account_number": "123456",
+        "branch_code": "000000",
+        "payment_methods_enabled": ("eft",),
     }
     values.update(overrides)
     return Settings(**values)

@@ -204,6 +204,31 @@ async def get_order_by_id(database: Database, order_id: int) -> dict | None:
     return _decode_order(row)
 
 
+async def get_latest_order(database: Database, phone_number: str) -> dict | None:
+    """Get the most recent order for a customer by phone number."""
+    if database.mode == "postgres":
+        row = await fetch_one(
+            database,
+            """SELECT o.id, o.order_number, o.total, o.status, o.payment_method
+               FROM orders o
+               JOIN customers c ON c.id = o.customer_id
+               WHERE c.phone_number = $1
+               ORDER BY o.created_at DESC LIMIT 1""",
+            phone_number,
+        )
+    else:
+        row = await fetch_one(
+            database,
+            """SELECT o.id, o.order_number, o.total, o.status, o.payment_method
+               FROM orders o
+               JOIN customers c ON c.id = o.customer_id
+               WHERE c.phone_number = ?
+               ORDER BY o.created_at DESC LIMIT 1""",
+            phone_number,
+        )
+    return _decode_order(row)
+
+
 async def update_order_status(database: Database, order_id: int, status: str) -> dict | None:
     if database.mode == "postgres":
         await execute(

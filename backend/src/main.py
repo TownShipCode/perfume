@@ -14,6 +14,7 @@ from src.api.analytics import router as analytics_routes
 from src.api.auth import router as auth_routes
 from src.api.customers import router as customer_routes
 from src.api.orders import router as order_routes
+from src.api.payments import router as payment_routes
 from src.api.products import router as product_routes
 from src.api.templates import router as template_routes
 from src.api.webhook import router as webhook_routes
@@ -77,6 +78,7 @@ app.include_router(analytics_routes)
 app.include_router(auth_routes)
 app.include_router(product_routes)
 app.include_router(order_routes)
+app.include_router(payment_routes)
 app.include_router(customer_routes)
 app.include_router(template_routes)
 app.include_router(webhook_routes)
