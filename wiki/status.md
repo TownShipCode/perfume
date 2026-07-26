@@ -1,6 +1,21 @@
 # BioMed — Project Status
 
-**2026-07-26** · 25 tests passing · 11 migrations · Interactive WhatsApp UX deployed
+**2026-07-26 (evening)** · 25 tests passing · 12 migrations · Interactive WhatsApp UX deployed
+
+## Today's Session (2026-07-26 PM)
+
+| Change | Detail |
+|---|---|
+| Step counters removed | Address prompts now conversational: "👤 What is your FIRST NAME?" — no "Step 1/7" prefix |
+| Warm address intro | "🚚 Let's get your order to you! Share a few delivery details." before first question |
+| Fire-and-forget reply | `deliver_reply` runs in background via `BackgroundTasks` — webhook returns 200 instantly (~50% latency cut) |
+| Background expiry task | `expire_stale_pop_orders` moved to 10-min `asyncio` loop, removed from hot path |
+| Address collection escape hatches | CANCEL/HELP/CATALOGUE/hi during address collection no longer swallowed as address fields |
+| Catalogue image removed | Misleading single-product image detached from catalogue — clean text only |
+| Product images in order flow | Selecting a product sends image + description, THEN quantity buttons (two messages) |
+| Multi-message support | `build_customer_reply` can return a list — webhook sends each as separate WhatsApp message |
+| `send_product_message` disabled | Commented out per user request — dormant until Meta catalog configured |
+| Email in profile confirmation | "📧 Email: {email}" added to profile summary |
 
 ## Wiki Index
 
@@ -33,7 +48,7 @@
 | Interactive WhatsApp buttons (welcome, quantity, cart, confirm) | Done |
 | Quantity selection (configurable via WHATSAPP_QUANTITY_OPTIONS) | Done |
 | Cart summary buttons [➕ Add More] [🛒 Checkout] | Done |
-| Visual catalogue with product descriptions | Done |
+| Visual catalogue — clean one-liner with emoji + "info N" detail | Done |
 | Language selection removed — default en auto-assigned | Done |
 | Any text triggers welcome (no "hi" gate) | Done |
 | Warmer branding messages (welcome, POP, cancel, confirmed, shipped) | Done |
