@@ -279,6 +279,45 @@ async def _handle_address_collection(
     text: str,
 ) -> dict[str, object]:
     phone_number = customer["phone_number"]
+    settings = get_settings()
+    lowered = text.strip().lower()
+
+    # ── Escape hatches: allow cancel, help, catalogue while collecting address ──
+    if lowered in settings.whatsapp_cancel_commands:
+        await save_session_state(
+            database, phone_number,
+            state=State.IDLE, cart=cart_items,
+            current_step=0, temp_address={},
+        )
+        return {"action": "order_cancelled", "state": State.IDLE}
+
+    if lowered in ("help", "?"):
+        return {
+            "action": "interactive_welcome",
+            "state": session.get("state"),
+            "customer_name": customer.get("name") or "",
+            "greeting": f"ℹ️ You're in the middle of providing your delivery details.\n\nType *CANCEL* to start over, or continue answering the questions.",
+        }
+
+    if lowered in settings.whatsapp_catalog_commands:
+        lines = await build_catalog_lines(database)
+        image_url = await _get_catalogue_image_url(database)
+        return {
+            "action": "catalogue",
+            "state": session.get("state"),
+            "catalogue": "\n".join(lines) if lines else "No products available right now.",
+            "image_url": image_url,
+        }
+
+    if lowered in settings.whatsapp_greeting_commands:
+        _prompt = ADDRESS_STEPS[min(int(session.get("current_step", 0)), len(ADDRESS_STEPS) - 1)][1]
+        return {
+            "action": "address_collection_progress",
+            "state": session.get("state"),
+            "current_step": int(session.get("current_step", 0)),
+            "prompt": f"👋 You're in the middle of providing your delivery details.\n\n{_prompt}\n\n_Type CANCEL to start over._",
+        }
+
     step_index = int(session.get("current_step", 0))
     temp_address = dict(session.get("temp_address") or {})
     key, _prompt = ADDRESS_STEPS[min(step_index, len(ADDRESS_STEPS) - 1)]
