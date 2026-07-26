@@ -18,13 +18,13 @@ from src.services.state_machine import State
 
 
 ADDRESS_STEPS = [
-    ("name", "👤 *Step 1/7* — What is your FIRST NAME?"),
-    ("surname", "📝 *Step 2/7* — What is your SURNAME?"),
-    ("area", "📍 *Step 3/7* — What is your AREA?"),
-    ("street", "🏠 *Step 4/7* — Now send your STREET and HOUSE NUMBER."),
-    ("city", "🏙️ *Step 5/7* — Now send your CITY."),
-    ("postal_code", "📮 *Step 6/7* — Now send your POSTAL CODE."),
-    ("province", "🗺️ *Step 7/7* — Now send your PROVINCE."),
+    ("name", "� *Let's get your order to you!*\n\nTo make sure your products reach you safely, please share a few delivery details.\n\n👤 What is your FIRST NAME?"),
+    ("surname", "📝 What is your SURNAME?"),
+    ("area", "📍 What is your AREA?"),
+    ("street", "🏠 Now send your STREET and HOUSE NUMBER."),
+    ("city", "🏙️ Now send your CITY."),
+    ("postal_code", "📮 Now send your POSTAL CODE."),
+    ("province", "🗺️ Now send your PROVINCE."),
 ]
 
 logger = logging.getLogger(__name__)
@@ -151,6 +151,7 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
                 "customer_name": customer.get("name", ""),
                 "surname": customer.get("surname", ""),
                 "address": customer.get("full_address"),
+                "email": customer.get("email", ""),
                 "province": customer.get("province", ""),
                 "cart": _serialize_cart(cart),
             }
