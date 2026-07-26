@@ -20,8 +20,8 @@ async def deliver_reply(event: dict[str, Any], reply: dict[str, Any] | None) -> 
         payload = reply.get("payload")
         if isinstance(payload, dict):
             result = await send_interactive_message(recipient, payload)
-            # Fallback: if interactive fails, try sending the text version
-            if result.get("status") == "failed" and reply.get("fallback_text"):
+            # Fallback: if interactive fails or is in dry_run/skipped mode, send text instead
+            if result.get("status") in ("failed", "dry_run", "skipped") and reply.get("fallback_text"):
                 return await send_text_message(recipient, reply["fallback_text"])
             return result
         return {"status": "skipped", "reason": "missing_interactive_payload"}
