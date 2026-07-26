@@ -293,20 +293,18 @@ async def _handle_address_collection(
 
     if lowered in ("help", "?"):
         return {
-            "action": "interactive_welcome",
+            "action": "address_collection_progress",
             "state": session.get("state"),
-            "customer_name": customer.get("name") or "",
-            "greeting": f"ℹ️ You're in the middle of providing your delivery details.\n\nType *CANCEL* to start over, or continue answering the questions.",
+            "current_step": int(session.get("current_step", 0)),
+            "prompt": "ℹ️ You're providing your delivery details.\n\nReply *CANCEL* to start over, or continue answering the questions.",
         }
 
     if lowered in settings.whatsapp_catalog_commands:
-        lines = await build_catalog_lines(database)
-        image_url = await _get_catalogue_image_url(database)
         return {
-            "action": "catalogue",
+            "action": "address_collection_progress",
             "state": session.get("state"),
-            "catalogue": "\n".join(lines) if lines else "No products available right now.",
-            "image_url": image_url,
+            "current_step": int(session.get("current_step", 0)),
+            "prompt": "📋 Please finish providing your delivery details first — then you can browse the catalogue.\n\nReply *CANCEL* to start over.",
         }
 
     if lowered in settings.whatsapp_greeting_commands:

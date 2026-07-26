@@ -132,6 +132,8 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         return {"text": prompt}
 
     if action == "address_collection_progress":
+        if "prompt" in result:
+            return {"text": str(result["prompt"])}
         current_step = result.get("current_step")
         step_key_map = {
             0: "address_request_name",
