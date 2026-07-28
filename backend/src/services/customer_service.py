@@ -196,3 +196,134 @@ async def set_customer_language(database: Database, phone_number: str, language:
         await execute(database, "UPDATE customers SET language = ?, updated_at = CURRENT_TIMESTAMP WHERE phone_number = ?", language, phone_number)
     return await get_customer_by_phone(database, phone_number)
 
+
+# ── Agent & Role functions (Phase 1-4) ──
+
+
+async def get_customer_by_agent_code(database: Database, agent_code: str) -> dict[str, Any] | None:
+    """Look up a customer by their agent code."""
+    query = (
+        "SELECT * FROM customers WHERE agent_code = $1"
+        if database.mode == "postgres"
+        else "SELECT * FROM customers WHERE agent_code = ?"
+    )
+    return await fetch_one(database, query, agent_code)
+
+
+async def get_customer_by_email(database: Database, email: str) -> dict[str, Any] | None:
+    """Look up a customer by email (for web store login)."""
+    query = (
+        "SELECT * FROM customers WHERE email = $1"
+        if database.mode == "postgres"
+        else "SELECT * FROM customers WHERE email = ?"
+    )
+    return await fetch_one(database, query, email)
+
+
+async def register_agent(
+    database: Database,
+    phone_number: str,
+    first_name: str,
+    surname: str,
+    team_code: str,
+    recovery_pin: str,
+) -> dict[str, Any] | None:
+    """Register a new agent under a team member."""
+    import secrets
+
+    # Validate team member exists
+    team_member = await get_customer_by_agent_code(database, team_code)
+    if team_member is None or team_member.get("role") != "team_member":
+        return None
+
+    # Generate agent code
+    suffix = secrets.token_hex(2).upper()[:4]
+    agent_code = f"{team_code}-{suffix}"
+
+    if database.mode == "postgres":
+        await execute(
+            database,
+            """INSERT INTO customers (phone_number, name, surname, role, agent_code, registered_by, recovery_pin)
+               VALUES ($1, $2, $3, 'agent', $4, $5, $6)
+               ON CONFLICT (phone_number) DO UPDATE
+               SET role = 'agent', agent_code = $4, registered_by = $5, recovery_pin = $6,
+                   name = $2, surname = $3, updated_at = NOW()""",
+            phone_number, first_name, surname, agent_code, team_member["id"], recovery_pin,
+        )
+    else:
+        await execute(
+            database,
+            """INSERT INTO customers (phone_number, name, surname, role, agent_code, registered_by, recovery_pin)
+               VALUES (?, ?, ?, 'agent', ?, ?, ?)
+               ON CONFLICT (phone_number) DO UPDATE
+               SET role = 'agent', agent_code = ?, registered_by = ?, recovery_pin = ?,
+                   name = ?, surname = ?, updated_at = CURRENT_TIMESTAMP""",
+            phone_number, first_name, surname, agent_code, team_member["id"], recovery_pin,
+            agent_code, team_member["id"], recovery_pin, first_name, surname,
+        )
+
+    return await get_customer_by_phone(database, phone_number)
+
+
+async def migrate_phone_number(
+    database: Database,
+    old_phone: str,
+    new_phone: str,
+) -> dict[str, Any] | None:
+    """Migrate a customer account to a new phone number. Tracks old number."""
+    import json as _json
+
+    customer = await get_customer_by_phone(database, old_phone)
+    if customer is None:
+        return None
+
+    old_phones = _json.loads(customer.get("previous_phone_numbers") or "[]")
+    old_phones.append(old_phone)
+
+    if database.mode == "postgres":
+        await execute(
+            database,
+            """UPDATE customers SET phone_number = $1, previous_phone_numbers = $2, updated_at = NOW()
+               WHERE id = $3""",
+            new_phone, _json.dumps(old_phones), customer["id"],
+        )
+    else:
+        await execute(
+            database,
+            """UPDATE customers SET phone_number = ?, previous_phone_numbers = ?, updated_at = CURRENT_TIMESTAMP
+               WHERE id = ?""",
+            new_phone, _json.dumps(old_phones), customer["id"],
+        )
+
+    return await get_customer_by_phone(database, new_phone)
+
+
+async def list_customers_by_role(database: Database, role: str) -> list[dict]:
+    """List all customers with a specific role."""
+    if database.mode == "postgres":
+        return await fetch_all(
+            database,
+            "SELECT * FROM customers WHERE role = $1 ORDER BY created_at DESC",
+            role,
+        )
+    return await fetch_all(
+        database,
+        "SELECT * FROM customers WHERE role = ? ORDER BY created_at DESC",
+        role,
+    )
+
+
+async def list_agents_by_team_member(database: Database, team_member_id: int) -> list[dict]:
+    """List all agents registered by a specific team member."""
+    if database.mode == "postgres":
+        return await fetch_all(
+            database,
+            "SELECT * FROM customers WHERE registered_by = $1 AND role = 'agent' ORDER BY created_at DESC",
+            team_member_id,
+        )
+    return await fetch_all(
+        database,
+        "SELECT * FROM customers WHERE registered_by = ? AND role = 'agent' ORDER BY created_at DESC",
+        team_member_id,
+    )
+

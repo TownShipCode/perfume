@@ -57,6 +57,8 @@ class Settings:
     courier_fee: Decimal
     courier_name: str
     courier_tracking_url: str
+    commission_percent: Decimal
+    low_stock_threshold: int
     fl_username: str
     quantity_options: tuple[int, ...]
     max_quantity: int
@@ -110,7 +112,9 @@ def get_settings() -> Settings:
     default_language = os.getenv("DEFAULT_LANGUAGE", "en").strip().lower() or "en"
     supported_languages = _csv_values(os.getenv("SUPPORTED_LANGUAGES", "en,zu"))
     default_margin = Decimal(os.getenv("DEFAULT_MARGIN", "70.00") or "70.00")
-    courier_fee = Decimal(os.getenv("COURIER_FEE", "150.00") or "150.00")
+    courier_fee = Decimal(os.getenv("COURIER_FEE", "65.00") or "65.00")
+    commission_percent = Decimal(os.getenv("COMMISSION_PERCENT", "5") or "5")
+    low_stock_threshold = int(os.getenv("LOW_STOCK_THRESHOLD", "5") or "5")
     courier_name = os.getenv("COURIER_NAME", "The Courier Guy").strip()
     courier_tracking_url = os.getenv("COURIER_TRACKING_URL", "https://thecourierguy.co.za/track").strip()
     fl_username = os.getenv("FL_USERNAME", "BioMed_SA").strip()
@@ -169,6 +173,8 @@ def get_settings() -> Settings:
         courier_fee=courier_fee,
         courier_name=courier_name,
         courier_tracking_url=courier_tracking_url,
+        commission_percent=commission_percent,
+        low_stock_threshold=low_stock_threshold,
         fl_username=fl_username,
         quantity_options=quantity_options,
         max_quantity=max_quantity,

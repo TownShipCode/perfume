@@ -9,7 +9,7 @@ from src.config import Settings, get_settings
 from src.db.connection import Database, execute, fetch_one
 from src.models.cart import CartItem
 from src.services.cart_service import add_item_to_cart, build_cart
-from src.services.catalog_service import build_catalog_lines, get_keyword_map, get_product_by_number, list_active_products
+from src.services.catalog_service import build_catalog_lines, get_keyword_map, get_product_by_number, list_active_products, search_products
 from src.services.customer_service import get_customer_by_phone, get_or_create_customer, save_customer_profile, set_customer_language
 from src.services.order_service import create_order, get_latest_open_order, record_pop_received
 from src.services.order_parser import parse_order
@@ -47,6 +47,15 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
     customer = await get_or_create_customer(database, phone_number, event.get("profile_name"))
     session = await get_or_create_session(database, phone_number)
     cart_items = [CartItem.model_validate(item) for item in session.get("cart", [])]
+
+    # ── Agent detection (Phase 3) ──
+    # If customer is an agent, stamp agent_code + team_member_id on the session
+    # so all orders from this session get commission tracking.
+    agent_code = customer.get("agent_code")
+    team_member_id = customer.get("registered_by")
+    if agent_code:
+        session["agent_code"] = agent_code
+        session["team_member_id"] = team_member_id
 
     text = (event.get("text") or "").strip()
     lowered = text.lower()
@@ -109,6 +118,23 @@ async def handle_text_message(database: Database, event: dict) -> dict[str, obje
     if lowered in settings.whatsapp_cancel_commands:
         await _cancel_order(database, phone_number)
         return {"action": "order_cancelled", "state": State.IDLE}
+
+    # ── Agent registration: JOIN <team_code> (Phase 4) ──
+    if lowered.startswith("join "):
+        return await _handle_agent_join(database, phone_number, customer, text)
+
+    # ── Lost number recovery: RECOVER <agent_code> [pin] (Phase 4) ──
+    if lowered.startswith("recover "):
+        return await _handle_agent_recovery(database, phone_number, customer, session, lowered)
+
+    # ── Stock check: stock <product_number or name> (Phase 8) ──
+    if lowered.startswith("stock "):
+        return await _handle_stock_check(database, lowered)
+
+    # ── Recovery challenge active? (Phase 4) ──
+    temp = session.get("temp_address") or {}
+    if temp.get("recovery_agent_code"):
+        return await _handle_recovery_challenge(database, phone_number, session, text)
 
     # In POP_WAITING, handle payment method selection + cancel/checkout
     if session.get("state") == State.POP_WAITING:
@@ -356,6 +382,7 @@ async def _handle_address_collection(
         phone_number=phone_number,
         cart_items=cart_items,
         full_address=updated_customer["full_address"],
+        session=session,
     )
 
 
@@ -375,6 +402,7 @@ async def _handle_profile_confirmation(
             phone_number=phone_number,
             cart_items=cart_items,
             full_address=customer.get("full_address"),
+            session=session,
         )
 
     if lowered in settings.whatsapp_reject_commands:
@@ -406,17 +434,32 @@ async def _finalize_order(
     phone_number: str,
     cart_items: list[CartItem],
     full_address: str | None,
+    session: dict | None = None,
 ) -> dict[str, object]:
     price_map = await _build_price_map(database)
     cart = build_cart(cart_items, price_map)
     settings = get_settings()
     applied_shipping = await _compute_shipping(settings, cart.total)
+
+    # ── Commission calculation (Phase 3) ──
+    agent_code_val: str | None = None
+    team_member_id_val: int | None = None
+    commission = Decimal("0")
+    if session:
+        agent_code_val = session.get("agent_code")
+        team_member_id_val = session.get("team_member_id")
+        if agent_code_val and team_member_id_val:
+            commission = (cart.total + applied_shipping) * settings.commission_percent / Decimal("100")
+
     order = await create_order(
         database,
         customer_id=customer_id,
         cart_items=cart_items,
         total=cart.total + applied_shipping,
         shipping_fee=applied_shipping,
+        agent_code=agent_code_val,
+        team_member_id=team_member_id_val,
+        commission_amount=commission,
     )
     updated_session = await save_session_state(
         database,
@@ -448,7 +491,11 @@ async def _handle_yoco_payment(database: Database, session: dict, settings) -> d
 
     total = order.get("total", 0)
     amount_cents = int(float(str(total)) * 100)
-    result = await create_checkout_session(str(order.get("order_number", "")), amount_cents)
+    result = await create_checkout_session(
+        str(order.get("order_number", "")), amount_cents,
+        agent_code=order.get("agent_code"),
+        team_member_id=order.get("team_member_id"),
+    )
 
     if result:
         # Store payment method
@@ -569,6 +616,206 @@ async def _cancel_order(database: Database, phone_number: str) -> None:
         state=State.IDLE, cart=[],
         current_step=0, temp_address=None,
     )
+
+
+# ── Phase 4: Agent registration & recovery ──
+
+
+async def _handle_agent_join(
+    database: Database, phone_number: str, customer: dict, text: str
+) -> dict[str, object]:
+    """Handle JOIN <team_code> command for agent self-registration."""
+    import secrets
+    from src.services.customer_service import get_customer_by_agent_code, register_agent
+
+    parts = text.strip().split()
+    if len(parts) < 2:
+        return {"action": "error", "text": "Usage: JOIN <team-code>\n\nAsk your team member for their code."}
+
+    team_code = parts[1].strip().upper()
+
+    # Check if already an agent
+    if customer.get("role") == "agent" and customer.get("agent_code"):
+        return {
+            "action": "already_agent",
+            "text": f"⚠️ You're already registered as agent *{customer['agent_code']}*.\nType CATALOGUE to start ordering.",
+        }
+
+    # Validate team code
+    team_member = await get_customer_by_agent_code(database, team_code)
+    if team_member is None or team_member.get("role") != "team_member":
+        return {"action": "error", "text": "❌ Team code not found. Check with your team member."}
+
+    # Generate recovery PIN
+    recovery_pin = str(secrets.randbelow(10000)).zfill(4)
+
+    # Register agent (reuse existing customer record by phone)
+    agent = await register_agent(
+        database, phone_number,
+        first_name=customer.get("name") or "",
+        surname=customer.get("surname") or "",
+        team_code=team_code,
+        recovery_pin=recovery_pin,
+    )
+
+    if agent is None:
+        return {"action": "error", "text": "❌ Registration failed. Please try again or contact support."}
+
+    agent_code_val = agent.get("agent_code", "")
+    return {
+        "action": "agent_registered",
+        "text": (
+            f"✅ *Welcome to Zen Fragrances!*\n\n"
+            f"Your agent code: *{agent_code_val}*\n"
+            f"🔐 Recovery PIN: *{recovery_pin}* — save this!\n\n"
+            f"Type *CATALOGUE* to browse, *STOCK <number>* to check availability, "
+            f"or reply with a product number to order."
+        ),
+    }
+
+
+async def _handle_agent_recovery(
+    database: Database, new_phone: str, customer: dict, session: dict, lowered: str
+) -> dict[str, object]:
+    """Handle RECOVER <agent_code> [pin] for lost number recovery."""
+    from src.services.customer_service import get_customer_by_agent_code, migrate_phone_number
+
+    parts = lowered.strip().split()
+
+    # RECOVER <agent_code>
+    if len(parts) < 2:
+        return {"action": "error", "text": "Usage: RECOVER <your-agent-code> [pin]\n\nIf you don't know your code, contact your team member."}
+
+    agent_code_input = parts[1].strip().upper()
+    agent = await get_customer_by_agent_code(database, agent_code_input)
+
+    if agent is None:
+        return {"action": "error", "text": "❌ Agent code not found."}
+
+    # If PIN provided: direct recovery
+    if len(parts) >= 3:
+        pin_input = parts[2].strip()
+        stored_pin = agent.get("recovery_pin") or ""
+        if pin_input == stored_pin:
+            await migrate_phone_number(database, agent["phone_number"], new_phone)
+            return {
+                "action": "agent_recovered",
+                "text": "✅ Your account is now linked to this number. Type CATALOGUE to start ordering.",
+            }
+        return {"action": "error", "text": "❌ Incorrect PIN. If you forgot it, contact your team member for help."}
+
+    # Challenge mode: ask for last order total
+    session["recovery_agent_code"] = agent_code_input
+    session["recovery_attempts"] = 0
+    await save_session_state(
+        database, new_phone,
+        state=State.IDLE, cart=session.get("cart", []),
+        current_step=0,
+        temp_address={"recovery_agent_code": agent_code_input, "recovery_attempts": 0},
+    )
+    return {
+        "action": "recovery_challenge",
+        "text": "🔐 To verify your identity, what was the total of your last order? (e.g. R990)",
+    }
+
+
+async def _handle_recovery_challenge(
+    database: Database, phone_number: str, session: dict, text: str
+) -> dict[str, object]:
+    """Verify recovery challenge answer."""
+    from src.services.customer_service import get_customer_by_agent_code, migrate_phone_number
+
+    temp = session.get("temp_address") or {}
+    agent_code_val = temp.get("recovery_agent_code", "")
+    attempts = int(temp.get("recovery_attempts", 0))
+
+    agent = await get_customer_by_agent_code(database, agent_code_val)
+    if agent is None:
+        return {"action": "error", "text": "Recovery session expired. Start again with RECOVER <code>."}
+
+    # Get last order total for this agent
+    if database.mode == "postgres":
+        from src.db.connection import fetch_one
+        last_order = await fetch_one(
+            database,
+            "SELECT total FROM orders WHERE agent_code = $1 ORDER BY created_at DESC LIMIT 1",
+            agent_code_val,
+        )
+    else:
+        from src.db.connection import fetch_one
+        last_order = await fetch_one(
+            database,
+            "SELECT total FROM orders WHERE agent_code = ? ORDER BY created_at DESC LIMIT 1",
+            agent_code_val,
+        )
+
+    expected = str(last_order["total"]) if last_order else ""
+    if text.strip().replace("R", "").replace("r", "") == expected.replace("R", "").replace("r", ""):
+        old_phone = agent["phone_number"]
+        await migrate_phone_number(database, old_phone, phone_number)
+        # Clear recovery state
+        await save_session_state(
+            database, phone_number,
+            state=State.IDLE, cart=[], current_step=0, temp_address=None,
+        )
+        return {
+            "action": "agent_recovered",
+            "text": f"✅ Verified! Your account is now on this number. Type CATALOGUE to order.",
+        }
+
+    attempts += 1
+    if attempts >= 3:
+        await save_session_state(
+            database, phone_number,
+            state=State.IDLE, cart=[], current_step=0, temp_address=None,
+        )
+        return {"action": "error", "text": "❌ Too many failed attempts. Contact your team member or use RECOVER <code> <pin>."}
+
+    await save_session_state(
+        database, phone_number,
+        state=State.IDLE, cart=session.get("cart", []),
+        current_step=0,
+        temp_address={"recovery_agent_code": agent_code_val, "recovery_attempts": attempts},
+    )
+    return {"action": "recovery_challenge", "text": f"❌ Not correct. Try again or contact your team member. ({3 - attempts} attempts left)"}
+
+
+# ── Phase 8: Stock check ──
+
+
+async def _handle_stock_check(database: Database, lowered: str) -> dict[str, object]:
+    """Handle STOCK <product_number> or STOCK <name> command."""
+    from src.services.catalog_service import get_product_by_number, get_product_detail
+
+    query = lowered.replace("stock", "", 1).replace(":", "").strip()
+
+    # Try by product number
+    if query.isdigit():
+        product = await get_product_by_number(database, int(query))
+        if product is None:
+            # Try as product ID
+            pid = int(query)
+            product = await get_product_detail(database, pid)
+    else:
+        # Search by name
+        result = await search_products(database, query, page=1, page_size=1)
+        products = result.get("products", [])
+        product = products[0] if products else None
+
+    if product is None:
+        return {"action": "stock_not_found", "text": f"❌ Product not found: {query}"}
+
+    name = product.get("name", query)
+    stock = product.get("stock_quantity")
+
+    if stock is None:
+        return {"action": "stock_info", "text": f"📦 *{name}*: In stock ✅"}
+    elif stock > 5:
+        return {"action": "stock_info", "text": f"📦 *{name}*: {stock} in stock ✅"}
+    elif stock > 0:
+        return {"action": "stock_info", "text": f"⚠️ *{name}*: only *{stock}* left! Order soon."}
+    else:
+        return {"action": "stock_info", "text": f"❌ *{name}* is out of stock."}
 
 
 async def handle_image_message(database: Database, event: dict) -> dict[str, object]:

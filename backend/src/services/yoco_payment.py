@@ -21,6 +21,8 @@ async def create_checkout_session(
     order_number: str,
     amount_cents: int,
     currency: str = "ZAR",
+    agent_code: str | None = None,
+    team_member_id: int | None = None,
 ) -> dict[str, Any] | None:
     """Call Yoco Checkout API to create a payment session.
 
@@ -31,10 +33,16 @@ async def create_checkout_session(
     if not settings.yoco_secret_key:
         return None
 
+    metadata: dict[str, Any] = {"order_number": order_number}
+    if agent_code:
+        metadata["agent_code"] = agent_code
+    if team_member_id:
+        metadata["team_member_id"] = str(team_member_id)
+
     payload = {
         "amount": amount_cents,
         "currency": currency,
-        "metadata": {"order_number": order_number},
+        "metadata": metadata,
     }
 
     try:

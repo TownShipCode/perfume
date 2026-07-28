@@ -12,7 +12,8 @@ from src.models.cart import CartItem
 ORDER_SELECT_COLUMNS = """
 o.id, o.order_number, o.customer_id, o.items, o.total, o.status, o.pop_image_url, o.tracking_info,
 o.forwarded_to, o.forwarded_at, o.forward_delivery_status, o.forward_message_id, o.forward_error,
-o.forward_payload, o.forward_response, o.forward_attempts, o.shipping_fee, o.created_at, o.updated_at,
+o.forward_payload, o.forward_response, o.forward_attempts, o.shipping_fee,
+o.agent_code, o.team_member_id, o.commission_amount, o.created_at, o.updated_at,
 c.phone_number, c.full_address, c.name
 """.strip()
 
@@ -30,6 +31,9 @@ async def create_order(
     cart_items: list[CartItem],
     total: Decimal,
     shipping_fee: Decimal = Decimal("0"),
+    agent_code: str | None = None,
+    team_member_id: int | None = None,
+    commission_amount: Decimal = Decimal("0"),
 ) -> dict:
     order_number = _generate_order_number()
     items_payload = json.dumps([item.model_dump() for item in cart_items])
@@ -38,47 +42,51 @@ async def create_order(
         row = await fetch_one(
             database,
             """
-            INSERT INTO orders (order_number, customer_id, items, total, status, shipping_fee)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO orders (order_number, customer_id, items, total, status, shipping_fee,
+                                agent_code, team_member_id, commission_amount)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING id, order_number, customer_id, items, total, status, pop_image_url, tracking_info,
                       forwarded_to, forwarded_at, forward_delivery_status, forward_message_id, forward_error,
-                      forward_payload, forward_response, forward_attempts, created_at, updated_at
+                      forward_payload, forward_response, forward_attempts, agent_code, team_member_id,
+                      commission_amount, created_at, updated_at
             """,
-            order_number,
-            customer_id,
-            items_payload,
-            total,
-            "pending",
-            shipping_fee,
+            order_number, customer_id, items_payload, total, "pending", shipping_fee,
+            agent_code, team_member_id, commission_amount,
         )
         assert row is not None
+        # Stock decrement
+        for item in cart_items:
+            await _adjust_stock(database, item.product_id, -item.quantity)
         return _decode_order(row)
 
     await execute(
         database,
         """
-        INSERT INTO orders (order_number, customer_id, items, total, status, shipping_fee)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (order_number, customer_id, items, total, status, shipping_fee,
+                            agent_code, team_member_id, commission_amount)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        order_number,
-        customer_id,
-        items_payload,
-        str(total),
-        "pending",
-        str(shipping_fee),
+        order_number, customer_id, items_payload, str(total), "pending", str(shipping_fee),
+        agent_code, str(team_member_id) if team_member_id else None,
+        str(commission_amount),
     )
     row = await fetch_one(
         database,
         """
          SELECT id, order_number, customer_id, items, total, status, pop_image_url, tracking_info,
              forwarded_to, forwarded_at, forward_delivery_status, forward_message_id, forward_error,
-             forward_payload, forward_response, forward_attempts, created_at, updated_at
+             forward_payload, forward_response, forward_attempts, agent_code, team_member_id,
+             commission_amount, created_at, updated_at
         FROM orders
         WHERE order_number = ?
         """,
         order_number,
     )
     assert row is not None
+
+    # ── Stock decrement (Phase 8) ──
+    await _decrement_stock_for_order(database, cart_items)
+
     return _decode_order(row)
 
 
@@ -319,7 +327,18 @@ async def record_order_forwarding(
 
 
 async def cancel_pending_pop_order(database: Database, phone_number: str) -> None:
-    """Cancel the latest pop_waiting order for a customer, if any."""
+    """Cancel the latest pop_waiting order for a customer, if any. Restore stock."""
+    # First get the order to restore stock
+    order = await fetch_one(
+        database,
+        "SELECT * FROM orders WHERE customer_id = (SELECT id FROM customers WHERE phone_number = $1) AND status = 'pop_waiting' ORDER BY created_at DESC LIMIT 1"
+        if database.mode == "postgres"
+        else "SELECT * FROM orders WHERE customer_id = (SELECT id FROM customers WHERE phone_number = ?) AND status = 'pop_waiting' ORDER BY created_at DESC LIMIT 1",
+        phone_number,
+    )
+    if order:
+        await _increment_stock_for_order(database, order)
+
     if database.mode == "postgres":
         await execute(
             database,
@@ -346,20 +365,37 @@ async def cancel_pending_pop_order(database: Database, phone_number: str) -> Non
 
 
 async def expire_stale_pop_orders(database: Database, pop_expiry_hours: int) -> int:
+    """Expire stale POP orders. Restore stock for each."""
     cutoff = datetime.now(timezone.utc) - timedelta(hours=pop_expiry_hours)
+
+    # Get expired orders to restore stock
     if database.mode == "postgres":
+        expired = await fetch_all(
+            database,
+            "SELECT * FROM orders WHERE status = 'pop_waiting' AND created_at < $1",
+            cutoff,
+        )
         await execute(
             database,
             "UPDATE orders SET status = 'expired', updated_at = NOW() WHERE status = 'pop_waiting' AND created_at < $1",
             cutoff,
         )
     else:
+        expired = await fetch_all(
+            database,
+            "SELECT * FROM orders WHERE status = 'pop_waiting' AND created_at < ?",
+            cutoff.isoformat(),
+        )
         await execute(
             database,
             "UPDATE orders SET status = 'expired', updated_at = CURRENT_TIMESTAMP WHERE status = 'pop_waiting' AND created_at < ?",
             cutoff.isoformat(),
         )
-    return 0
+
+    for order in expired:
+        await _increment_stock_for_order(database, order)
+
+    return len(expired)
 
 
 def _build_list_orders_query(mode: str, status: str | None, forward_status: str | None) -> tuple[str, tuple[object, ...]]:
@@ -404,6 +440,43 @@ def _decode_order(row: dict | None) -> dict | None:
         if isinstance(raw_value, str) and raw_value:
             decoded[key] = json.loads(raw_value)
     return decoded
+
+
+# ── Stock management helpers (Phase 8) ──
+
+
+async def _adjust_stock(database: Database, product_id: int, delta: int) -> None:
+    """Adjust stock_quantity for a product by delta (negative = decrement)."""
+    if database.mode == "postgres":
+        await execute(
+            database,
+            "UPDATE products SET stock_quantity = COALESCE(stock_quantity, 0) + $1, updated_at = NOW() WHERE id = $2 AND stock_quantity IS NOT NULL",
+            delta, product_id,
+        )
+    else:
+        await execute(
+            database,
+            "UPDATE products SET stock_quantity = COALESCE(stock_quantity, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND stock_quantity IS NOT NULL",
+            delta, product_id,
+        )
+
+
+async def _decrement_stock_for_order(database: Database, cart_items: list[CartItem]) -> None:
+    """Decrement stock for each item in the order."""
+    for item in cart_items:
+        await _adjust_stock(database, item.product_id, -item.quantity)
+
+
+async def _increment_stock_for_order(database: Database, order: dict) -> None:
+    """Increment stock for each item in a cancelled/expired order."""
+    items = order.get("items", [])
+    if isinstance(items, str):
+        items = json.loads(items or "[]")
+    for item in items:
+        pid = item.get("product_id") or item.get("id", 0)
+        qty = item.get("quantity", 0)
+        if pid and qty:
+            await _adjust_stock(database, int(pid), int(qty))
 
 
 async def record_fl_pop(

@@ -21,7 +21,10 @@
 
 | Document | Description |
 |---|---|
+| [_index.md](_index.md) | **START HERE** — navigation hub, global wiki links, session pre-flight |
+| [learnings.md](learnings.md) | Session log, errors found, token waste patterns, global patterns applied |
 | [status.md](status.md) | Project overview, features, config |
+| [architecture.md](architecture.md) | Stack, request flow, state machine, key files, env vars |
 | [e2e-test-results.md](e2e-test-results.md) | End-to-end API test results against live Railway |
 | [security-review.md](security-review.md) | Auth, rate limiting, endpoint coverage, recommendations |
 | [retrospective.md](retrospective.md) | What worked, challenges, questions we should have asked, Kapso debugging post-mortem |
@@ -34,7 +37,7 @@
 |---------|-----|
 | API | `https://biomed-production.up.railway.app` |
 | Dashboard | `https://biomed-dashboard-five.vercel.app` |
-| Repo | `https://github.com/TownShipCode/BioMed` |
+| Repo | `https://github.com/TownShipCode/perfume` |
 
 ## Feature Summary
 

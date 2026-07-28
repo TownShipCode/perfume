@@ -174,3 +174,132 @@ async def set_password(request: Request) -> JSONResponse:
         path="/",
     )
     return resp
+
+
+# ── Phase 7: Role-based auth (login, register, agent registration) ──
+
+
+@router.post("/login/role")
+async def login_role(request: Request) -> JSONResponse:
+    """Login with email + password, returns role + token for dashboard redirect."""
+    body = await request.json()
+    email = (body or {}).get("email", "").strip().lower()
+    password = (body or {}).get("password", "")
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email and password required")
+
+    database: Database = request.app.state.database
+    from src.services.customer_service import get_customer_by_email
+
+    customer = await get_customer_by_email(database, email)
+    if customer is None:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    stored_hash = customer.get("password_hash") or ""
+    if not _verify_password(password, stored_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    token = await _store_session(database, stored_hash)
+    resp = JSONResponse(content={
+        "authenticated": True,
+        "role": customer.get("role", "customer"),
+        "agent_code": customer.get("agent_code"),
+        "name": customer.get("name"),
+        "id": customer["id"],
+    })
+    resp.set_cookie(
+        key="session_token", value=token,
+        max_age=SESSION_HOURS * 3600, httponly=True, secure=True, samesite="lax", path="/",
+    )
+    return resp
+
+
+@router.post("/register")
+async def register_public(request: Request) -> JSONResponse:
+    """Public self-service registration (no approval needed)."""
+    body = await request.json() or {}
+    email = body.get("email", "").strip().lower()
+    phone = body.get("phone", "").strip()
+    name = body.get("name", "").strip()
+    surname = body.get("surname", "").strip()
+    password = body.get("password", "")
+
+    if not email or not phone or not password:
+        raise HTTPException(status_code=400, detail="Email, phone, and password required")
+
+    database: Database = request.app.state.database
+    from src.services.customer_service import get_customer_by_phone, get_customer_by_email
+
+    if await get_customer_by_email(database, email):
+        raise HTTPException(status_code=409, detail="Email already registered")
+    if await get_customer_by_phone(database, phone):
+        raise HTTPException(status_code=409, detail="Phone number already registered")
+
+    password_hash = _hash_password(password)
+    if database.mode == "postgres":
+        await execute(
+            database,
+            """INSERT INTO customers (phone_number, email, name, surname, password_hash, role)
+               VALUES ($1, $2, $3, $4, $5, 'customer')""",
+            phone, email, name, surname, password_hash,
+        )
+    else:
+        await execute(
+            database,
+            """INSERT INTO customers (phone_number, email, name, surname, password_hash, role)
+               VALUES (?, ?, ?, ?, ?, 'customer')""",
+            phone, email, name, surname, password_hash,
+        )
+
+    return JSONResponse(content={"registered": True, "email": email}, status_code=201)
+
+
+@router.post("/register/agent")
+async def register_agent_web(request: Request) -> JSONResponse:
+    """Agent self-registration via web store (with team code)."""
+    body = await request.json() or {}
+    phone = body.get("phone", "").strip()
+    name = body.get("name", "").strip()
+    surname = body.get("surname", "").strip()
+    team_code = body.get("team_code", "").strip().upper()
+    email = body.get("email", "").strip().lower()
+    password = body.get("password", "")
+
+    if not phone or not name or not team_code:
+        raise HTTPException(status_code=400, detail="Phone, name, and team code required")
+
+    database: Database = request.app.state.database
+    from src.services.customer_service import register_agent
+
+    import secrets
+    recovery_pin = str(secrets.randbelow(10000)).zfill(4)
+
+    agent = await register_agent(
+        database, phone, first_name=name, surname=surname,
+        team_code=team_code, recovery_pin=recovery_pin,
+    )
+
+    if agent is None:
+        raise HTTPException(status_code=400, detail="Team code not found")
+
+    # Set email + password if provided
+    if email and password:
+        password_hash = _hash_password(password)
+        if database.mode == "postgres":
+            await execute(
+                database,
+                "UPDATE customers SET email = $1, password_hash = $2 WHERE id = $3",
+                email, password_hash, agent["id"],
+            )
+        else:
+            await execute(
+                database,
+                "UPDATE customers SET email = ?, password_hash = ? WHERE id = ?",
+                email, password_hash, agent["id"],
+            )
+
+    return JSONResponse(content={
+        "registered": True,
+        "agent_code": agent.get("agent_code"),
+        "recovery_pin": recovery_pin,
+    }, status_code=201)

@@ -348,3 +348,131 @@ def _normalize_keywords(keywords: list[str]) -> list[str]:
         seen.add(value)
         normalized.append(value)
     return normalized
+
+
+# ── Paginated catalogue (Phase 2: 99 SKU support) ──
+
+
+async def search_products(
+    database: Database,
+    query: str,
+    *,
+    page: int = 1,
+    page_size: int = 5,
+    category: str | None = None,
+    gender: str | None = None,
+    sort: str = "number",
+) -> dict[str, Any]:
+    """Paginated + filtered product search for WhatsApp + web store."""
+    mode = database.mode
+    conditions: list[str] = ["p.is_active = TRUE" if mode == "postgres" else "p.is_active = 1"]
+    params: list[Any] = []
+    param_idx = 0
+
+    if query.strip():
+        param_idx += 1
+        placeholder = f"${param_idx}" if mode == "postgres" else "?"
+        conditions.append(
+            f"(LOWER(p.name) LIKE LOWER({placeholder}) OR LOWER(p.description) LIKE LOWER({placeholder}) "
+            f"OR p.id IN (SELECT pk.product_id FROM product_keywords pk WHERE LOWER(pk.keyword) LIKE LOWER({placeholder})))"
+        )
+        params.append(f"%{query.strip()}%")
+
+    if category:
+        param_idx += 1
+        placeholder = f"${param_idx}" if mode == "postgres" else "?"
+        conditions.append(
+            f"p.id IN (SELECT pcm.product_id FROM product_category_map pcm "
+            f"JOIN product_categories pc ON pc.id = pcm.category_id WHERE LOWER(pc.name) = LOWER({placeholder}))"
+        )
+        params.append(category)
+
+    if gender:
+        param_idx += 1
+        placeholder = f"${param_idx}" if mode == "postgres" else "?"
+        conditions.append(f"LOWER(p.gender) = LOWER({placeholder})")
+        params.append(gender)
+
+    where_clause = " AND ".join(conditions)
+
+    order_clause: str
+    if sort == "price_asc":
+        order_clause = "p.price ASC, p.product_number ASC"
+    elif sort == "price_desc":
+        order_clause = "p.price DESC, p.product_number ASC"
+    elif sort == "name":
+        order_clause = "p.name ASC"
+    else:
+        order_clause = "p.product_number ASC"
+
+    # Count total
+    count_sql = f"SELECT COUNT(*) as total FROM products p WHERE {where_clause}"
+    count_row = await fetch_one(database, count_sql, *params)
+    total = count_row["total"] if count_row else 0
+
+    # Fetch page
+    offset = (page - 1) * page_size
+    param_idx += 1
+    limit_p = f"${param_idx}" if mode == "postgres" else "?"
+    params.append(page_size)
+    param_idx += 1
+    offset_p = f"${param_idx}" if mode == "postgres" else "?"
+    params.append(offset)
+
+    select_sql = f"""
+        SELECT p.id, p.product_number, p.name, p.price, p.bio_med_margin, p.image_url,
+               p.thumbnail_url, p.description, p.gender, p.scent_family, p.top_notes,
+               p.stock_quantity, p.is_active, p.created_at, p.updated_at
+        FROM products p
+        WHERE {where_clause}
+        ORDER BY {order_clause}
+        LIMIT {limit_p} OFFSET {offset_p}
+    """
+    rows = await fetch_all(database, select_sql, *params)
+    products = await _attach_keywords(database, rows)
+
+    return {
+        "products": products,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": max(1, (total + page_size - 1) // page_size) if total > 0 else 1,
+    }
+
+
+async def get_product_categories(database: Database) -> list[dict]:
+    """Return all product categories."""
+    return await fetch_all(
+        database,
+        "SELECT id, name, display_order FROM product_categories ORDER BY display_order",
+    )
+
+
+async def get_product_detail(database: Database, product_id: int) -> dict | None:
+    """Get full product detail including stock and categories."""
+    product = await get_product_by_id(database, product_id)
+    if product is None:
+        return None
+
+    products_with_kw = await _attach_keywords(database, [product])
+
+    if database.mode == "postgres":
+        cat_rows = await fetch_all(
+            database,
+            """SELECT pc.name FROM product_category_map pcm
+               JOIN product_categories pc ON pc.id = pcm.category_id
+               WHERE pcm.product_id = $1""",
+            product_id,
+        )
+    else:
+        cat_rows = await fetch_all(
+            database,
+            """SELECT pc.name FROM product_category_map pcm
+               JOIN product_categories pc ON pc.id = pcm.category_id
+               WHERE pcm.product_id = ?""",
+            product_id,
+        )
+
+    result = products_with_kw[0]
+    result["categories"] = [row["name"] for row in cat_rows]
+    return result

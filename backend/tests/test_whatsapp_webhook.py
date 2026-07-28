@@ -66,6 +66,8 @@ def make_settings(**overrides: object) -> Settings:
         "account_number": "123456",
         "branch_code": "000000",
         "payment_methods_enabled": ("eft",),
+        "commission_percent": "5",
+        "low_stock_threshold": 5,
     }
     values.update(overrides)
     return Settings(**values)

@@ -4,13 +4,17 @@ from asyncpg.exceptions import UniqueViolationError
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from src.middleware.auth import require_dashboard_api_key
+from src.middleware.rate_limit import public_rate_limit
 from src.services.catalog_service import (
     ProductInput,
     ProductUpdateInput,
     create_product,
     delete_product,
     get_product_by_id,
+    get_product_categories,
+    get_product_detail,
     list_all_products,
+    search_products,
     update_product,
 )
 
@@ -19,9 +23,31 @@ router = APIRouter(prefix="/api/products", tags=["products"])
 
 
 @router.get("")
-async def get_products(request: Request) -> dict[str, object]:
+async def get_products(
+    request: Request,
+    search: str = "",
+    page: int = 1,
+    page_size: int = 20,
+    category: str = "",
+    gender: str = "",
+    sort: str = "number",
+) -> dict[str, object]:
+    """Paginated + filtered product search for WhatsApp + web store."""
+    if search or category or gender:
+        return await search_products(
+            request.app.state.database, search,
+            page=page, page_size=page_size,
+            category=category or None, gender=gender or None, sort=sort,
+        )
     products = await list_all_products(request.app.state.database)
     return {"items": products, "count": len(products)}
+
+
+@router.get("/categories")
+async def get_categories(request: Request) -> dict[str, object]:
+    """Return all product categories."""
+    cats = await get_product_categories(request.app.state.database)
+    return {"items": cats}
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_dashboard_api_key)])
