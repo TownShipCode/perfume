@@ -201,27 +201,71 @@ East London, Port Elizabeth, Bloemfontein, Randburg, Vereeniging, Eastgate, Pret
 | **Facebook** | [Exotic Perfume Wholesalers Parow](https://www.facebook.com/exop erfume/) |
 | **WhatsApp** | +27 82 389 1158 |
 | **Location** | 172 Voortrekker Road, Parow, Cape Town |
-| **Relevance** | Uses WhatsApp for ordering! Physical + WhatsApp model. Closest competitor model to ours.
+| **Relevance** | Uses WhatsApp for ordering! Physical + WhatsApp model. Closest competitor model to ours. |
+
+---
+
+### 11. NEW: Perfumes for Africa (Milnerton, Cape Town) 🟡 STRONG COMPETITOR
+
+| Field | Detail |
+|-------|--------|
+| **Website** | [perfumesforafrica.co.za](https://www.perfumesforafrica.co.za/) |
+| **Social** | [Facebook](https://www.facebook.com/perfumes4africa), [Twitter](https://twitter.com/perfumes4africa) |
+| **WhatsApp** | **+27 81 891 2873** (prominently displayed — order via WhatsApp!) |
+| **Location** | Shop 10, Milnerton Mall, Loxton Road, Milnerton, Cape Town |
+| **Contact** | sales@perfumesforafrica.co.za |
+| **Type** | Retail + Wholesale — physical store + online shop |
+| **Value Prop** | "The best in affordable fragrances inspired by your favourite brand perfumes" |
+| **Pricing** | Transparent, listed on homepage |
+| **SKUs** | 40+ (20 women's + 20 men's listed, "MANY more in store") |
+| **Delivery** | Nationwide courier delivery |
+| **Content** | Active blog with SEO (perfume guides, fragrance reviews) |
+| **Product Downloads** | "Product Lists" available for download |
+| **Tech** | WordPress + Candace Consulting |
+
+**Pricing (all sizes listed):**
+
+| Type | 5ml | 15ml | 30ml | 50ml | 60ml | 100ml |
+|------|:---:|:---:|:---:|:---:|:---:|:---:|
+| Non-boxed | R12 | R24 | R42-47 | R65 | R75 | R123 |
+| Boxed | — | — | R52-57 | R75 | R85 | R133 |
+
+**Our advantage over them:**
+- They're a single physical store — we're a platform
+- No agent/team member hierarchy (they appear to be direct-sale only)
+- No automated commission tracking
+- No stock-check commands
+- No multi-role dashboards
+- Their online store is a basic WooCommerce-style shop (not WhatsApp-integrated)
+
+**Their advantage over us:**
+- **WhatsApp ordering prominently displayed** — validates our model
+- Transparent pricing visible immediately on homepage
+- Physical store presence (walk-in customers)
+- Active blog with SEO content (driving organic traffic)
+- Product downloads available
+- Multiple sizes (5ml through 100ml) — we only do one size
+- Built Facebook + Twitter following
 
 ---
 
 ## Competitive Landscape Summary
 
-| Dimension | Fine Fragrance Collection | Zen Fragrances (Us) |
-|-----------|--------------------------|---------------------|
-| Ordering | Web only | **WhatsApp + Web** |
-| Agent pricing | From R20 wholesale | **Same price for all — no discount tiers** |
-| Retail pricing | R40–R80 | Same price for all |
-| Delivery | R65, 7 days | **R65, courier TBD** |
-| Commission | Manual (spreadsheets?) | **Automated 5%** |
-| Support | Call centre | **WhatsApp (instant)** |
-| Agent discovery | "Find an Agent" | **Team member dashboard** |
-| Multi-role | Consumer + Agent | **6 roles** (super admin, manufacturer, team, agent, wholesaler, public) |
-| Dashboards | Basic account page | **Role-specific dashboards** |
-| Stock check | Login + browse | **WhatsApp "stock 1" command** |
-| Payment | Card | **Yoco + EFT** |
-| Social media | FB, X, TikTok | **None yet — TODO** |
-| SKU count | Unknown | **99 planned** |
+| Dimension | Fine Fragrance Collection | Perfumes for Africa | Zen Fragrances (Us) |
+|-----------|--------------------------|---------------------|---------------------|
+| Ordering | Web only | **WhatsApp + Web + Physical** | **WhatsApp + Web** |
+| Agent program | R960 starter pack, markup model | ❌ Direct sale only | **No upfront cost, 5% commission** |
+| Pricing | R20-94 wholesale / R40-190 retail | R12-133 retail | Same price for all |
+| SKU count | ~42 | 40+ | 99 planned |
+| Sizes | 30ml only | 5ml, 15ml, 30ml, 50ml, 60ml, 100ml | 30ml (for now) |
+| Delivery | R65, 7 days | Nationwide courier | R65, courier TBD |
+| Physical presence | 15 warehouses | 1 store (Milnerton) | Online only |
+| Commission model | Buy-sell spread (100% markup) | None (direct sale) | **Automated 5%** |
+| Support | Call centre | WhatsApp, email, phone | **WhatsApp (instant)** |
+| SEO/Blog | ❌ None | ✅ Active blog | ❌ None yet |
+| Stock check | Login + browse | In-store / call | **WhatsApp "stock 1"** |
+| Multi-role dashboard | Basic account page | None | **6 roles** |
+| Social media | FB, X, TikTok | FB, Twitter | ❌ None yet |
 
 ---
 
