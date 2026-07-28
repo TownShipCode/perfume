@@ -17,6 +17,17 @@ For each competitor, we document:
 
 ---
 
+---
+
+## Our Pricing Model
+
+- **Wholesale price:** What agents pay the platform (e.g., R40-100 per bottle)
+- **Retail price:** What agents sell to their customers (~2x wholesale, agent sets their own price)
+- **Team member commission:** 5% of the wholesale order value placed by their agents
+- **Public/wholesaler price:** Same as wholesale
+- **No starter pack required** — agents order as needed
+- **No discounts, no tiers** — published wholesale prices apply to all agents
+
 ## Competitors
 
 ### 1. Fine Fragrance Collection 🔴 PRIMARY COMPETITOR
@@ -251,21 +262,19 @@ East London, Port Elizabeth, Bloemfontein, Randburg, Vereeniging, Eastgate, Pret
 
 ## Competitive Landscape Summary
 
-| Dimension | Fine Fragrance Collection | Perfumes for Africa | Zen Fragrances (Us) |
-|-----------|--------------------------|---------------------|---------------------|
-| Ordering | Web only | **WhatsApp + Web + Physical** | **WhatsApp + Web** |
-| Agent program | R960 starter pack, markup model | ❌ Direct sale only | **No upfront cost, 5% commission** |
-| Pricing | R20-94 wholesale / R40-190 retail | R12-133 retail | Same price for all |
+| Dimension | Fine Fragrance Collection | Fragrance Boutique | Zen Fragrances (Us) |
+|-----------|--------------------------|-------------------|---------------------|
+| Ordering | Web only | Web + WhatsApp + Physical | **WhatsApp + Web** |
+| Agent model | R960 starter, buy-sell spread | Application-based | **No starter cost, buy wholesale, sell 2x** |
+| Agent pricing | R20-94 wholesale | R20-319 retail | Wholesale pricing (agents set their own retail) |
+| Team commission | ❌ None | ❌ None | **5% on agent wholesale orders** |
 | SKU count | ~42 | 40+ | 99 planned |
-| Sizes | 30ml only | 5ml, 15ml, 30ml, 50ml, 60ml, 100ml | 30ml (for now) |
-| Delivery | R65, 7 days | Nationwide courier | R65, courier TBD |
-| Physical presence | 15 warehouses | 1 store (Milnerton) | Online only |
-| Commission model | Buy-sell spread (100% markup) | None (direct sale) | **Automated 5%** |
-| Support | Call centre | WhatsApp, email, phone | **WhatsApp (instant)** |
-| SEO/Blog | ❌ None | ✅ Active blog | ❌ None yet |
-| Stock check | Login + browse | In-store / call | **WhatsApp "stock 1"** |
-| Multi-role dashboard | Basic account page | None | **6 roles** |
-| Social media | FB, X, TikTok | FB, Twitter | ❌ None yet |
+| Sizes | 30ml only | 50ml, 100ml (Parfum/EDT) | TBD |
+| Delivery | R65, 7 days | R128, free over R700 | R65 |
+| Commission model | Buy-sell spread only | None | **5% team commission + buy-sell spread** |
+| Support | Call centre | WhatsApp + email | **WhatsApp** |
+| Stock check | Login + browse | Browse site | **WhatsApp "stock 1"** |
+| Multi-role | Consumer + Agent | Customer + Agent | **6 roles** (admin, mfg, team, agent, wholesaler, public) |
 
 ---
 
