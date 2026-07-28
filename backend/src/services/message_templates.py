@@ -283,6 +283,11 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
     if action == "order_cancelled_pending":
         return {"text": "❌ Order cancelled.\n\nType a product name to start again, or *HELP* for options."}
 
+    if action == "repeat_order":
+        item_list = result.get("item_list", "")
+        total = result.get("total", "0")
+        return {"text": f"🔄 *Last order restored!*\n\n{item_list}\n\n💰 Total: R{total}\n\nType *CHECKOUT* to order or add more products.\nType *CANCEL* to clear."}
+
     if action == "language_selection":
         return {"text": await render_template(database, "language_selection")}
 

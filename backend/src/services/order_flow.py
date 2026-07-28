@@ -236,6 +236,37 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
             "cart": _serialize_cart(cart),
         }
 
+    # ── Repeat last order: restore previous order to cart ──
+    if lowered in ("repeat", "reorder", "repeat last", "same again"):
+        from src.services.order_service import get_latest_order
+        last = await get_latest_order(database, phone_number)
+        if not last or not last.get("items"):
+            return {"action": "text", "text": "📭 No previous orders found.\n\nType a product name to start, e.g. _\"5 Rose Oud\"_."}
+        items = last["items"]
+        restored = []
+        for it in items:
+            pid = it.get("product_id")
+            qty = it.get("quantity", 1)
+            if pid:
+                restored.append(CartItem(product_id=pid, quantity=qty))
+        if not restored:
+            return {"action": "text", "text": "📭 Couldn't restore your last order.\n\nType a product name to start fresh."}
+        await save_session_state(
+            database, phone_number,
+            state=State.ORDERING, cart=restored,
+            current_step=0, temp_address=temp,
+        )
+        price_map = await _build_price_map(database)
+        cart = build_cart(restored, price_map)
+        item_names = [f"{it.get('quantity', 1)}× {it.get('product_name', '?')}" for it in cart.get("items", [])]
+        return {
+            "action": "repeat_order",
+            "state": State.ORDERING,
+            "cart": _serialize_cart(cart),
+            "item_list": "\n".join(f"  {n}" for n in item_names),
+            "total": cart.get("total", "0"),
+        }
+
     if lowered in settings.whatsapp_checkout_commands:
         # Auto-confirm any pending order before checkout
         if pending_order:

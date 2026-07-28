@@ -11,6 +11,9 @@ export default function Layout() {
         </Link>
         <div className="flex items-center gap-4 text-sm">
           <Link to="/catalogue" className="text-gray-600 hover:text-purple-700">Catalogue</Link>
+          <Link to="/quick-order" className="text-gray-600 hover:text-purple-700 hidden md:inline">Quick Order</Link>
+          <Link to="/blog" className="text-gray-600 hover:text-purple-700 hidden md:inline">Blog</Link>
+          <Link to="/agents" className="text-gray-600 hover:text-purple-700 hidden md:inline">Find Agent</Link>
           {user ? (
             <>
               <Link to={`/dashboard/${user.role === 'super_admin' ? 'admin' : user.role === 'manufacturer' ? 'manufacturer' : user.role === 'team_member' ? 'team' : 'agent'}`}
@@ -30,7 +33,7 @@ export default function Layout() {
       </main>
       <footer className="bg-gray-50 border-t border-gray-200 px-6 py-8 text-center text-sm text-gray-500">
         <p>Zen Fragrances &copy; {new Date().getFullYear()} &middot; Premium perfume oils for resellers</p>
-        <p className="mt-1">Nationwide delivery from R65 &middot; WhatsApp: {import.meta.env.VITE_WHATSAPP_NUMBER || '012 345 6789'}</p>
+        <p className="mt-1">Nationwide delivery from R65</p>
       </footer>
     </div>
   );
