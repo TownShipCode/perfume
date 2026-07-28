@@ -288,3 +288,26 @@ East London, Port Elizabeth, Bloemfontein, Randburg, Vereeniging, Eastgate, Pret
 - [ ] Check Hellopeter / Google Reviews for competitor reputation
 - [ ] Check Takealot / Bobshop for perfume oil resellers
 - [ ] Search "fragrance dropshipping South Africa" for emerging competitors
+
+
+---
+
+### 12. Fragrance Boutique (Montague Gardens, Cape Town) 🟠
+
+| Field | Detail |
+|-------|--------|
+| **Website** | [fragranceboutique.co.za](https://fragranceboutique.co.za/) |
+| **Social** | [Facebook](https://www.facebook.com/FragranceBoutiqueZA), [Instagram](https://www.instagram.com/fragrance.boutique/) |
+| **WhatsApp** | **084 450 0834** |
+| **Email** | info@fragranceboutique.co.za |
+| **Location** | 1A Signal Cres, Montague Gardens, Cape Town 7441 |
+| **Platform** | WordPress + WooCommerce |
+| **Pricing** | 50ml Parfum R319, 100ml Parfum R419, 50ml EDT R219, 100ml EDT R319 |
+| **Delivery** | Flat R128, free over R700. Cash on delivery (COD) |
+| **Agent Program** | "Apply to be an Agent" — application-based, not self-service |
+| **Scent Notes** | Amber Woody, Chypre Floral, Oriental Vanilla, etc. (good categorization!) |
+| **Gamification** | Spin & Win promo |
+| **Newsletter** | 10% first-purchase discount |
+
+**Our advantage:** Instant agent registration, Yoco/EFT payments, R65 shipping, team hierarchy, stock commands.
+**Their advantage:** Physical store, gamification, newsletter capture, scent note filters, multiple sizes, active social media.
