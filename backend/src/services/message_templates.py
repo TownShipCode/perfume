@@ -112,9 +112,9 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         from src.services.whatsapp_buttons import build_welcome_buttons
         customer_name = result.get("customer_name") or ""
         greeting = f" {customer_name}" if customer_name else ""
-        body = result.get("greeting") or f"👋 *Welcome to Zen Fragrances!* ✨\n\nYour wholesale perfume supplier on WhatsApp.\nWhat would you like to do?"
+        body = result.get("greeting") or f"👋 *Welcome to Zen Fragrances!* ✨\n\nWholesale perfumes for agents.\nType a product name to order — e.g. \"5 Rose Oud\"\n\nWhat would you like to do?"
         web_url = result.get("web_url", "")
-        fallback = f"👋 Hi{greeting}! Welcome to Zen Fragrances.\n\n🛍️ Browse our catalogue: {web_url}\n🛒 Type a product name to order (e.g. \"5 Rose Oud\")\n📋 Type HELP for more options."
+        fallback = f"👋 Hi{greeting}! Welcome to Zen Fragrances.\n\n⚡ Type a product name to order (e.g. \"5 Rose Oud\")\n🛍️ Browse catalogue: {web_url}\n📋 Type HELP for all commands."
         return {
             "type": "interactive",
             "payload": build_welcome_buttons(body),
@@ -264,16 +264,21 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
     if action == "confirm_order":
         from src.services.whatsapp_buttons import build_confirm_order_buttons
         body = f"🛒 *Confirm your order*\n\n{result.get('quantity', '?')}× *{result.get('product_name', 'item')}*\nR{result.get('unit_price', '0')} each = R{result.get('unit_total', '0')}\n\nAdd to cart?"
-        return {
+        reply = {
             "type": "interactive",
             "payload": build_confirm_order_buttons(body),
             "fallback_text": f"🛒 Adding {result.get('quantity', '?')}× {result.get('product_name', 'item')} at R{result.get('unit_total', '0')}. Reply YES to confirm or type CANCEL.",
         }
+        if result.get("image_url"):
+            return [{"image_url": result["image_url"], "text": f"*{result.get('product_name', 'item')}*"}, reply]
+        return reply
 
     if action == "order_confirmed":
         cart = result.get("cart") or {}
         total = cart.get("total", "0")
-        return {"text": f"✅ *{result.get('quantity', '?')}× {result.get('product_name', 'item')} added!*\n\n🛒 Cart total: R{total}\n\nType another product or *CHECKOUT* when ready.\nType *CART* to review your order."}
+        item_count = len(cart.get("items", []))
+        tips = "\n\n💡 *Tips:* `stock Rose Oud` · `cart` · `checkout` · `cancel`" if item_count == 1 else ""
+        return {"text": f"✅ *{result.get('quantity', '?')}× {result.get('product_name', 'item')} added!*\n\n🛒 Cart: {item_count} item{'s' if item_count != 1 else ''} · R{total}\n\nType another product or *CHECKOUT* when ready.{tips}"}
 
     if action == "order_cancelled_pending":
         return {"text": "❌ Order cancelled.\n\nType a product name to start again, or *HELP* for options."}

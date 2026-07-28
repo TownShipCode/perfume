@@ -359,7 +359,9 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
         state=State.ORDERING, cart=cart_items,
         current_step=0, temp_address=temp,
     )
-    return {
+    # Look up product image for visual confirmation
+    product_detail = await get_product_by_number(database, parsed["product_number"])
+    result: dict[str, object] = {
         "action": "confirm_order",
         "state": State.ORDERING,
         "product_name": parsed["product_name"],
@@ -367,6 +369,9 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
         "unit_price": str(parsed["unit_price"]),
         "unit_total": f"{unit_total:,.2f}",
     }
+    if product_detail and product_detail.get("image_url"):
+        result["image_url"] = product_detail["image_url"]
+    return result
 
 
 async def _handle_language_selection(
