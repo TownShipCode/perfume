@@ -41,15 +41,50 @@ For each competitor, we document:
 - WhatsApp ordering (they're web-only — friction for agents)
 - Instant stock checks (they require login + browse)
 - No call centre needed — WhatsApp is support
-- Automated commission tracking (theirs appears manual)
+- Automated commission tracking (theirs is markup-based, not commission)
 - Multi-role dashboards (agent, team member, manufacturer)
+- No starter pack required (they require R960.71 upfront — we don't)
 
 **Their advantage over us:**
-- Established brand with call centre
-- "Find an Agent" feature — customer discovery
+- Established brand with 15 physical warehouses nationwide
+- "Find an Agent" feature — customer discovery via suburb search
 - Social media presence (FB, X, TikTok)
 - Card payment integration live
 - Men's + Ladies' categorization visible
+- Physical kiosks in shopping centres (we're online-only)
+- Downloadable PDF agent price list
+- 42+ fragrances already listed (we have 99 planned but not yet seeded)
+
+---
+
+### 💰 FFC Agent Model Deep Dive
+
+**Starter Pack:** R960.71 for 30 assorted bottles (R32/bottle avg)
+**Or:** Build-your-own with minimum 10 different fragrances, 30 bottles total
+**Activation:** Buying starter pack = automatic agent. No fees. No recruitment.
+
+**Pricing Model (buy-sell spread):**
+- Wholesale: R18.63 – R94.22 per bottle (agents buy at this)
+- Retail: R40 – R190 per bottle (agents sell at this)
+- ~100% markup on most items
+- "No Special Prices, no discounts. Published prices apply to all agents."
+- Agents restock as little as 1 bottle at wholesale price
+
+**42 Fragrances (all 30ml "generic of X" dupes):**
+
+| Category | Examples | Wholesale | Retail |
+|----------|----------|:---:|:---:|
+| Premium Men's | Creed Aventus, Ombre Nomade | R85-R94 | R180-R190 |
+| Mid Men's | Sauvage, Bleu de Chanel, Versace Eros | R34-R45 | R70-R90 |
+| Budget Men's | Fahrenheit, Versace Man | R19 | R40 |
+| Premium Women's | Coco Mademoiselle, Baccarat Rouge | R41-R63 | R90-R130 |
+| Mid Women's | J'adore, La Vie Est Belle, Light Blue | R34-R35 | R70 |
+| Budget Women's | Chanel No5 | R19 | R40 |
+
+**Physical Presence:** 15 warehouses nationwide:
+East London, Port Elizabeth, Bloemfontein, Randburg, Vereeniging, Eastgate, Pretoria, Johannesburg, Durban, Pietermaritzburg, Polokwane, Nelspruit, Witbank, Rustenburg, Cape Town
+
+**"Find an Agent":** Customer-facing suburb search to find nearby agents. Shows area-based agent directory.
 
 ---
 
