@@ -12,6 +12,7 @@ from typing import Any
 # We map that ID to a text command that the existing order_flow handlers understand.
 BUTTON_TO_CMD: dict[str, str] = {
     "catalogue": "catalogue",
+    "browse_store": "catalogue",
     "order": "checkout",
     "help": "help",
     "yes": "yes",
@@ -20,6 +21,9 @@ BUTTON_TO_CMD: dict[str, str] = {
     "browse": "catalogue",
     "pay_yoco": "yoco",
     "pay_eft": "eft",
+    "confirm_add": "add_confirm",
+    "cancel_add": "add_cancel",
+    "view_cart": "cart",
 }
 
 
@@ -44,8 +48,8 @@ def build_welcome_buttons(body_text: str) -> dict[str, Any]:
             "body": {"text": body_text},
             "action": {
                 "buttons": [
-                    {"type": "reply", "reply": {"id": "catalogue", "title": "�️ View Catalogue"}},
-                    {"type": "reply", "reply": {"id": "order", "title": "🛒 Order"}},
+                    {"type": "reply", "reply": {"id": "browse_store", "title": "🛍️ Browse Store"}},
+                    {"type": "reply", "reply": {"id": "view_cart", "title": "🛒 View Cart"}},
                     {"type": "reply", "reply": {"id": "help", "title": "ℹ️ Help"}},
                 ]
             },
@@ -102,6 +106,23 @@ def build_cart_buttons(body_text: str) -> dict[str, Any]:
                 "buttons": [
                     {"type": "reply", "reply": {"id": "add_more", "title": "➕ Add More"}},
                     {"type": "reply", "reply": {"id": "order", "title": "🛒 Checkout"}},
+                ]
+            },
+        },
+    }
+
+
+def build_confirm_order_buttons(body_text: str) -> dict[str, Any]:
+    """Confirmation buttons before adding to cart."""
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body_text},
+            "action": {
+                "buttons": [
+                    {"type": "reply", "reply": {"id": "confirm_add", "title": "✅ Confirm"}},
+                    {"type": "reply", "reply": {"id": "cancel_add", "title": "❌ Cancel"}},
                 ]
             },
         },

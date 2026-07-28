@@ -501,7 +501,7 @@ async def record_fl_pop(
     fl_pop_url: str,
     fl_amount: Decimal | None = None,
 ) -> dict | None:
-    """Record BioMed's POP paid to Focus Logic."""
+    """Record platform POP paid to Focus Logic."""
     now = datetime.now(timezone.utc)
     if database.mode == "postgres":
         row = await fetch_one(

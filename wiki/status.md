@@ -1,4 +1,4 @@
-# BioMed — Project Status
+# Zen Fragrances — Project Status
 
 **2026-07-26 (evening)** · 25 tests passing · 12 migrations · Interactive WhatsApp UX deployed
 
@@ -35,8 +35,8 @@
 
 | Service | URL |
 |---------|-----|
-| API | `https://biomed-production.up.railway.app` |
-| Dashboard | `https://biomed-dashboard-five.vercel.app` |
+| API | `https://zenfragrances-production.up.railway.app` |
+| Dashboard | `https://zenfragrances.vercel.app` |
 | Repo | `https://github.com/TownShipCode/perfume` |
 
 ## Feature Summary
@@ -91,7 +91,7 @@ AUTO_FORWARD_TO_MANUFACTURER=true
 DEFAULT_MARGIN=70.00
 COURIER_FEE=150.00
 COURIER_NAME=The Courier Guy
-FL_USERNAME=BioMed_SA
+FL_USERNAME=ZenFragrances
 ```
 
 ## Pending

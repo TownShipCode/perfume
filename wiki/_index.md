@@ -1,6 +1,6 @@
-# BioMed — Wiki Index
+# Zen Fragrances — Wiki Index
 
-**Project:** BioMed (WhatsApp Order Platform for low-literacy customers)
+**Project:** Zen Fragrances (WhatsApp-first perfume dropshipping & reseller platform)
 **Repo:** `TownShipCode/perfume`
 **Global Wiki:** [`TownShipCode/wiki`](https://github.com/TownShipCode/wiki)
 

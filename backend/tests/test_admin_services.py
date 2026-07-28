@@ -35,6 +35,7 @@ def test_admin_service_queries_and_status_update(tmp_path, monkeypatch) -> None:
 
             for message_id, text in [
                 ("m1", "2 shoes"),
+                ("m1b", "add_confirm"),
                 ("m2", "done"),
                 ("m3", "Alice"),
                 ("m4", "Dlamini"),

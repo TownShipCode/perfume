@@ -88,11 +88,11 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
         )
 
     if lowered in settings.whatsapp_catalog_commands:
-        lines = await build_catalog_lines(database)
+        web_url = settings.web_base_url.rstrip("/")
         return {
-            "action": "catalogue",
+            "action": "catalogue_web",
             "state": session.get("state", State.IDLE),
-            "catalogue": "\n".join(lines) if lines else "No products available right now.",
+            "web_url": f"{web_url}/catalogue",
         }
 
     # Language codes: auto-set language, then show catalogue
@@ -109,6 +109,39 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
             "catalogue": "\n".join(lines) if lines else "No products available right now.",
         }
 
+    # ── Confirmation step: agent confirmed/cancelled a pending order ──
+    temp = session.get("temp_address") or {}
+    pending_order = temp.get("__pending_order__")
+    if pending_order and lowered in ("add_confirm", "add_cancel"):
+        if lowered == "add_confirm":
+            # Add pending to cart
+            updated_items = add_item_to_cart(cart_items, pending_order["product_id"], pending_order["quantity"])
+            temp.pop("__pending_order__", None)
+            await save_session_state(
+                database, phone_number,
+                state=State.ORDERING, cart=updated_items,
+                current_step=session.get("current_step", 0),
+                temp_address=temp,
+            )
+            price_map = await _build_price_map(database)
+            cart = build_cart(updated_items, price_map)
+            return {
+                "action": "order_confirmed",
+                "state": State.ORDERING,
+                "product_name": pending_order["product_name"],
+                "quantity": pending_order["quantity"],
+                "cart": _serialize_cart(cart),
+            }
+        else:
+            # Cancel pending — clear it
+            temp.pop("__pending_order__", None)
+            await save_session_state(
+                database, phone_number,
+                state=State.IDLE, cart=cart_items,
+                current_step=0, temp_address=temp,
+            )
+            return {"action": "order_cancelled_pending", "state": State.IDLE}
+
     if session.get("state") == State.ADDRESS_COLLECTION:
         return await _handle_address_collection(database, customer, session, cart_items, text)
 
@@ -118,7 +151,8 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
         if num_text.isdigit():
             product = await get_product_by_number(database, int(num_text))
             if product:
-                return {"action": "product_detail", "product_name": product["name"], "description": product.get("description") or "No description available.", "price": str(product["price"]), "image_url": product.get("image_url")}
+                web_url = settings.web_base_url.rstrip("/")
+                return {"action": "product_detail", "product_name": product["name"], "description": product.get("description") or "No description available.", "price": str(product["price"]), "image_url": product.get("image_url"), "product_url": f"{web_url}/product/{product['product_number']}"}
         return {"action": "unmatched", "state": session.get("state", State.IDLE), "text": text}
 
     if session.get("state") == State.ADDRESS_CONFIRMATION:
@@ -140,8 +174,37 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
     if lowered.startswith("stock "):
         return await _handle_stock_check(database, lowered)
 
+    # ── Agent price list: "price list" or "pricelist" ──
+    if lowered in ("price list", "pricelist", "prices"):
+        return {
+            "action": "price_list",
+            "state": session.get("state", State.IDLE),
+            "url": f"{settings.api_base_url}/api/agent/price-list",
+        }
+
+    # ── WhatsApp catalog link ──
+    if lowered in ("catalog link", "share catalog", "wa catalog"):
+        catalog_id = settings.whatsapp_catalog_id
+        if catalog_id:
+            return {
+                "action": "catalog_link",
+                "state": session.get("state", State.IDLE),
+                "catalog_url": f"https://wa.me/c/{catalog_id}",
+            }
+        return {"action": "text", "text": "📋 View our catalogue here:\n{}/catalogue".format(settings.api_base_url.replace("/api", ""))}
+
+    # ── Agent referral: customer can become an agent ──
+    if lowered == "agent" or lowered == "become agent" or lowered == "become an agent":
+        if customer.get("role") == "agent":
+            return {"action": "text", "text": "✨ You're already a Zen Fragrances agent! Use your dashboard to manage orders and track commissions."}
+        return {
+            "action": "become_agent",
+            "state": session.get("state", State.IDLE),
+            "customer_name": customer.get("name") or "",
+            "register_url": f"{settings.api_base_url.replace('/api', '')}/register-agent",
+        }
+
     # ── Recovery challenge active? (Phase 4) ──
-    temp = session.get("temp_address") or {}
     if temp.get("recovery_agent_code"):
         return await _handle_recovery_challenge(database, phone_number, session, text)
 
@@ -153,15 +216,39 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
             return await _handle_eft_payment(session)
         # Let them browse catalogue while waiting
         if lowered in settings.whatsapp_catalog_commands:
-            lines = await build_catalog_lines(database)
+            web_url = settings.web_base_url.rstrip("/")
             return {
-                "action": "catalogue",
+                "action": "catalogue_web",
                 "state": State.POP_WAITING,
-                "catalogue": "\n".join(lines) if lines else "No products available right now.",
+                "web_url": f"{web_url}/catalogue",
             }
         return {"action": "awaiting_pop", "state": State.POP_WAITING}
 
+    # ── Cart view: show current cart on demand ──
+    if lowered in ("cart", "view cart", "my cart"):
+        if not cart_items:
+            return {"action": "text", "text": "🛒 Your cart is empty.\n\nType a product name to add items, e.g. _\"5 Rose Oud\"_."}
+        price_map = await _build_price_map(database)
+        cart = build_cart(cart_items, price_map)
+        return {
+            "action": "cart_summary",
+            "state": State.ORDERING,
+            "cart": _serialize_cart(cart),
+        }
+
     if lowered in settings.whatsapp_checkout_commands:
+        # Auto-confirm any pending order before checkout
+        if pending_order:
+            updated_items = add_item_to_cart(cart_items, pending_order["product_id"], pending_order["quantity"])
+            temp.pop("__pending_order__", None)
+            cart_items = updated_items
+            await save_session_state(
+                database, phone_number,
+                state=State.ORDERING, cart=cart_items,
+                current_step=0, temp_address=temp,
+            )
+            session["cart"] = [item.model_dump() for item in cart_items]
+
         if not cart_items:
             return {"action": "checkout_blocked", "reason": "empty_cart", "state": session.get("state", State.IDLE)}
 
@@ -195,13 +282,12 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
             "cart": _serialize_cart(cart),
         }
 
-    # Help command — show useful info instead of re-triggering welcome
+    # Help command — show useful info with web store link
     if lowered in ("help", "?"):
+        web_url = settings.web_base_url.rstrip("/")
         return {
-            "action": "interactive_welcome",
-            "state": session.get("state", State.IDLE),
-            "customer_name": customer.get("name") or "",
-            "greeting": f"ℹ️ *How to use {settings.store_name}*\n\n📋 Send *CATALOGUE* to browse products\n🔢 Send a number like *1* to order\n🛒 Send *CHECKOUT* to complete order\n📸 Send your POP image to confirm\n🗑️ Send *CANCEL* to cancel\n\nWe're here for you! 🫖",
+            "action": "text",
+            "text": f"💡 *{settings.store_name}*\n\n🛍️ Browse & order online:\n{web_url}/catalogue\n\n⚡ Quick order via WhatsApp:\n• Type product name: e.g. _\"5 Rose Oud\"_\n• Check stock: _\"stock 1\"_\n• View cart: _\"cart\"_\n• Checkout: _\"checkout\"_\n• Cancel: _\"cancel\"_",
         }
 
     # Bare number shortcut or quantity input
@@ -229,13 +315,13 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
                 "description": product.get("description", ""),
                 "image_url": product.get("image_url"),
             }
-        # Product number doesn't exist — show what IS available
-        lines = await build_catalog_lines(database)
+        # Product number doesn't exist — suggest web store
+        web_url = settings.web_base_url.rstrip("/")
         return {
             "action": "product_not_found",
             "state": session.get("state", State.IDLE),
             "attempted_number": int(text),
-            "catalogue": "\n".join(lines) if lines else "No products available right now.",
+            "web_url": f"{web_url}/catalogue",
         }
 
     keyword_map = await get_keyword_map(database)
@@ -251,29 +337,35 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
             customer["language"] = settings.default_language
         customer_name = customer.get("name") or ""
         greeting = f" {customer_name}" if customer_name else ""
+        web_url = settings.web_base_url.rstrip("/")
         return {
             "action": "interactive_welcome",
             "state": session.get("state", State.IDLE),
             "customer_name": customer_name,
-            "greeting": f"👋 Hi{greeting}! Welcome to BioMed. What would you like to do?",
+            "greeting": f"👋 Hi{greeting}! Welcome to Zen Fragrances. What would you like to do?",
+            "web_url": f"{web_url}/catalogue",
         }
 
-    updated_items = add_item_to_cart(cart_items, parsed["product_id"], parsed["quantity"])
-    updated_session = await save_session_state(
-        database,
-        phone_number,
-        state=State.ORDERING,
-        cart=updated_items,
-        current_step=session.get("current_step", 0),
-        temp_address=session.get("temp_address"),
+    # ── Confirmation: ask agent to confirm before adding to cart ──
+    unit_total = parsed["quantity"] * float(parsed["unit_price"])
+    temp["__pending_order__"] = {
+        "product_id": parsed["product_id"],
+        "product_name": parsed["product_name"],
+        "quantity": parsed["quantity"],
+        "unit_price": str(parsed["unit_price"]),
+    }
+    await save_session_state(
+        database, phone_number,
+        state=State.ORDERING, cart=cart_items,
+        current_step=0, temp_address=temp,
     )
-    price_map = await _build_price_map(database)
-    cart = build_cart(updated_items, price_map)
     return {
-        "action": "cart_updated",
-        "state": updated_session["state"],
-        "matched_item": parsed,
-        "cart": _serialize_cart(cart),
+        "action": "confirm_order",
+        "state": State.ORDERING,
+        "product_name": parsed["product_name"],
+        "quantity": parsed["quantity"],
+        "unit_price": str(parsed["unit_price"]),
+        "unit_total": f"{unit_total:,.2f}",
     }
 
 

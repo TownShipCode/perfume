@@ -1,4 +1,4 @@
-# BioMed — Build Retrospective
+# Zen Fragrances — Build Retrospective
 
 **2026-07-24 / 2026-07-25** · Sessions: Phase 1–4 + Live Testing
 

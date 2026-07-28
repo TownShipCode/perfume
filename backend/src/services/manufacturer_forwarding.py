@@ -103,7 +103,7 @@ async def _build_forward_message(database: Database, order: dict[str, object]) -
         surname=surname,
         full_address=full_address,
         postal_code=postal_code,
-        email=settings.bio_med_email,
+        email=settings.store_email or "",
         province=province,
         phone_number=phone_number,
         items=quantities,

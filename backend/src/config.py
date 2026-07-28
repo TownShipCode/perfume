@@ -24,6 +24,7 @@ class Settings:
     store_name: str
     store_currency: str
     api_base_url: str
+    web_base_url: str
     database_url: str | None
     local_sqlite_path: Path
     whatsapp_provider: str
@@ -62,7 +63,7 @@ class Settings:
     fl_username: str
     quantity_options: tuple[int, ...]
     max_quantity: int
-    bio_med_email: str
+    store_email: str | None
     default_membership: str
     default_repurchase: str
     self_pickup_default: str
@@ -117,19 +118,19 @@ def get_settings() -> Settings:
     low_stock_threshold = int(os.getenv("LOW_STOCK_THRESHOLD", "5") or "5")
     courier_name = os.getenv("COURIER_NAME", "The Courier Guy").strip()
     courier_tracking_url = os.getenv("COURIER_TRACKING_URL", "https://thecourierguy.co.za/track").strip()
-    fl_username = os.getenv("FL_USERNAME", "BioMed_SA").strip()
+    fl_username = os.getenv("FL_USERNAME", "ZenFragrances").strip()
     auto_forward = os.getenv("AUTO_FORWARD_TO_MANUFACTURER", "true").strip().lower() in ("true", "1", "yes")
     quantity_options = tuple(
         int(v.strip()) for v in os.getenv("WHATSAPP_QUANTITY_OPTIONS", "1,2,3,4,5,6").split(",") if v.strip().isdigit()
     )
     max_quantity = int(os.getenv("MAX_QUANTITY", "99") or "99")
-    bio_med_email = os.getenv("BIO_MED_EMAIL", "orders@biomed.co.za").strip()
+    store_email = os.getenv("STORE_EMAIL", "").strip() or None
     default_membership = os.getenv("DEFAULT_MEMBERSHIP", "NO").strip()
     default_repurchase = os.getenv("DEFAULT_REPURCHASE", "YES").strip()
     self_pickup_default = os.getenv("SELF_PICKUP_DEFAULT", "NO").strip()
     yoco_base_url = os.getenv("YOCO_BASE_URL", "https://online.yoco.com/v1").strip()
     bank_name = os.getenv("BANK_NAME", "Standard Bank").strip()
-    account_holder = os.getenv("ACCOUNT_HOLDER", "BioMed").strip()
+    account_holder = os.getenv("ACCOUNT_HOLDER", "Zen Fragrances").strip()
     account_number = os.getenv("ACCOUNT_NUMBER", "").strip()
     branch_code = os.getenv("BRANCH_CODE", "").strip()
     payment_methods_enabled = _csv_values(os.getenv("PAYMENT_METHODS_ENABLED", "yoco,eft"))
@@ -140,6 +141,7 @@ def get_settings() -> Settings:
         store_name=os.getenv("STORE_NAME", "Example Store"),
         store_currency=os.getenv("STORE_CURRENCY", "ZAR"),
         api_base_url=os.getenv("API_BASE_URL", "http://localhost:8000"),
+        web_base_url=os.getenv("WEB_BASE_URL", "http://localhost:5173"),
         database_url=_optional("DATABASE_URL"),
         local_sqlite_path=local_sqlite_path,
         whatsapp_provider=os.getenv("WHATSAPP_PROVIDER", "meta").lower(),
@@ -178,7 +180,7 @@ def get_settings() -> Settings:
         fl_username=fl_username,
         quantity_options=quantity_options,
         max_quantity=max_quantity,
-        bio_med_email=bio_med_email,
+        store_email=store_email,
         default_membership=default_membership,
         default_repurchase=default_repurchase,
         self_pickup_default=self_pickup_default,

@@ -20,6 +20,7 @@ def make_settings(**overrides: object) -> Settings:
         "store_name": "Test Store",
         "store_currency": "ZAR",
         "api_base_url": "http://localhost:8000",
+        "web_base_url": "http://localhost:5173",
         "database_url": None,
         "local_sqlite_path": __import__("pathlib").Path("app.db"),
         "whatsapp_provider": "meta",
@@ -51,10 +52,10 @@ def make_settings(**overrides: object) -> Settings:
         "courier_fee": __import__("decimal").Decimal("150.00"),
         "courier_name": "The Courier Guy",
         "courier_tracking_url": "https://thecourierguy.co.za/track",
-        "fl_username": "BioMed_SA",
+        "fl_username": "ZenFragrances",
         "quantity_options": (1, 2, 3, 4, 5, 6),
         "max_quantity": 99,
-        "bio_med_email": "orders@biomed.co.za",
+        "store_email": None,
         "default_membership": "NO",
         "default_repurchase": "YES",
         "self_pickup_default": "NO",
@@ -148,8 +149,22 @@ def test_webhook_text_message_updates_session_state(tmp_path, monkeypatch) -> No
                 },
             )
 
-            assert result["action"] == "cart_updated"
-            assert result["state"] == "ordering"
+            assert result["action"] == "confirm_order"
+            assert result["product_name"] == "Red Shoes"
+            assert result["quantity"] == 2
+
+            # Confirm the pending order
+            result = await handle_text_message(
+                database,
+                {
+                    "message_id": "wamid.201",
+                    "from": "27820000000",
+                    "type": "text",
+                    "text": "add_confirm",
+                    "profile_name": "Alice",
+                },
+            )
+            assert result["action"] == "order_confirmed"
             assert result["cart"]["items"][0]["quantity"] == 2
             assert result["cart"]["total"] == "700.00"
 

@@ -1,4 +1,4 @@
-# BioMed — Learnings & Session Log
+# Zen Fragrances — Learnings & Session Log
 
 **Last updated:** 2026-07-28
 **Global wiki reference:** [`TownShipCode/wiki`](https://github.com/TownShipCode/wiki)

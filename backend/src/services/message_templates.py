@@ -34,12 +34,12 @@ DEFAULT_TEMPLATES = {
     "payment_received": "✅ *Payment received — thank you!* 🙏\n\nOrder #{order_number} is confirmed. We'll notify you once your order is on the way.",
     "payment_declined": "❌ *Payment declined*\n\nPlease try again or use EFT / Bank Deposit instead.\n\nType *CATALOGUE* to browse or *CHECKOUT* to try again.",
     "pop_received": "📸 *POP received — thank you!* 🙏\n\nWe'll review your payment and confirm your order shortly.\nYou'll receive a notification once your order is on the way.",
-    "order_confirmed": "✅ *Order #{order_number} Confirmed!* 🎉\n\nHi {customer_name}, your order has been processed and sent to our fulfilment team.\n\n🛒 {items}\n💰 Total: R{total}\n🚚 Delivery: {courier}\n\nWe'll notify you once your order is on the way. Thank you for choosing BioMed! 🫖",
-    "order_shipped": "🚚 *Your order is on the way!*\n\nOrder #{order_number}\n📦 Waybill: {tracking_info}\n🔗 Track your order: {tracking_url}\n\n📍 Delivery to:\n{full_address}\n\nThank you for choosing BioMed! 🫖",
+    "order_confirmed": "✅ *Order #{order_number} Confirmed!* 🎉\n\nHi {customer_name}, your order has been processed and sent to our fulfilment team.\n\n🛒 {items}\n💰 Total: R{total}\n🚚 Delivery: {courier}\n\nWe'll notify you once your order is on the way. Thank you for choosing Zen Fragrances! ✨",
+    "order_shipped": "🚚 *Your order is on the way!*\n\nOrder #{order_number}\n📦 Waybill: {tracking_info}\n🔗 Track your order: {tracking_url}\n\n📍 Delivery to:\n{full_address}\n\nThank you for choosing Zen Fragrances! ✨",
     "checkout_blocked": "🛒 Your cart is empty. Add a product first — reply with a number like *1*.",
     "unmatched": "❓ I couldn't match that.\n\nType *CATALOGUE* to see products, or a product number like *1* to start ordering.",
     "awaiting_pop": "⏳ Your order is waiting for POP (proof of payment).\n\n📸 Please send your POP image to confirm.\n🗑️ Type *CANCEL* to cancel this order.\n\n_Your order will expire in {expiry_hours}h if no POP is received._",
-    "order_cancelled": "🗑️ Order cancelled.\n\nWhenever you're ready, just say *Hi* to start a new order. We're here for you! 🫖",
+    "order_cancelled": "🗑️ Order cancelled.\n\nWhenever you're ready, just say *Hi* to start a new order. We're here for you! ✨",
     "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *SURNAME:* {surname}\n➡️ *ADDRESS:* {full_address}\n➡️ *POSTAL CODE:* {postal_code}\n➡️ *EMAIL:* {email}\n➡️ *PROVINCE /CITY:* {province}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *QUANTITY:*\n{items}\n➡️ *DATE OF PAYMENT:* {date_of_payment}\n➡️ *CELL NO:* {phone_number}\n➡️ *COURIER:* {courier_name}\n➡️ *SELF PICK UP:* {self_pickup}",
 }
 
@@ -51,15 +51,16 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
     settings = get_settings()
     action = result.get("action")
     if action == "cart_summary":
-        # Interactive buttons: add more items or checkout
+        # On-demand cart view with line items + add more / checkout buttons
         from src.services.whatsapp_buttons import build_cart_buttons
-        matched = result.get("matched_item") or {}
         cart = result.get("cart") or {}
-        body = f"🛒 Added {matched.get('quantity', 0)}x *{matched.get('product_name', 'item')}*\nTotal: R{cart.get('total', '0.00')}\n\nWhat would you like to do?"
+        items = cart.get("items", [])
+        item_lines = "\n".join(f"  {it.get('quantity', 0)}× {it.get('product_name', '?')} — R{it.get('subtotal', '0')}" for it in items) if items else "(empty)"
+        body = f"🛒 *Your Cart*\n\n{item_lines}\n\n💴 Total: R{cart.get('total', '0.00')}\n\nWhat would you like to do?"
         return {
             "type": "interactive",
             "payload": build_cart_buttons(body),
-            "fallback_text": f"🛒 Added {matched.get('quantity', 0)}x *{matched.get('product_name', 'item')}*\nTotal: R{cart.get('total', '0.00')}\n\nType CATALOGUE to add more or CHECKOUT to order.",
+            "fallback_text": f"🛒 Cart total: R{cart.get('total', '0.00')}. Type CHECKOUT to order or type a product name to add more.",
         }
 
     if action == "cart_updated":
@@ -87,6 +88,10 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
             **({"image_url": image_url} if image_url else {}),
         }
 
+    if action == "catalogue_web":
+        web_url = result.get("web_url", "")
+        return {"text": f"🛍️ *Browse Our Catalogue*\n\nView all fragrances with images, filters & scent notes:\n\n🔗 {web_url}\n\n⚡ Or order directly here — type a product name, e.g. _\"5 Rose Oud\"_."}
+
     if action == "welcome_catalogue":
         customer_name = result.get("customer_name") or ""
         prefix = f" {customer_name}" if customer_name else ""
@@ -107,16 +112,13 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         from src.services.whatsapp_buttons import build_welcome_buttons
         customer_name = result.get("customer_name") or ""
         greeting = f" {customer_name}" if customer_name else ""
-        body = result.get("greeting") or f"👋 *Welcome to BioMed!* 🫖\n\nYour natural health store on WhatsApp.\nWhat would you like to do?"
+        body = result.get("greeting") or f"👋 *Welcome to Zen Fragrances!* ✨\n\nYour wholesale perfume supplier on WhatsApp.\nWhat would you like to do?"
+        web_url = result.get("web_url", "")
+        fallback = f"👋 Hi{greeting}! Welcome to Zen Fragrances.\n\n🛍️ Browse our catalogue: {web_url}\n🛒 Type a product name to order (e.g. \"5 Rose Oud\")\n📋 Type HELP for more options."
         return {
             "type": "interactive",
             "payload": build_welcome_buttons(body),
-            "fallback_text": await render_template(
-                database,
-                "welcome_catalogue",
-                customer_name=greeting,
-                catalogue=result.get("catalogue", "No products available right now."),
-            ),
+            "fallback_text": fallback,
         }
 
     if action == "quantity_selection":
@@ -224,29 +226,15 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         return {"text": await render_template(database, "pop_received")}
 
     if action == "checkout_blocked":
-        body = "🛒 *Your cart is empty!*\n\nBrowse our products and pick something you like."
-        return {
-            "type": "interactive",
-            "payload": {
-                "type": "interactive",
-                "interactive": {
-                    "type": "button",
-                    "body": {"text": body},
-                    "action": {
-                        "buttons": [
-                            {"type": "reply", "reply": {"id": "browse", "title": "\U0001f6cd\ufe0f Browse Products"}},
-                            {"type": "reply", "reply": {"id": "help", "title": "ℹ️ Help"}},
-                        ]
-                    },
-                },
-            },
-            "fallback_text": "🛒 Your cart is empty. Type CATALOGUE to browse products.",
-        }
+        settings = get_settings()
+        web_url = settings.web_base_url.rstrip("/")
+        return {"text": f"🛒 *Your cart is empty!*\n\n🛍️ Browse our catalogue online:\n{web_url}/catalogue\n\nOr type a product name here, e.g. _\"5 Rose Oud\"_."}
 
     if action == "product_not_found":
         attempted = result.get("attempted_number", "?")
-        catalogue = result.get("catalogue", "")
-        return {"text": f"❓ Product #{attempted} not found.\n\nHere's what's available:\n\n{catalogue}\n\n_Type a number to select a product._"}
+        settings = get_settings()
+        web_url = settings.web_base_url.rstrip("/")
+        return {"text": f"❓ Product #{attempted} not found.\n\n🛍️ Browse our full catalogue online:\n{web_url}/catalogue\n\nOr type a product name directly, e.g. _\"5 Rose Oud\"_."}
 
     if action == "unmatched":
         return {"text": await render_template(database, "unmatched")}
@@ -259,6 +247,8 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
 
     if action == "product_detail":
         image_url = result.get("image_url")
+        product_url = result.get("product_url", "")
+        web_link = f"\n\n🔗 View online: {product_url}" if product_url else ""
         return {
             "text": await render_template(
                 database,
@@ -267,9 +257,26 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
                 description=result.get("description", ""),
                 price=result.get("price", "0"),
                 currency=settings.store_currency,
-            ),
+            ) + web_link,
             **(({"image_url": image_url} if image_url else {})),
         }
+
+    if action == "confirm_order":
+        from src.services.whatsapp_buttons import build_confirm_order_buttons
+        body = f"🛒 *Confirm your order*\n\n{result.get('quantity', '?')}× *{result.get('product_name', 'item')}*\nR{result.get('unit_price', '0')} each = R{result.get('unit_total', '0')}\n\nAdd to cart?"
+        return {
+            "type": "interactive",
+            "payload": build_confirm_order_buttons(body),
+            "fallback_text": f"🛒 Adding {result.get('quantity', '?')}× {result.get('product_name', 'item')} at R{result.get('unit_total', '0')}. Reply YES to confirm or type CANCEL.",
+        }
+
+    if action == "order_confirmed":
+        cart = result.get("cart") or {}
+        total = cart.get("total", "0")
+        return {"text": f"✅ *{result.get('quantity', '?')}× {result.get('product_name', 'item')} added!*\n\n🛒 Cart total: R{total}\n\nType another product or *CHECKOUT* when ready.\nType *CART* to review your order."}
+
+    if action == "order_cancelled_pending":
+        return {"text": "❌ Order cancelled.\n\nType a product name to start again, or *HELP* for options."}
 
     if action == "language_selection":
         return {"text": await render_template(database, "language_selection")}
@@ -331,6 +338,26 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
 
     if action == "payment_declined":
         return {"text": await render_template(database, "payment_declined")}
+
+    if action == "price_list":
+        url = result.get("url", "")
+        return {"text": f"📋 *Agent Wholesale Price List*\n\nDownload or print our current wholesale price list:\n{url}\n\n_Share this with your customers. Suggested retail: 2× wholesale._"}
+
+    if action == "catalog_link":
+        catalog_url = result.get("catalog_url", "")
+        return {"text": f"🛍️ *WhatsApp Catalog*\n\nBrowse our full product catalog on WhatsApp:\n{catalog_url}\n\nTap the link to view all fragrances with images and prices."}
+
+    if action == "become_agent":
+        customer_name = result.get("customer_name", "")
+        greeting = f" {customer_name}" if customer_name else ""
+        register_url = result.get("register_url", "")
+        return {"text": f"🚀 *Become a Zen Fragrances Agent!*\n\nHi{greeting}! Ready to start your own perfume business?\n\n✨ *Why become an agent?*\n• Buy at wholesale prices (R40-100/bottle)\n• Sell at your own retail price (~2× markup)\n• No starter pack required\n• Order via WhatsApp — no website needed\n• Earn commission by building your own team\n\n📝 Register here:\n{register_url}\n\nAlready registered? Just start ordering — your agent discount is automatic!"}
+
+    if action == "internal_error":
+        return {"text": result.get("text", "Something went wrong. Please try again.")}
+
+    if action == "text":
+        return {"text": str(result.get("text", ""))}
 
     return None
 

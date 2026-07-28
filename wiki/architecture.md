@@ -1,4 +1,4 @@
-# BioMed — Architecture Reference
+# Zen Fragrances — Architecture Reference
 
 **2026-07-26** · For future sessions / new developers
 

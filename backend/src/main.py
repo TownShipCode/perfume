@@ -10,6 +10,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from src.api.agent_tools import router as agent_tools_routes
 from src.api.analytics import router as analytics_routes
 from src.api.auth import router as auth_routes
 from src.api.customers import router as customer_routes
@@ -86,6 +87,7 @@ async def add_security_headers(request: Request, call_next):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
+app.include_router(agent_tools_routes)
 app.include_router(analytics_routes)
 app.include_router(auth_routes)
 app.include_router(product_routes)

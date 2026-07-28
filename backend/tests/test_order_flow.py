@@ -37,8 +37,17 @@ def test_order_flow_collects_address_and_creates_order(tmp_path, monkeypatch) ->
                 database,
                 {"message_id": "m1", "from": "27820000000", "type": "text", "text": "2 shoes", "profile_name": "Alice"},
             )
-            assert added["action"] == "cart_updated"
-            assert added["cart"]["total"] == "700.00"
+            assert added["action"] == "confirm_order"
+            assert added["quantity"] == 2
+            assert added["product_name"] == "Red Shoes"
+
+            # Confirm the pending order
+            confirmed = await handle_text_message(
+                database,
+                {"message_id": "m1b", "from": "27820000000", "type": "text", "text": "add_confirm", "profile_name": "Alice"},
+            )
+            assert confirmed["action"] == "order_confirmed"
+            assert confirmed["cart"]["total"] == "700.00"
 
             done = await handle_text_message(
                 database,
@@ -223,16 +232,13 @@ def test_order_flow_returns_catalogue_for_menu_command(tmp_path, monkeypatch) ->
                 database,
                 {"message_id": "m1", "from": "27820000000", "type": "text", "text": "menu", "profile_name": "Alice"},
             )
-            assert result["action"] == "catalogue"
-            assert "Red Shoes" in result["catalogue"]
-            assert "R350" in result["catalogue"]
-            assert "Blue Hat" in result["catalogue"]
-            assert "R120" in result["catalogue"]
+            assert result["action"] == "catalogue_web"
+            assert "catalogue" in result["web_url"]
 
             reply = await build_customer_reply(database, result)
             assert reply is not None
-            assert "*Available Products*" in reply["text"]
-            assert "Type a number to order" in reply["text"]
+            assert "Browse Our Catalogue" in reply["text"]
+            assert result["web_url"] in reply["text"]
 
             session = await get_session_by_phone(database, "27820000000")
             assert session is not None
@@ -269,7 +275,7 @@ def test_order_flow_uses_configured_catalogue_commands(tmp_path, monkeypatch) ->
                 database,
                 {"message_id": "m1", "from": "27820000000", "type": "text", "text": "shop", "profile_name": "Alice"},
             )
-            assert configured["action"] == "catalogue"
+            assert configured["action"] == "catalogue_web"
 
             default_menu = await handle_text_message(
                 database,
@@ -318,8 +324,8 @@ def test_order_flow_returns_welcome_catalogue_for_greeting(tmp_path, monkeypatch
             assert "payload" in reply
             # Interactive payload should contain welcome buttons
             buttons = reply["payload"]["interactive"]["action"]["buttons"]
-            assert any(b["reply"]["id"] == "catalogue" for b in buttons)
-            assert any(b["reply"]["id"] == "order" for b in buttons)
+            assert any(b["reply"]["id"] == "browse_store" for b in buttons)
+            assert any(b["reply"]["id"] == "view_cart" for b in buttons)
         finally:
             await close_database(database)
 

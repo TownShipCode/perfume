@@ -50,6 +50,27 @@ async def get_categories(request: Request) -> dict[str, object]:
     return {"items": cats}
 
 
+@router.get("/scents")
+async def get_scents(request: Request) -> dict[str, object]:
+    """Return distinct scent families and genders for filter chips."""
+    from src.db.connection import fetch_all
+    rows = await fetch_all(
+        request.app.state.database,
+        "SELECT DISTINCT scent_family FROM products WHERE scent_family IS NOT NULL AND is_active = TRUE ORDER BY scent_family"
+        if request.app.state.database.mode == "postgres"
+        else "SELECT DISTINCT scent_family FROM products WHERE scent_family IS NOT NULL AND is_active = 1 ORDER BY scent_family",
+    )
+    scent_families = [r["scent_family"] for r in rows if r["scent_family"]]
+    gender_rows = await fetch_all(
+        request.app.state.database,
+        "SELECT DISTINCT gender FROM products WHERE gender IS NOT NULL AND is_active = TRUE ORDER BY gender"
+        if request.app.state.database.mode == "postgres"
+        else "SELECT DISTINCT gender FROM products WHERE gender IS NOT NULL AND is_active = 1 ORDER BY gender",
+    )
+    genders = [r["gender"] for r in gender_rows if r["gender"]]
+    return {"scent_families": scent_families, "genders": genders}
+
+
 @router.get("/{product_id}")
 async def get_product(request: Request, product_id: int) -> dict[str, object]:
     """Get a single product by ID (public — used by web store)."""
