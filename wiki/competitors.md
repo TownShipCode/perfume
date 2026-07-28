@@ -53,7 +53,7 @@ For each competitor, we document:
 
 ---
 
-### 2. SensoryFX (Centurion) 🟡 NOT DIRECT COMPETITOR
+### 2. SensoryFX (Centurion) 🟡 B2B MANUFACTURER — NOT A RESELLER COMPETITOR
 
 | Field | Detail |
 |-------|--------|
@@ -66,26 +66,46 @@ For each competitor, we document:
 | **Contact** | 0861 999 782, 012 653 2346, hello@sensoryfx.co.za |
 | **Model** | B2B — makes fragrances FOR other brands. Not a reseller platform. |
 
-**Relevance:** They could be a SUPPLIER, not a competitor. If you need custom fragrances manufactured, they're an option. But they don't compete for the same reseller/agent market.
+**Relevance:** They could be a SUPPLIER, not a competitor. If you need custom fragrances manufactured, they're an option.
 
 ---
 
-### 3. Sensetek / French Fragrances SA 🟡
+### 3. Sensetek / French Fragrances SA (Sandton) 🟡 B2B SUPPLIER
 
 | Field | Detail |
 |-------|--------|
-| **Website** | [sensetek.biz](https://www.sensetek.biz/) |
-| **Status** | ⚠️ Site inaccessible during research — TODO: manual review |
+| **Website** | [sensetek.co.za](https://sensetek.co.za/) (NOT .biz) |
+| **Type** | B2B fragrance compound & raw material supplier |
+| **Value Prop** | "Smell · Taste · Emotion" — French fragrances from Grasse (200+ year heritage) |
+| **Founded** | Since 1995 |
+| **Location** | 24 Village Crescent, Linbro Office Park, Sandton, Gauteng |
+| **Contact** | sales@sensetek.co.za, +27 11 608 4944 |
+| **Products** | Fine fragrances, flavour oils, essential/natural oils, Tournaire aluminium packaging |
+| **Markets** | Personal care, home care, FMCG, fine perfumery, food & beverage |
+| **Order Sizes** | Flexible — from startups (half-kilo batches) to bulk industrial |
+| **Lead Times** | 24-48 hours for stocked products; longer for imported/custom |
+| **Services** | Custom scent creation (via French perfumers), local blending, manufacturing guidance, training |
+| **Compliance** | IFRA-compliant |
+| **Tech** | Chamberlink (Pty) Ltd — basic WordPress-style site |
+| **Regional Reach** | South Africa, Namibia, Botswana, Zimbabwe, Mozambique, Zambia, Malawi |
+
+**Relevance:** SUPPLIER — they sell raw fragrance materials to manufacturers. NOT a dropshipping/reseller platform. Could be YOUR supplier for perfume oils if you manufacture in-house. Their "custom scent creation" service could help you develop exclusive fragrances.
 
 ---
 
-### 4. Frazer Parfum (Cape Town) / Fraquence 🟡
+### 4. Frazer Parfum (Cape Town) 🟡 PHYSICAL BOUTIQUE — NOT A COMPETITOR
 
 | Field | Detail |
 |-------|--------|
-| **Website** | [frazerparfum.com](https://www.frazerparfum.com/) → redirects to [fraquence.com](https://fraquence.com/) |
-| **Status** | ⚠️ Store password-protected — not publicly accessible |
-| **Platform** | Shopify |
+| **Website** | [frazerparfum.com](https://www.frazerparfum.com/) → redirects to [fraquence.com](https://fraquence.com/) (Shopify, password-protected) |
+| **Type** | Physical perfumery + aromatherapy |
+| **Location** | 9 Rose St, Cape Town |
+| **Value Prop** | "Pioneers of measured-dose aromatherapy using pharmaceutical-grade essential oils" |
+| **Model** | Bespoke, wholesale & retail — handcrafted organic/natural perfume products |
+| **Labs** | Phoenix, AZ and Cape Town, ZA |
+| **Yellow Pages** | 1375 likes — perfume store |
+
+**Relevance:** None. Physical boutique in Cape Town. Not a dropshipping/reseller platform.
 
 ---
 
@@ -104,6 +124,49 @@ For each competitor, we document:
 |-------|--------|
 | **Website** | [fragrancegarden.co.za](https://www.fragrancegarden.co.za/) |
 | **Status** | ⚠️ Site inaccessible during research — TODO: manual review |
+
+---
+
+### 7. NEW: Perfume Oils SA 🟡 SUPPLIER
+
+| Field | Detail |
+|-------|--------|
+| **Website** | [perfumeoils.co.za](https://perfumeoils.co.za/) |
+| **Type** | Direct importer + distributor of perfume oils & bottles |
+| **Value Prop** | "Start your own Perfume Selling Business — we supply everything you need to get started" |
+| **Relevance** | Could be a SUPPLIER for oils and bottles. Not a reseller platform competitor. |
+
+---
+
+### 8. NEW: The Perfume Garden 🟡
+
+| Field | Detail |
+|-------|--------|
+| **Website** | [perfumegarden.co.za](https://www.perfumegarden.co.za/) |
+| **Value Prop** | "Buy Perfume Online | Imported French Oils | Eau de Parfum" |
+| **Delivery** | FREE delivery on purchases over R750 |
+| **Relevance** | Retail perfume store. Not a dropshipping/reseller platform. |
+
+---
+
+### 9. NEW: Silhouette Scents 🟡 WHOLESALE
+
+| Field | Detail |
+|-------|--------|
+| **Website** | [silhouettescents.co.za](https://www.silhouettescents.co.za/index.html) |
+| **Value Prop** | "Wholesale Perfumes | South Africa — From selected bottles and boxes to complete branding support" |
+| **Relevance** | Wholesale supply for individuals and businesses. Closer to our model but no WhatsApp/agent program visible. |
+
+---
+
+### 10. NEW: Exotic Perfume Wholesalers (Parow, Cape Town) 🟡
+
+| Field | Detail |
+|-------|--------|
+| **Facebook** | [Exotic Perfume Wholesalers Parow](https://www.facebook.com/exop erfume/) |
+| **WhatsApp** | +27 82 389 1158 |
+| **Location** | 172 Voortrekker Road, Parow, Cape Town |
+| **Relevance** | Uses WhatsApp for ordering! Physical + WhatsApp model. Closest competitor model to ours.
 
 ---
 
