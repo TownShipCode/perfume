@@ -238,17 +238,29 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
 
     # ── Repeat last order: restore previous order to cart ──
     if lowered in ("repeat", "reorder", "repeat last", "same again"):
-        from src.services.order_service import get_latest_order
-        last = await get_latest_order(database, phone_number)
+        from src.services.order_service import list_orders
+        all_orders = await list_orders(database)
+        # Find the most recent non-cancelled order for this phone
+        last = None
+        for o in all_orders:
+            if o.get("phone_number") == phone_number and o.get("status") not in ("cancelled", "expired"):
+                last = o
+                break
         if not last or not last.get("items"):
             return {"action": "text", "text": "📭 No previous orders found.\n\nType a product name to start, e.g. _\"5 Rose Oud\"_."}
         items = last["items"]
+        product_ids = [it.get("product_id") for it in items if it.get("product_id")]
+        from src.services.catalog_service import get_products_by_ids
+        name_map = await get_products_by_ids(database, product_ids)
         restored = []
+        item_names = []
         for it in items:
             pid = it.get("product_id")
             qty = it.get("quantity", 1)
             if pid:
                 restored.append(CartItem(product_id=pid, quantity=qty))
+                pname = name_map.get(pid, {}).get("name", f"#{pid}") if name_map else f"#{pid}"
+                item_names.append(f"  {qty}× {pname}")
         if not restored:
             return {"action": "text", "text": "📭 Couldn't restore your last order.\n\nType a product name to start fresh."}
         await save_session_state(
@@ -258,13 +270,12 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
         )
         price_map = await _build_price_map(database)
         cart = build_cart(restored, price_map)
-        item_names = [f"{it.get('quantity', 1)}× {it.get('product_name', '?')}" for it in cart.get("items", [])]
         return {
             "action": "repeat_order",
             "state": State.ORDERING,
             "cart": _serialize_cart(cart),
-            "item_list": "\n".join(f"  {n}" for n in item_names),
-            "total": cart.get("total", "0"),
+            "item_list": "\n".join(item_names) if item_names else "No items",
+            "total": str(cart.total),
         }
 
     if lowered in settings.whatsapp_checkout_commands:

@@ -1,103 +1,118 @@
 # Zen Fragrances — Project Status
 
-**2026-07-26 (evening)** · 25 tests passing · 12 migrations · Interactive WhatsApp UX deployed
+**2026-07-28** · 25 tests passing · 15 migrations · Web cart + WhatsApp flow complete
 
-## Today's Session (2026-07-26 PM)
+## Platform Summary
 
-| Change | Detail |
-|---|---|
-| Step counters removed | Address prompts now conversational: "👤 What is your FIRST NAME?" — no "Step 1/7" prefix |
-| Warm address intro | "🚚 Let's get your order to you! Share a few delivery details." before first question |
-| Fire-and-forget reply | `deliver_reply` runs in background via `BackgroundTasks` — webhook returns 200 instantly (~50% latency cut) |
-| Background expiry task | `expire_stale_pop_orders` moved to 10-min `asyncio` loop, removed from hot path |
-| Address collection escape hatches | CANCEL/HELP/CATALOGUE/hi during address collection no longer swallowed as address fields |
-| Catalogue image removed | Misleading single-product image detached from catalogue — clean text only |
-| Product images in order flow | Selecting a product sends image + description, THEN quantity buttons (two messages) |
-| Multi-message support | `build_customer_reply` can return a list — webhook sends each as separate WhatsApp message |
-| `send_product_message` disabled | Commented out per user request — dormant until Meta catalog configured |
-| Email in profile confirmation | "📧 Email: {email}" added to profile summary |
+```
+                    WEB STORE                      WHATSAPP
+                    (everyone)                     (agents only)
+                    ──────────                     ────────────
+                    
+Browse:      ✅ Catalogue (scent/gender filters)   ❌ (web only)
+Cart:        ✅ Add to Cart from grid/detail       ✅ Type "5 Rose Oud" → confirm
+Checkout:    ✅ Address form → Yoco/EFT             ✅ Address prompts → POP
+Repeat:      ❌ (use Quick Order)                   ✅ "repeat" restores last order
+Discovery:   ✅ Blog (5 SEO articles)               ✅ "help" + web link
+Agents:      ✅ Agent Locator (suburb search)       ✅ "join / recover / agent"
+Dashboard:   ✅ Admin / Mfg / Team / Agent          ❌ (web only)
+```
 
-## Wiki Index
+## Today's Session (2026-07-28) — Complete Rebuild
 
-| Document | Description |
-|---|---|
-| [_index.md](_index.md) | **START HERE** — navigation hub, global wiki links, session pre-flight |
-| [learnings.md](learnings.md) | Session log, errors found, token waste patterns, global patterns applied |
-| [status.md](status.md) | Project overview, features, config |
-| [architecture.md](architecture.md) | Stack, request flow, state machine, key files, env vars |
-| [e2e-test-results.md](e2e-test-results.md) | End-to-end API test results against live Railway |
-| [security-review.md](security-review.md) | Auth, rate limiting, endpoint coverage, recommendations |
-| [retrospective.md](retrospective.md) | What worked, challenges, questions we should have asked, Kapso debugging post-mortem |
-| [kapso-debugging.md](kapso-debugging.md) | Kapso webhook format guide, common mistakes, CLI reference |
-| [adding-products.md](adding-products.md) | How to add products: seed script, dashboard, or API |
+### Branding & Cleanup
+- All BioMed references removed → Zen Fragrances
+- Config renamed: `fl_username=ZenFragrances`, `account_holder=Zen Fragrances`, `bio_med_email→store_email`
+- Wiki: 6 files updated, pricing model corrected (wholesale + agent markup + 5% team commission)
 
-## URLs
+### WhatsApp Flow Redesign
+- Catalogue text wall replaced with web store link
+- Order confirmation step: [✅ Confirm] [❌ Cancel] before items hit cart
+- Product image shown in confirmation prompt
+- Streamlined multi-product: type → confirm → type next → checkout
+- Cart on demand: `cart` command with line items + buttons
+- Quick tips on first item: `stock · cart · checkout · cancel`
+- Repeat last order: `repeat` / `reorder` / `same again`
+- Web bridge: 🛍️ Browse Store button, web URL in help/product detail/not found
+- Agent referral: `agent` / `become an agent` command
 
-| Service | URL |
-|---------|-----|
-| API | `https://zenfragrances-production.up.railway.app` |
-| Dashboard | `https://zenfragrances.vercel.app` |
-| Repo | `https://github.com/TownShipCode/perfume` |
+### Web Store — 11 Pages
+- Landing: correct wholesale pricing, Quick Order CTA, link tiles
+- Catalogue: gender chips, scent family filters, Add to Cart buttons
+- Product Detail: scent profile card, stock badge, Add to Cart + WhatsApp buttons
+- Quick Order: grid with qty ± inputs, floating cart bar, WhatsApp send
+- Cart: line items, qty controls, shipping calc, checkout button
+- Checkout: address form, Yoco/EFT payment, order creation
+- Order Confirmed: success page
+- Blog: 5 SEO articles (dupes guide, business 101, EDT vs EDP, top 10 men's, wholesale)
+- Agent Locator: suburb search → agent cards with WhatsApp
+- Register / Register Agent / Login / Forgot Password
+- Dashboards: Admin, Manufacturer, Team, Agent
+
+### Backend
+- `POST /api/orders/web` — web checkout endpoint (validates products server-side)
+- `GET /api/agent/price-list` — printer-friendly wholesale price list
+- `GET /api/agent/search` — agent locator by suburb
+- `GET /api/products/scents` — distinct scent families + genders for filters
+- `GET /api/products` — `scent_family` query param
+- `get_product_by_id` returns all fields (gender, scent, top_notes, stock)
+- Migration 015: `suburb`, `is_listed`, `bio`, `profile_image_url` on customers
+- `SECURITY.md` with vulnerability reporting policy
+- `scripts/monitor_competitors.py` — FFC, Fragrance Boutique, Perfumes for Africa scraper
 
 ## Feature Summary
 
 | Feature | Status |
 |---------|--------|
-| Backend scaffold, config, migrations (7) | Done |
-| Product catalog + keyword matching + description | Done |
-| Order parsing + cart + shipping (R109, free over R2000) | Done |
-| WhatsApp webhook + signature + idempotency + rate limiter | Done |
-| Address collection (7-step: name, surname, area, street, city, postal_code, province) | Done |
-| Interactive WhatsApp buttons (welcome, quantity, cart, confirm) | Done |
-| Quantity selection (configurable via WHATSAPP_QUANTITY_OPTIONS) | Done |
-| Cart summary buttons [➕ Add More] [🛒 Checkout] | Done |
-| Visual catalogue — clean one-liner with emoji + "info N" detail | Done |
-| Language selection removed — default en auto-assigned | Done |
-| Any text triggers welcome (no "hi" gate) | Done |
-| Warmer branding messages (welcome, POP, cancel, confirmed, shipped) | Done |
-| 14-field FL manufacturer forward format | Done |
-| Order confirmed notification on admin forward | Done |
-| Order shipped notification with waybill + tracking URL | Done |
-| Dashboard waybill input for Ship action | Done |
-| Error handling: phone validation, quantity cap, address validation | Done |
-| POP handling + expiry (24h) + order cancellation | Done |
-| Admin API (orders, customers, products, templates) | Done |
-| Dashboard (React/Vite) with manufacturer msg display | Done |
-| Manufacturer forwarding (Focus Logic format) + two-message send | Done |
-| FL POP upload + auto-forward (two-POP model) | Done |
-| Dashboard FL POP upload + preview + confirm UI | Done |
-| Product margin (per-product `bio_med_margin`) | Done |
-| All commands configurable (env-driven, no hardcoding) | Done |
-| WhatsApp catalogue/menu + greet/welcome + info command | Done |
-| Language infrastructure (en/zu, DB-backed templates) | Done |
-| Railway deploy (Docker + PostgreSQL) | Done |
-| Vercel dashboard deploy | Done |
-| Atomic idempotency (race condition fix) | Done |
-| Language code guard (en/zu outside selection state) | Done |
-| Product image serving (/static via FastAPI) | Done |
-| Railway Railpack config (Root Directory = backend) | Done |
+| Multi-role (admin, mfg, team, agent, wholesaler, public) | Done |
+| WhatsApp ordering (confirmation, cart, checkout, repeat) | Done |
+| Web cart + checkout (Yoco/EFT) | Done |
+| Product catalog (scent/gender filters, categories) | Done |
+| Agent locator (suburb search, public listing) | Done |
+| Agent price list (PDF/HTML) | Done |
+| Agent referral (WhatsApp command) | Done |
+| Order confirmation step | Done |
+| Repeat last order | Done |
+| Stock management (atomic decrement, low stock threshold) | Done |
+| Payment (Yoco checkout + webhook, EFT + POP) | Done |
+| Competitor price monitoring | Done |
+| Blog (5 SEO articles) | Done |
+| Quick Order (grid + bulk WhatsApp send) | Done |
+| Manufacturer forwarding (Focus Logic format) | Done |
+| Rate limiting (4 tiers: webhook, public, auth, dashboard, yoco) | Done |
+| Security headers (CSP, HSTS, X-Frame-Options) | Done |
+| Dual DB (Postgres/SQLite for local dev) | Done |
+| 25 tests passing | Done |
 
 ## Config
 
 ```env
-DASHBOARD_API_KEY=bmd-7xp3kqm9wf2rhn8vd4lj
-SHIPPING_FEE=109.00
+# Required for production
+WHATSAPP_SEND_MODE=live
+MANUFACTURER_PHONE=
+WHATSAPP_APP_SECRET=
+APP_ENV=production
+WEB_BASE_URL=https://zenfragrances.vercel.app
+STORE_EMAIL=orders@zenfragrances.co.za
+
+# Pricing
+SHIPPING_FEE=65.00
 FREE_SHIPPING_THRESHOLD=2000.00
-WHATSAPP_SEND_MODE=dry_run
-POP_EXPIRY_HOURS=24
-DEFAULT_LANGUAGE=en
-SUPPORTED_LANGUAGES=en,zu
-AUTO_FORWARD_TO_MANUFACTURER=true
-DEFAULT_MARGIN=70.00
-COURIER_FEE=150.00
+COMMISSION_PERCENT=5
+COURIER_FEE=65.00
 COURIER_NAME=The Courier Guy
 FL_USERNAME=ZenFragrances
 ```
 
-## Pending
+## Pending for Launch
 
-- WhatsApp credentials + `MANUFACTURER_PHONE` + `WHATSAPP_APP_SECRET` (set in Railway Dashboard)
-- **Live test**: verify the atomic dedup + language guard fixes work end-to-end
+- [ ] Product data (99 SKU CSV → seed script)
+- [ ] WhatsApp credentials + `MANUFACTURER_PHONE` + `WHATSAPP_APP_SECRET` in Railway
+- [ ] Deploy web store to Vercel (`web/dist/` ready, 300KB)
+- [ ] Set `WEB_BASE_URL` in Railway
+- [ ] Switch `WHATSAPP_SEND_MODE=live` and `APP_ENV=production`
+- [ ] Configure Meta WhatsApp catalog → set `WHATSAPP_CATALOG_ID`
+- [ ] Enable GitHub security settings (6 from blog post)
 - isiZulu template translations (17 templates need text)
 - Sentry error tracking (DSN available, not configured)
 - `APP_ENV=production` (after MANUFACTURER_PHONE and APP_SECRET are set)
