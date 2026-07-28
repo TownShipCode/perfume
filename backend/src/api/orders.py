@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from src.config import get_settings
 from src.middleware.auth import require_dashboard_api_key
 from src.services.manufacturer_forwarding import forward_order_to_manufacturer, get_manufacturer_forward_preview
-from src.services.catalog_service import get_keyword_map
+from src.services.catalog_service import get_keyword_map, get_products_by_ids
 from src.services.order_parser import parse_order
 from src.services.order_service import get_order_by_id, list_orders, record_fl_pop, update_order_status
 
@@ -38,6 +38,25 @@ class FlPopConfirmRequest(BaseModel):
     fl_pop_image_url: str
     fl_amount: Decimal | None = None
     confirm: bool = True
+
+
+class WebOrderItem(BaseModel):
+    product_id: int
+    quantity: int
+
+
+class WebOrderRequest(BaseModel):
+    items: list[WebOrderItem]
+    name: str
+    surname: str = ""
+    email: str = ""
+    phone: str = ""
+    area: str = ""
+    street: str = ""
+    city: str = ""
+    postal_code: str = ""
+    province: str = ""
+    payment_method: str = "yoco"  # yoco or eft
 
 
 @router.post("/parse")
@@ -173,4 +192,84 @@ async def confirm_fl_pop_and_forward(request: Request, order_id: int, payload: F
     return {
         "order": updated,
         "forward_result": forward_result,
+    }
+
+
+# ── Web Store Checkout ──
+
+
+@router.post("/web")
+async def create_web_order(request: Request, payload: WebOrderRequest) -> dict[str, object]:
+    """Public: create an order from the web store. Returns order + Yoco checkout URL."""
+    from src.models.cart import CartItem
+    from src.services.customer_service import get_or_create_customer
+    from src.services.order_service import create_order
+    from src.services.yoco_payment import create_checkout_session
+    from src.services.catalog_service import get_products_by_ids
+
+    db = request.app.state.database
+    settings = get_settings()
+
+    if not payload.items:
+        raise HTTPException(status_code=400, detail="No items in order")
+
+    # Get product prices from DB (don't trust client prices)
+    product_ids = [it.product_id for it in payload.items]
+    price_map = await get_products_by_ids(db, product_ids)
+    if not price_map:
+        raise HTTPException(status_code=400, detail="No valid products found")
+
+    cart_items: list[CartItem] = []
+    subtotal = Decimal("0")
+    for it in payload.items:
+        product = price_map.get(it.product_id)
+        if not product:
+            continue
+        qty = max(1, min(it.quantity, 99))
+        cart_items.append(CartItem(product_id=it.product_id, quantity=qty))
+        subtotal += Decimal(str(product["price"])) * qty
+
+    if not cart_items:
+        raise HTTPException(status_code=400, detail="No valid items after validation")
+
+    # Calculate shipping
+    shipping = settings.shipping_fee if subtotal < settings.free_shipping_threshold else Decimal("0")
+    total = subtotal + shipping
+
+    # Get or create customer
+    phone = payload.phone.strip() if payload.phone else "27820000000"
+    if not phone.startswith("+"):
+        phone = f"+{phone}" if not phone.startswith("+") else phone
+    customer = await get_or_create_customer(db, phone, payload.name)
+
+    # Build address
+    address_parts = [p for p in [payload.street, payload.area, payload.city, payload.postal_code, payload.province] if p]
+    full_address = ", ".join(address_parts) if address_parts else None
+
+    # Create order
+    order = await create_order(
+        db,
+        customer_id=customer["id"],
+        cart_items=cart_items,
+        total=total,
+        shipping_fee=shipping,
+    )
+
+    # Yoco checkout
+    checkout_url = None
+    if payload.payment_method == "yoco" and settings.yoco_secret_key:
+        try:
+            checkout = await create_checkout_session(
+                db, order, total, phone,
+                agent_code=customer.get("agent_code"),
+                team_member_id=customer.get("registered_by"),
+            )
+            checkout_url = checkout.get("checkout_url")
+        except Exception:
+            pass  # Fall through — order created, payment can be done manually
+
+    return {
+        "order": order,
+        "checkout_url": checkout_url,
+        "payment_method": payload.payment_method,
     }

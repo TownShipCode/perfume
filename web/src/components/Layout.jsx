@@ -1,8 +1,10 @@
 import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '../useAuth';
+import { useCart } from '../useCart';
 
 export default function Layout() {
   const { user } = useAuth();
+  const { count } = useCart();
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
@@ -14,6 +16,10 @@ export default function Layout() {
           <Link to="/quick-order" className="text-gray-600 hover:text-purple-700 hidden md:inline">Quick Order</Link>
           <Link to="/blog" className="text-gray-600 hover:text-purple-700 hidden md:inline">Blog</Link>
           <Link to="/agents" className="text-gray-600 hover:text-purple-700 hidden md:inline">Find Agent</Link>
+          <Link to="/cart" className="relative text-gray-600 hover:text-purple-700">
+            🛒
+            {count > 0 && <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{count}</span>}
+          </Link>
           {user ? (
             <>
               <Link to={`/dashboard/${user.role === 'super_admin' ? 'admin' : user.role === 'manufacturer' ? 'manufacturer' : user.role === 'team_member' ? 'team' : 'agent'}`}

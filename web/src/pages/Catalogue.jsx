@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { useCart } from '../useCart';
 
 const GENDER_ICONS = { men: '👨', women: '👩', unisex: '👥' };
 
@@ -14,6 +15,7 @@ export default function Catalogue() {
   const [categories, setCategories] = useState([]);
   const [scents, setScents] = useState([]);
   const [genders, setGenders] = useState([]);
+  const { addItem, items } = useCart();
 
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const timerRef = useRef(null);
@@ -113,9 +115,11 @@ export default function Catalogue() {
         <p className="text-gray-500 text-center py-12">No products found.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map(p => (
-            <Link key={p.id} to={`/product/${p.id}`}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+          {products.map(p => {
+            const inCart = items.find(i => i.id === p.id);
+            return (
+            <div key={p.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+              <Link to={`/product/${p.id}`}>
               <div className="aspect-square bg-gray-100 flex items-center justify-center text-4xl">
                 {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" /> : '🫧'}
               </div>
@@ -132,8 +136,15 @@ export default function Catalogue() {
                   </p>
                 )}
               </div>
-            </Link>
-          ))}
+              </Link>
+              <div className="px-3 pb-3">
+                <button onClick={(e) => { e.preventDefault(); addItem(p); }}
+                  className={`w-full text-xs font-medium py-1.5 rounded-lg transition-colors ${inCart ? 'bg-purple-100 text-purple-700' : 'bg-purple-600 text-white hover:bg-purple-700'}`}>
+                  {inCart ? `🛒 In Cart (${inCart.qty})` : '+ Add to Cart'}
+                </button>
+              </div>
+            </div>
+          )})}
         </div>
       )}
     </div>

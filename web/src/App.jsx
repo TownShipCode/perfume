@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './useAuth';
+import { CartProvider } from './useCart';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import DashboardLayout from './components/DashboardLayout';
@@ -7,6 +8,9 @@ import Landing from './pages/Landing';
 import Catalogue from './pages/Catalogue';
 import ProductDetail from './pages/ProductDetail';
 import QuickOrder from './pages/QuickOrder';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import OrderConfirmed from './pages/OrderConfirmed';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import AgentLocator from './pages/AgentLocator';
@@ -23,6 +27,7 @@ export default function App() {
   return (
     <ErrorBoundary>
     <AuthProvider>
+    <CartProvider>
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
@@ -30,6 +35,9 @@ export default function App() {
             <Route path="/catalogue" element={<Catalogue />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/quick-order" element={<QuickOrder />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order/:id/confirmed" element={<OrderConfirmed />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/agents" element={<AgentLocator />} />
@@ -47,6 +55,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+    </CartProvider>
     </AuthProvider>
     </ErrorBoundary>
   );

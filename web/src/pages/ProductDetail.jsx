@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api';
+import { useCart } from '../useCart';
 
 const GENDER_LABELS = { men: '👨 For Men', women: '👩 For Women', unisex: '👥 Unisex' };
 
@@ -15,6 +16,8 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { addItem, items } = useCart();
+  const inCart = items.find(i => i.id === product?.id);
 
   useEffect(() => {
     api(`/api/products/${id}`).then(setProduct).catch(() => setProduct(null)).finally(() => setLoading(false));
@@ -90,14 +93,14 @@ export default function ProductDetail() {
           )}
 
           <div className="flex flex-wrap gap-3 pt-2">
+            <button onClick={() => addItem(product)}
+              className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors">
+              {inCart ? `🛒 Add Another (${inCart.qty} in cart)` : '🛒 Add to Cart'}
+            </button>
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-700 transition-colors">
               📱 Order via WhatsApp
             </a>
-            <Link to="/catalogue"
-              className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors">
-              🛍️ Browse More
-            </Link>
           </div>
           <p className="text-xs text-gray-400 mt-4">Prices shown are wholesale. Agents set their own retail prices (suggested: 2× wholesale).</p>
         </div>
