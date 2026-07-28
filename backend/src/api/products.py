@@ -50,6 +50,16 @@ async def get_categories(request: Request) -> dict[str, object]:
     return {"items": cats}
 
 
+@router.get("/{product_id}")
+async def get_product(request: Request, product_id: int) -> dict[str, object]:
+    """Get a single product by ID (public — used by web store)."""
+    from src.services.catalog_service import get_product_detail
+    product = await get_product_detail(request.app.state.database, product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
+
 @router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_dashboard_api_key)])
 async def post_product(request: Request, payload: ProductInput) -> dict[str, object]:
     try:

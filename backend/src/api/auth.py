@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from src.db.connection import Database, execute, fetch_one
 from src.middleware.auth import require_dashboard_api_key
+from src.middleware.rate_limit import auth_rate_limit
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -90,7 +91,7 @@ async def _clear_token(database: Database, token: str) -> None:
         await execute(database, "DELETE FROM _admin_sessions WHERE token = $1", token)
 
 
-@router.post("/login")
+@router.post("/login", dependencies=[Depends(auth_rate_limit())])
 async def login(request: Request) -> JSONResponse:
     body = await request.json()
     password = (body or {}).get("password", "")
@@ -179,7 +180,7 @@ async def set_password(request: Request) -> JSONResponse:
 # ── Phase 7: Role-based auth (login, register, agent registration) ──
 
 
-@router.post("/login/role")
+@router.post("/login/role", dependencies=[Depends(auth_rate_limit())])
 async def login_role(request: Request) -> JSONResponse:
     """Login with email + password, returns role + token for dashboard redirect."""
     body = await request.json()
@@ -214,7 +215,7 @@ async def login_role(request: Request) -> JSONResponse:
     return resp
 
 
-@router.post("/register")
+@router.post("/register", dependencies=[Depends(auth_rate_limit())])
 async def register_public(request: Request) -> JSONResponse:
     """Public self-service registration (no approval needed)."""
     body = await request.json() or {}
@@ -254,7 +255,7 @@ async def register_public(request: Request) -> JSONResponse:
     return JSONResponse(content={"registered": True, "email": email}, status_code=201)
 
 
-@router.post("/register/agent")
+@router.post("/register/agent", dependencies=[Depends(auth_rate_limit())])
 async def register_agent_web(request: Request) -> JSONResponse:
     """Agent self-registration via web store (with team code)."""
     body = await request.json() or {}

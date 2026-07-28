@@ -87,11 +87,18 @@ async def is_yoco_event_duplicate(database, yoco_event_id: str) -> bool:
     """Check if a Yoco event has already been processed (idempotency gate)."""
     from src.db.connection import fetch_one
 
-    row = await fetch_one(
-        database,
-        "SELECT yoco_event_id FROM orders WHERE yoco_event_id = $1 LIMIT 1",
-        yoco_event_id,
-    )
+    if database.mode == "postgres":
+        row = await fetch_one(
+            database,
+            "SELECT yoco_event_id FROM orders WHERE yoco_event_id = $1 LIMIT 1",
+            yoco_event_id,
+        )
+    else:
+        row = await fetch_one(
+            database,
+            "SELECT yoco_event_id FROM orders WHERE yoco_event_id = ? LIMIT 1",
+            yoco_event_id,
+        )
     return row is not None
 
 
@@ -104,16 +111,29 @@ async def record_yoco_payment(
     """Update order with Yoco payment result. Returns updated order or None."""
     from src.db.connection import execute, fetch_one
 
-    await execute(
-        database,
-        """UPDATE orders SET payment_status = $1, yoco_event_id = $2, updated_at = NOW()
-           WHERE order_number = $3 AND payment_method = 'yoco'""",
-        payment_status,
-        yoco_event_id,
-        order_number,
-    )
+    if database.mode == "postgres":
+        await execute(
+            database,
+            """UPDATE orders SET payment_status = $1, yoco_event_id = $2, updated_at = NOW()
+               WHERE order_number = $3 AND payment_method = 'yoco'""",
+            payment_status, yoco_event_id, order_number,
+        )
+    else:
+        await execute(
+            database,
+            """UPDATE orders SET payment_status = ?, yoco_event_id = ?, updated_at = CURRENT_TIMESTAMP
+               WHERE order_number = ? AND payment_method = 'yoco'""",
+            payment_status, yoco_event_id, order_number,
+        )
+
+    if database.mode == "postgres":
+        return await fetch_one(
+            database,
+            "SELECT id, order_number FROM orders WHERE order_number = $1",
+            order_number,
+        )
     return await fetch_one(
         database,
-        "SELECT id, order_number, phone_number, full_address FROM orders WHERE order_number = $1",
+        "SELECT id, order_number FROM orders WHERE order_number = ?",
         order_number,
     )

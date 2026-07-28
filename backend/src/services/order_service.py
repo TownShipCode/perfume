@@ -446,19 +446,35 @@ def _decode_order(row: dict | None) -> dict | None:
 
 
 async def _adjust_stock(database: Database, product_id: int, delta: int) -> None:
-    """Adjust stock_quantity for a product by delta (negative = decrement)."""
+    """Adjust stock_quantity for a product by delta (negative = decrement).
+    Uses atomic UPDATE with stock check to prevent overselling."""
     if database.mode == "postgres":
-        await execute(
-            database,
-            "UPDATE products SET stock_quantity = COALESCE(stock_quantity, 0) + $1, updated_at = NOW() WHERE id = $2 AND stock_quantity IS NOT NULL",
-            delta, product_id,
-        )
+        if delta < 0:
+            # Prevent negative stock: only decrement if enough stock available
+            await execute(
+                database,
+                "UPDATE products SET stock_quantity = COALESCE(stock_quantity, 0) + $1, updated_at = NOW() WHERE id = $2 AND COALESCE(stock_quantity, 0) + $1 >= 0",
+                delta, product_id,
+            )
+        else:
+            await execute(
+                database,
+                "UPDATE products SET stock_quantity = COALESCE(stock_quantity, 0) + $1, updated_at = NOW() WHERE id = $2",
+                delta, product_id,
+            )
     else:
-        await execute(
-            database,
-            "UPDATE products SET stock_quantity = COALESCE(stock_quantity, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND stock_quantity IS NOT NULL",
-            delta, product_id,
-        )
+        if delta < 0:
+            await execute(
+                database,
+                "UPDATE products SET stock_quantity = COALESCE(stock_quantity, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND COALESCE(stock_quantity, 0) + ? >= 0",
+                delta, product_id, delta,
+            )
+        else:
+            await execute(
+                database,
+                "UPDATE products SET stock_quantity = COALESCE(stock_quantity, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                delta, product_id,
+            )
 
 
 async def _decrement_stock_for_order(database: Database, cart_items: list[CartItem]) -> None:

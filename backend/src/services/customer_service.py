@@ -213,11 +213,11 @@ async def get_customer_by_agent_code(database: Database, agent_code: str) -> dic
 async def get_customer_by_email(database: Database, email: str) -> dict[str, Any] | None:
     """Look up a customer by email (for web store login)."""
     query = (
-        "SELECT * FROM customers WHERE email = $1"
+        "SELECT * FROM customers WHERE LOWER(email) = LOWER($1)"
         if database.mode == "postgres"
-        else "SELECT * FROM customers WHERE email = ?"
+        else "SELECT * FROM customers WHERE LOWER(email) = LOWER(?)"
     )
-    return await fetch_one(database, query, email)
+    return await fetch_one(database, query, email.strip().lower())
 
 
 async def register_agent(
