@@ -14,7 +14,8 @@ export default function ProductDetail() {
   if (loading) return <div className="max-w-3xl mx-auto px-4 py-12 text-center text-gray-500">Loading...</div>;
   if (!product) return <div className="max-w-3xl mx-auto px-4 py-12 text-center text-gray-500">Product not found.</div>;
 
-  const whatsappLink = `https://wa.me/27123456789?text=order%20${encodeURIComponent(product.name)}`;
+  const WA_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '27123456789';
+  const whatsappLink = `https://wa.me/${WA_NUMBER}?text=order%20${encodeURIComponent(product.name)}`;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">

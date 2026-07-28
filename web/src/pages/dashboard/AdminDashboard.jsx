@@ -15,7 +15,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: 'Total Orders', value: stats.total_orders || '—' },
-            { label: 'Revenue', value: `R${stats.total_revenue || '0'}` },
+            { label: 'Revenue', value: `R${stats.revenue || stats.total_revenue || '0'}` },
             { label: 'Active Agents', value: stats.active_agents || '—' },
             { label: 'Team Members', value: stats.team_members || '—' },
           ].map(s => (

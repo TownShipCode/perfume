@@ -4,6 +4,7 @@ import { api } from '../../api';
 export default function ManufacturerDashboard() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   async function load() {
     setLoading(true);
@@ -15,9 +16,9 @@ export default function ManufacturerDashboard() {
 
   async function updateStatus(id, status) {
     try {
-      await api(`/api/orders/${id}`, { method: 'PUT', body: JSON.stringify({ status }) });
+      await api(`/api/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
       load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { setError(e.message); }
   }
 
   if (loading) return <p className="text-gray-500">Loading orders...</p>;

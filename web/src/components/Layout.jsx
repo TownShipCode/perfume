@@ -30,7 +30,7 @@ export default function Layout() {
       </main>
       <footer className="bg-gray-50 border-t border-gray-200 px-6 py-8 text-center text-sm text-gray-500">
         <p>Zen Fragrances &copy; {new Date().getFullYear()} &middot; Premium perfume oils for resellers</p>
-        <p className="mt-1">Nationwide delivery from R65 &middot; WhatsApp: 012 345 6789</p>
+        <p className="mt-1">Nationwide delivery from R65 &middot; WhatsApp: {import.meta.env.VITE_WHATSAPP_NUMBER || '012 345 6789'}</p>
       </footer>
     </div>
   );

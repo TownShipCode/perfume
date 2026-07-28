@@ -18,6 +18,10 @@ class ProductInput(BaseModel):
     description: str | None = None
     is_active: bool = True
     keywords: list[str] = Field(default_factory=list)
+    gender: str | None = None
+    scent_family: str | None = None
+    top_notes: str | None = None
+    stock_quantity: int | None = None
 
 
 class ProductUpdateInput(BaseModel):
@@ -30,6 +34,10 @@ class ProductUpdateInput(BaseModel):
     description: str | None = None
     is_active: bool = True
     keywords: list[str] = Field(default_factory=list)
+    gender: str | None = None
+    scent_family: str | None = None
+    top_notes: str | None = None
+    stock_quantity: int | None = None
 
 
 async def list_active_products(database: Database) -> list[dict]:

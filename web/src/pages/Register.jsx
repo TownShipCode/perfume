@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../api';
 
 export default function Register() {
-  const [form, setForm] = useState({ name: '', surname: '', email: '', phone: '', password: '' });
+  const [form, setForm] = useState({ name: '', surname: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const nav = useNavigate();
@@ -13,6 +13,8 @@ export default function Register() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    if (form.password.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (form.password !== form.confirmPassword) { setError('Passwords do not match'); return; }
     try {
       await register(form);
       setSuccess(true);
@@ -41,7 +43,9 @@ export default function Register() {
           className="border border-gray-300 rounded-lg px-4 py-2 text-sm" required />
         <input type="tel" placeholder="Phone (e.g. 0821234567)" value={form.phone} onChange={set('phone')}
           className="border border-gray-300 rounded-lg px-4 py-2 text-sm" required />
-        <input type="password" placeholder="Password" value={form.password} onChange={set('password')}
+        <input type="password" placeholder="Password (min 6 chars)" value={form.password} onChange={set('password')}
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm" required />
+        <input type="password" placeholder="Confirm Password" value={form.confirmPassword} onChange={set('confirmPassword')}
           className="border border-gray-300 rounded-lg px-4 py-2 text-sm" required />
         <button type="submit"
           className="bg-purple-700 text-white py-2.5 rounded-lg font-medium hover:bg-purple-800 transition-colors">

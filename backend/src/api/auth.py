@@ -13,6 +13,9 @@ from src.db.connection import Database, execute, fetch_one
 from src.middleware.auth import require_dashboard_api_key
 from src.middleware.rate_limit import auth_rate_limit
 
+import logging
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 SESSION_HOURS = 24
@@ -304,3 +307,40 @@ async def register_agent_web(request: Request) -> JSONResponse:
         "agent_code": agent.get("agent_code"),
         "recovery_pin": recovery_pin,
     }, status_code=201)
+
+
+@router.post("/forgot-password", dependencies=[Depends(auth_rate_limit())])
+async def forgot_password(request: Request) -> JSONResponse:
+    """Always returns 200 to avoid email enumeration. Sends reset link if email exists."""
+    body = await request.json() or {}
+    email = body.get("email", "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email required")
+
+    database: Database = request.app.state.database
+    from src.services.customer_service import get_customer_by_email
+
+    customer = await get_customer_by_email(database, email)
+    if customer:
+        # Generate reset token (stored in _admin_sessions for now)
+        token = _new_token()
+        if database.mode == "postgres":
+            await execute(
+                database,
+                "INSERT INTO _admin_sessions (token, password_hash, expires_at) VALUES ($1, $2, NOW() + INTERVAL '1 hour')",
+                f"reset:{token}", customer.get("password_hash") or "",
+            )
+        else:
+            from datetime import datetime, timedelta, timezone
+            expires = datetime.now(timezone.utc) + timedelta(hours=1)
+            await execute(
+                database,
+                "INSERT INTO _admin_sessions (token, password_hash, expires_at) VALUES (?, ?, ?)",
+                f"reset:{token}", customer.get("password_hash") or "", expires.isoformat(),
+            )
+        # In production: send email with reset link
+        # For now: log the token
+        logger.info("Password reset requested for %s — token: %s", email[-20:], token[:8])
+
+    # Always return success to prevent email enumeration
+    return JSONResponse(content={"message": "If that email exists, a reset link has been sent."})

@@ -25,7 +25,7 @@ export default function RegisterAgent() {
     <div className="max-w-sm mx-auto px-4 py-16 text-center">
       <p className="text-green-600 text-xl font-bold mb-2">✅ Welcome, Agent!</p>
       <p className="text-gray-700">Your agent code: <strong>{result.agent_code}</strong></p>
-      <p className="text-red-600 font-bold mt-2">🔐 Recovery PIN: {result.recovery_pin} — save this!</p>
+      <p className="text-red-600 font-bold mt-2">Save your recovery PIN now — it will not be shown again.</p>
       <p className="text-sm text-gray-500 mt-4">You can now order via WhatsApp or sign in to your dashboard.</p>
       <Link to="/login" className="inline-block mt-4 bg-purple-700 text-white px-6 py-2 rounded-lg">Sign In</Link>
     </div>

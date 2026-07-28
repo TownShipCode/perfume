@@ -40,6 +40,15 @@ async def _get_catalogue_image_url(database: Database) -> str | None:
 
 
 async def handle_text_message(database: Database, event: dict) -> dict[str, object]:
+    try:
+        return await _handle_text_message_impl(database, event)
+    except Exception as exc:
+        logger.exception("handle_text_message_fatal | phone=%s error=%s",
+                         (event.get("from") or "?")[-4:], exc)
+        return {"action": "internal_error", "text": "Something went wrong. Please try again."}
+
+
+async def _handle_text_message_impl(database: Database, event: dict) -> dict[str, object]:
     phone_number = event.get("from")
     if not phone_number:
         return {"action": "ignored", "reason": "missing_phone_number"}

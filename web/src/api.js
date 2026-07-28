@@ -1,13 +1,12 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'https://biomed-production.up.railway.app';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 function token() {
-  return localStorage.getItem('zf_token') || '';
+  return ''; // HttpOnly cookie — token sent automatically via credentials
 }
 
 export async function api(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
-  if (token()) headers['Authorization'] = `Bearer ${token()}`;
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include' });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || `Request failed: ${res.status}`);
@@ -15,12 +14,11 @@ export async function api(path, options = {}) {
   return res.json();
 }
 
-export function setToken(t) { localStorage.setItem('zf_token', t); }
-export function clearToken() { localStorage.removeItem('zf_token'); localStorage.removeItem('zf_role'); localStorage.removeItem('zf_name'); localStorage.removeItem('zf_agent_code'); }
+export function setToken(t) { /* HttpOnly cookie — no localStorage */ }
+export function clearToken() { localStorage.removeItem('zf_role'); localStorage.removeItem('zf_name'); localStorage.removeItem('zf_agent_code'); }
 export function getToken() { return token(); }
 
 export function saveSession(data) {
-  if (data.token) setToken(data.token);
   if (data.role) localStorage.setItem('zf_role', data.role);
   if (data.name) localStorage.setItem('zf_name', data.name);
   if (data.agent_code) localStorage.setItem('zf_agent_code', data.agent_code);

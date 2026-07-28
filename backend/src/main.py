@@ -6,7 +6,7 @@ import subprocess
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -74,6 +74,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response: Response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if settings.is_production or os.getenv("ENFORCE_HTTPS") == "true":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
 app.include_router(analytics_routes)
 app.include_router(auth_routes)
 app.include_router(product_routes)
@@ -122,12 +134,11 @@ if not GIT_SHA:
 
 
 @app.get("/health")
-async def health(request: Request) -> dict[str, object]:
+async def health() -> dict[str, object]:
     return {
         "status": "ok",
         "version": "0.1.0",
         "commit": GIT_SHA,
-        "db": request.app.state.database.mode,
     }
 
 

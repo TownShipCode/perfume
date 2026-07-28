@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.middleware.auth import require_dashboard_api_key
 from src.services.message_templates import list_templates, update_template_body
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/templates", tags=["templates"], dependencies=[De
 
 
 class UpdateTemplateRequest(BaseModel):
-    body: str
+    body: str = Field(max_length=4096)  # WhatsApp message limit
 
 
 @router.get("")

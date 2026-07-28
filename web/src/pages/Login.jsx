@@ -45,6 +45,9 @@ export default function Login() {
       <p className="text-center text-sm text-gray-500 mt-4">
         Don&apos;t have an account? <Link to="/register" className="text-purple-700">Register</Link>
       </p>
+      <p className="text-center text-sm text-gray-500 mt-1">
+        <Link to="/forgot-password" className="text-purple-700">Forgot password?</Link>
+      </p>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 
@@ -9,21 +9,30 @@ export default function Catalogue() {
   const [category, setCategory] = useState('');
   const [categories, setCategories] = useState([]);
 
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const timerRef = useRef(null);
+
   useEffect(() => {
     api('/api/products/categories').then(d => setCategories(d.items || [])).catch(() => {});
   }, []);
 
   useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timerRef.current);
+  }, [search]);
+
+  useEffect(() => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (search) params.set('search', search);
+    if (debouncedSearch) params.set('search', debouncedSearch);
     if (category) params.set('category', category);
     params.set('page_size', '24');
     api(`/api/products?${params}`)
       .then(d => setProducts(d.items || d.products || []))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
-  }, [search, category]);
+  }, [debouncedSearch, category]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
