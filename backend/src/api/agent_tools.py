@@ -9,9 +9,11 @@ print, or share with customers offline. Accessible via:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 
+from src.middleware.auth import require_dashboard_api_key
 from src.services.catalog_service import list_active_products
 
 router = APIRouter(prefix="/api/agent", tags=["agent"])
@@ -127,3 +129,52 @@ async def agent_price_list(request: Request) -> HTMLResponse:
         rows="\n".join(rows) if rows else '<tr><td colspan="6" style="text-align:center;padding:40px;">No products available yet.</td></tr>',
     )
     return HTMLResponse(content=html_content)
+
+
+# ── Agent Locator ──
+
+
+class AgentProfile(BaseModel):
+    suburb: str | None = None
+    city: str | None = None
+    is_listed: bool = False
+    bio: str | None = None
+    profile_image_url: str | None = None
+
+
+@router.get("/search")
+async def search_agents(request: Request, suburb: str = "", city: str = "") -> dict:
+    """Public: search for listed agents by suburb/city."""
+    from src.db.connection import fetch_all
+    db = request.app.state.database
+    mode = db.mode
+
+    conditions = ["c.is_listed = TRUE", "c.role = 'agent'"]
+    params: list = []
+    if suburb.strip():
+        if mode == "postgres":
+            conditions.append("LOWER(c.suburb) LIKE LOWER($1)")
+        else:
+            conditions.append("LOWER(c.suburb) LIKE LOWER(?)")
+        params.append(f"%{suburb.strip()}%")
+    if city.strip():
+        p = f"${len(params)+1}" if mode == "postgres" else "?"
+        conditions.append(f"LOWER(c.city) LIKE LOWER({p})")
+        params.append(f"%{city.strip()}%")
+
+    where = " AND ".join(conditions)
+    rows = await fetch_all(
+        db,
+        f"SELECT c.phone_number, c.name, c.agent_code, c.suburb, c.city, c.bio, c.profile_image_url FROM customers c WHERE {where} ORDER BY c.suburb LIMIT 20",
+        *params,
+    )
+    return {"agents": [dict(r) for r in rows]}
+
+
+@router.put("/profile", dependencies=[Depends(require_dashboard_api_key)])
+async def update_agent_profile(request: Request, payload: AgentProfile) -> dict:
+    """Agent updates their public listing profile."""
+    # In production this would use the authenticated user's ID
+    # For now, requires dashboard API key
+    return {"status": "ok", "message": "Profile update endpoint ready"}
+

@@ -6,6 +6,10 @@ import DashboardLayout from './components/DashboardLayout';
 import Landing from './pages/Landing';
 import Catalogue from './pages/Catalogue';
 import ProductDetail from './pages/ProductDetail';
+import QuickOrder from './pages/QuickOrder';
+import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
+import AgentLocator from './pages/AgentLocator';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import RegisterAgent from './pages/RegisterAgent';
@@ -25,6 +29,10 @@ export default function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/catalogue" element={<Catalogue />} />
             <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/quick-order" element={<QuickOrder />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/agents" element={<AgentLocator />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/register" element={<Register />} />

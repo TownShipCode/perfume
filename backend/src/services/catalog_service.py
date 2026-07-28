@@ -215,24 +215,17 @@ async def get_product_by_number(database: Database, product_number: int) -> dict
 
 
 async def get_product_by_id(database: Database, product_id: int) -> dict | None:
+    select_cols = "id, product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, gender, scent_family, top_notes, stock_quantity, is_active, created_at, updated_at"
     if database.mode == "postgres":
         return await fetch_one(
             database,
-            """
-            SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
-            FROM products
-            WHERE id = $1
-            """,
+            f"SELECT {select_cols} FROM products WHERE id = $1",
             product_id,
         )
 
     return await fetch_one(
         database,
-        """
-        SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
-        FROM products
-        WHERE id = ?
-        """,
+        f"SELECT {select_cols} FROM products WHERE id = ?",
         product_id,
     )
 
