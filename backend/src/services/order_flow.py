@@ -10,7 +10,7 @@ from src.db.connection import Database, execute, fetch_one
 from src.models.cart import CartItem
 from src.services.cart_service import add_item_to_cart, build_cart
 from src.services.catalog_service import build_catalog_lines, get_keyword_map, get_product_by_number, list_active_products, search_products
-from src.services.customer_service import get_customer_by_phone, get_or_create_customer, save_customer_profile, set_customer_language
+from src.services.customer_service import get_customer_by_phone, get_or_create_customer, save_customer_profile
 from src.services.order_service import create_order, get_latest_open_order, record_pop_received
 from src.services.order_parser import parse_order
 from src.services.session_service import get_or_create_session, get_session_by_phone, save_session_state
@@ -76,37 +76,12 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
         customer.get("language") or "(none)",
     )
 
-    # ── LANGUAGE_SELECTION disabled — default language auto-assigned ──
-    # Safety net: users who might still have LANGUAGE_SELECTION in DB
-    # get auto-migrated to IDLE with default language.
-    if session.get("state") == State.LANGUAGE_SELECTION:
-        await set_customer_language(database, phone_number, settings.default_language)
-        await save_session_state(
-            database, phone_number,
-            state=State.IDLE, cart=session.get("cart", []),
-            current_step=0, temp_address=session.get("temp_address"),
-        )
-
     if lowered in settings.whatsapp_catalog_commands:
         web_url = settings.web_base_url.rstrip("/")
         return {
             "action": "catalogue_web",
             "state": session.get("state", State.IDLE),
             "web_url": f"{web_url}/catalogue",
-        }
-
-    # Language codes: auto-set language, then show catalogue
-    if lowered in settings.supported_languages:
-        if not customer.get("language") or customer.get("language") != lowered:
-            await set_customer_language(database, phone_number, lowered)
-            customer["language"] = lowered
-        lines = await build_catalog_lines(database)
-        customer_name = customer.get("name") or ""
-        return {
-            "action": "welcome_catalogue",
-            "state": session.get("state", State.IDLE),
-            "customer_name": customer_name,
-            "catalogue": "\n".join(lines) if lines else "No products available right now.",
         }
 
     # ── Confirmation step: agent confirmed/cancelled a pending order ──
@@ -373,10 +348,6 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
             "handle_text_message | UNMATCHED→WELCOME phone=%s state=%s text=%s",
             phone_number[-4:], session.get("state"), text[:60],
         )
-        # Any unrecognized text triggers interactive welcome — no gatekeeping
-        if not customer.get("language"):
-            await set_customer_language(database, phone_number, settings.default_language)
-            customer["language"] = settings.default_language
         customer_name = customer.get("name") or ""
         greeting = f" {customer_name}" if customer_name else ""
         web_url = settings.web_base_url.rstrip("/")

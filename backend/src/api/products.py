@@ -4,7 +4,6 @@ from asyncpg.exceptions import UniqueViolationError
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from src.middleware.auth import require_dashboard_api_key
-from src.middleware.rate_limit import public_rate_limit
 from src.services.catalog_service import (
     ProductInput,
     ProductUpdateInput,

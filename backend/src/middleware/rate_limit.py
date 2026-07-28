@@ -27,10 +27,7 @@ class RateLimiter:
 
 
 _webhook_limiter = RateLimiter(max_requests=60, window_seconds=60.0)
-_public_limiter = RateLimiter(max_requests=120, window_seconds=60.0)
 _auth_limiter = RateLimiter(max_requests=10, window_seconds=60.0)
-_dashboard_limiter = RateLimiter(max_requests=300, window_seconds=60.0)
-_yoco_limiter = RateLimiter(max_requests=120, window_seconds=60.0)
 
 
 def webhook_rate_limit(override_limiter: RateLimiter | None = None) -> Callable:
@@ -47,47 +44,13 @@ def webhook_rate_limit(override_limiter: RateLimiter | None = None) -> Callable:
     return dependency
 
 
-def public_rate_limit() -> Callable:
-    """Rate limit for public API endpoints (catalogue, search)."""
-
-    async def dependency(request: Request) -> None:
-        client_ip = _client_ip(request)
-        if not _public_limiter.is_allowed(client_ip):
-            raise HTTPException(429, detail="Too many requests. Please wait.")
-
-    return dependency
-
-
 def auth_rate_limit() -> Callable:
-    """Rate limit for auth endpoints (login, register)."""
+    """Rate limit for auth + dashboard endpoints."""
 
     async def dependency(request: Request) -> None:
         client_ip = _client_ip(request)
         if not _auth_limiter.is_allowed(client_ip):
-            raise HTTPException(429, detail="Too many login attempts. Wait and try again.")
-
-    return dependency
-
-
-def dashboard_rate_limit() -> Callable:
-    """Rate limit for authenticated dashboard endpoints. Uses user ID if available."""
-
-    async def dependency(request: Request) -> None:
-        user = getattr(request.state, "user", None)
-        key = f"user:{user['id']}" if user and isinstance(user, dict) and "id" in user else _client_ip(request)
-        if not _dashboard_limiter.is_allowed(key):
-            raise HTTPException(429, detail="Too many requests. Please wait.")
-
-    return dependency
-
-
-def yoco_rate_limit() -> Callable:
-    """Rate limit for Yoco webhook."""
-
-    async def dependency(request: Request) -> None:
-        client_ip = _client_ip(request)
-        if not _yoco_limiter.is_allowed(client_ip):
-            raise HTTPException(429, detail="Too many requests.")
+            raise HTTPException(429, detail="Too many attempts. Wait and try again.")
 
     return dependency
 

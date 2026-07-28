@@ -33,6 +33,7 @@ def test_forward_order_to_manufacturer_records_audit_fields(tmp_path, monkeypatc
             )
             for message_id, text in [
                 ("m1", "2 shoes"),
+                ("m1b", "add_confirm"),
                 ("m2", "done"),
                 ("m3", "Alice"),
                 ("m4", "Dlamini"),
@@ -54,8 +55,8 @@ def test_forward_order_to_manufacturer_records_audit_fields(tmp_path, monkeypatc
             preview = await get_manufacturer_forward_preview(database, 1)
             assert preview is not None
             assert preview["recipient"] == "27829990000"
+            assert "New Order" in preview["message"]
             assert "2x Red Shoes" in preview["message"]
-            assert "FOCUS LOGIC" in preview["message"]
             assert preview["line_items"] == [{"product_id": 1, "product_name": "Red Shoes", "quantity": 2}]
 
             result = await forward_order_to_manufacturer(database, 1)
@@ -63,7 +64,7 @@ def test_forward_order_to_manufacturer_records_audit_fields(tmp_path, monkeypatc
             assert result["action"] == "forwarded"
             assert result["recipient"] == "27829990000"
             assert result["delivery"]["status"] == "dry_run"
-            assert "FOCUS LOGIC" in result["message"]
+            assert "New Order" in result["message"]
             assert "2x Red Shoes" in result["message"]
             assert result["order"]["forwarded_to"] == "27829990000"
             assert result["order"]["forward_delivery_status"] == "dry_run"

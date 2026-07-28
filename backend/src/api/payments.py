@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 from src.config import get_settings
 from src.middleware.auth import require_dashboard_api_key
-from src.middleware.rate_limit import yoco_rate_limit
+from src.middleware.rate_limit import webhook_rate_limit
 from src.services.yoco_payment import (
     create_checkout_session,
     is_yoco_event_duplicate,
@@ -41,7 +41,7 @@ async def generate_checkout_link(request: Request, order_id: int) -> dict[str, o
     return {"checkout_url": result["checkout_url"], "checkout_id": result["checkout_id"]}
 
 
-@router.post("/webhooks/yoco", dependencies=[Depends(yoco_rate_limit())])
+@router.post("/webhooks/yoco", dependencies=[Depends(webhook_rate_limit())])
 async def yoco_webhook(
     request: Request,
     background_tasks: BackgroundTasks,

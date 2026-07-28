@@ -49,8 +49,6 @@ class Settings:
     whatsapp_reject_commands: tuple[str, ...]
     whatsapp_cancel_commands: tuple[str, ...]
     pop_expiry_hours: int
-    default_language: str
-    supported_languages: tuple[str, ...]
     cors_origins: tuple[str, ...]
     sentry_dsn: str | None
     auto_forward_to_manufacturer: bool
@@ -60,13 +58,8 @@ class Settings:
     courier_tracking_url: str
     commission_percent: Decimal
     low_stock_threshold: int
-    fl_username: str
     quantity_options: tuple[int, ...]
     max_quantity: int
-    store_email: str | None
-    default_membership: str
-    default_repurchase: str
-    self_pickup_default: str
     yoco_base_url: str
     bank_name: str
     account_holder: str
@@ -118,16 +111,11 @@ def get_settings() -> Settings:
     low_stock_threshold = int(os.getenv("LOW_STOCK_THRESHOLD", "5") or "5")
     courier_name = os.getenv("COURIER_NAME", "The Courier Guy").strip()
     courier_tracking_url = os.getenv("COURIER_TRACKING_URL", "https://thecourierguy.co.za/track").strip()
-    fl_username = os.getenv("FL_USERNAME", "ZenFragrances").strip()
     auto_forward = os.getenv("AUTO_FORWARD_TO_MANUFACTURER", "true").strip().lower() in ("true", "1", "yes")
     quantity_options = tuple(
         int(v.strip()) for v in os.getenv("WHATSAPP_QUANTITY_OPTIONS", "1,2,3,4,5,6").split(",") if v.strip().isdigit()
     )
     max_quantity = int(os.getenv("MAX_QUANTITY", "99") or "99")
-    store_email = os.getenv("STORE_EMAIL", "").strip() or None
-    default_membership = os.getenv("DEFAULT_MEMBERSHIP", "NO").strip()
-    default_repurchase = os.getenv("DEFAULT_REPURCHASE", "YES").strip()
-    self_pickup_default = os.getenv("SELF_PICKUP_DEFAULT", "NO").strip()
     yoco_base_url = os.getenv("YOCO_BASE_URL", "https://online.yoco.com/v1").strip()
     bank_name = os.getenv("BANK_NAME", "Standard Bank").strip()
     account_holder = os.getenv("ACCOUNT_HOLDER", "Zen Fragrances").strip()
@@ -166,8 +154,6 @@ def get_settings() -> Settings:
         free_shipping_threshold=free_shipping_threshold,
         whatsapp_cancel_commands=whatsapp_cancel_commands,
         pop_expiry_hours=pop_expiry_hours,
-        default_language=default_language,
-        supported_languages=supported_languages,
         cors_origins=cors_origins,
         sentry_dsn=_optional("SENTRY_DSN"),
         auto_forward_to_manufacturer=auto_forward,
@@ -177,13 +163,8 @@ def get_settings() -> Settings:
         courier_tracking_url=courier_tracking_url,
         commission_percent=commission_percent,
         low_stock_threshold=low_stock_threshold,
-        fl_username=fl_username,
         quantity_options=quantity_options,
         max_quantity=max_quantity,
-        store_email=store_email,
-        default_membership=default_membership,
-        default_repurchase=default_repurchase,
-        self_pickup_default=self_pickup_default,
         yoco_base_url=yoco_base_url,
         bank_name=bank_name,
         account_holder=account_holder,
@@ -257,12 +238,6 @@ def validate_settings(settings: Settings) -> None:
 
     if settings.pop_expiry_hours < 1:
         raise SettingsError("POP_EXPIRY_HOURS must be >= 1")
-
-    if not settings.supported_languages:
-        raise SettingsError("SUPPORTED_LANGUAGES must include at least one language")
-
-    if settings.default_language not in settings.supported_languages:
-        raise SettingsError(f"DEFAULT_LANGUAGE ({settings.default_language}) must be in SUPPORTED_LANGUAGES")
 
     settings.local_sqlite_path.parent.mkdir(parents=True, exist_ok=True)
 

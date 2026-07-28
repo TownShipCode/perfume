@@ -40,7 +40,7 @@ DEFAULT_TEMPLATES = {
     "unmatched": "❓ I couldn't match that.\n\nType *CATALOGUE* to see products, or a product number like *1* to start ordering.",
     "awaiting_pop": "⏳ Your order is waiting for POP (proof of payment).\n\n📸 Please send your POP image to confirm.\n🗑️ Type *CANCEL* to cancel this order.\n\n_Your order will expire in {expiry_hours}h if no POP is received._",
     "order_cancelled": "🗑️ Order cancelled.\n\nWhenever you're ready, just say *Hi* to start a new order. We're here for you! ✨",
-    "manufacturer_forward": "*FOCUS LOGIC ELECTRONIC FORM*\n\n➡️ *NAME:* {customer_name}\n➡️ *SURNAME:* {surname}\n➡️ *ADDRESS:* {full_address}\n➡️ *POSTAL CODE:* {postal_code}\n➡️ *EMAIL:* {email}\n➡️ *PROVINCE /CITY:* {province}\n➡️ *FL USERNAME:* {fl_username}\n➡️ *NEW MEMBERSHIP:* {new_membership}\n➡️ *REPURCHASE:* {repurchase}\n➡️ *QUANTITY:*\n{items}\n➡️ *DATE OF PAYMENT:* {date_of_payment}\n➡️ *CELL NO:* {phone_number}\n➡️ *COURIER:* {courier_name}\n➡️ *SELF PICK UP:* {self_pickup}",
+    "manufacturer_forward": "📦 *New Order #{order_number}*\n\n👤 {customer_name}\n📞 {phone_number}\n📍 {full_address}\n\n🛒 Items:\n{items}\n\n🚚 Courier: {courier_name}",
 }
 
 
@@ -373,88 +373,5 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
 
 
 async def render_template(database: Database, template_key: str, language: str = "en", **context: object) -> str:
-    template = await get_template_body(database, template_key, language)
-    return template.format(**context)
-
-
-async def get_template_body(database: Database, template_key: str, language: str = "en") -> str:
-    if database.mode == "postgres":
-        row = await fetch_one(database, "SELECT body FROM message_templates WHERE template_key = $1 AND language = $2", template_key, language)
-    else:
-        row = await fetch_one(database, "SELECT body FROM message_templates WHERE template_key = ? AND language = ?", template_key, language)
-
-    if row and row.get("body"):
-        return row["body"]
-
-    # Fallback to English
-    if language != "en":
-        if database.mode == "postgres":
-            row = await fetch_one(database, "SELECT body FROM message_templates WHERE template_key = $1 AND language = 'en'", template_key)
-        else:
-            row = await fetch_one(database, "SELECT body FROM message_templates WHERE template_key = ? AND language = 'en'", template_key)
-        if row and row.get("body"):
-            return row["body"]
-
-    return DEFAULT_TEMPLATES[template_key]
-
-
-async def list_templates(database: Database) -> list[dict[str, str | bool]]:
-    if database.mode == "postgres":
-        rows = await fetch_all(database, "SELECT template_key, body FROM message_templates")
-    else:
-        rows = await fetch_all(database, "SELECT template_key, body FROM message_templates")
-
-    stored = {row["template_key"]: row["body"] for row in rows}
-    items: list[dict[str, str | bool]] = []
-    for template_key in sorted(DEFAULT_TEMPLATES):
-        default_body = DEFAULT_TEMPLATES[template_key]
-        body = stored.get(template_key, default_body)
-        items.append(
-            {
-                "template_key": template_key,
-                "body": body,
-                "default_body": default_body,
-                "is_customized": body != default_body,
-            }
-        )
-    return items
-
-
-async def update_template_body(database: Database, template_key: str, body: str) -> dict[str, str | bool]:
-    if template_key not in DEFAULT_TEMPLATES:
-        raise KeyError(template_key)
-
-    default_body = DEFAULT_TEMPLATES[template_key]
-    normalized_body = body.strip()
-
-    if database.mode == "postgres":
-        await execute(
-            database,
-            """
-            INSERT INTO message_templates (template_key, body)
-            VALUES ($1, $2)
-            ON CONFLICT (template_key)
-            DO UPDATE SET body = EXCLUDED.body, updated_at = NOW()
-            """,
-            template_key,
-            normalized_body,
-        )
-    else:
-        await execute(
-            database,
-            """
-            INSERT INTO message_templates (template_key, body)
-            VALUES (?, ?)
-            ON CONFLICT(template_key)
-            DO UPDATE SET body = excluded.body, updated_at = CURRENT_TIMESTAMP
-            """,
-            template_key,
-            normalized_body,
-        )
-
-    return {
-        "template_key": template_key,
-        "body": normalized_body,
-        "default_body": default_body,
-        "is_customized": normalized_body != default_body,
-    }
+    """Render a template from DEFAULT_TEMPLATES. Database + language params kept for backward compat."""
+    return DEFAULT_TEMPLATES[template_key].format(**context)

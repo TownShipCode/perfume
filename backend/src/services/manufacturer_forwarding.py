@@ -74,8 +74,6 @@ async def forward_order_to_manufacturer(database: Database, order_id: int, *, fo
 
 
 async def _build_forward_message(database: Database, order: dict[str, object]) -> tuple[str | None, str, list[dict[str, object]]]:
-    from datetime import date
-
     settings = get_settings()
     recipient = settings.manufacturer_phone
     products_by_id = await get_products_by_ids(
@@ -87,12 +85,7 @@ async def _build_forward_message(database: Database, order: dict[str, object]) -
     customer_name = order.get("name") or ""
     phone_number = order.get("phone_number") or ""
     full_address = order.get("full_address") or ""
-
-    from src.services.customer_service import get_customer_by_phone
-    customer = await get_customer_by_phone(database, phone_number)
-    surname = (customer.get("surname") or "") if customer else ""
-    postal_code = (customer.get("postal_code") or "") if customer else ""
-    province = (customer.get("province") or "") if customer else ""
+    order_number = order.get("order_number", "")
 
     quantities = _format_items(line_items)
 
@@ -100,19 +93,11 @@ async def _build_forward_message(database: Database, order: dict[str, object]) -
         database,
         "manufacturer_forward",
         customer_name=customer_name,
-        surname=surname,
-        full_address=full_address,
-        postal_code=postal_code,
-        email=settings.store_email or "",
-        province=province,
         phone_number=phone_number,
+        full_address=full_address,
+        order_number=order_number,
         items=quantities,
-        fl_username=settings.fl_username,
-        new_membership=settings.default_membership,
-        repurchase=settings.default_repurchase,
-        date_of_payment=date.today().strftime("%d %b %Y"),
         courier_name=settings.courier_name,
-        self_pickup=settings.self_pickup_default,
     )
     return recipient, message, line_items
 
