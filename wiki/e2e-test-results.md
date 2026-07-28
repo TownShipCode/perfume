@@ -1,13 +1,69 @@
-# BioMed — E2E Test Results
+# Zen Fragrances — E2E Test Results
 
-**2026-07-24** · Live against `https://biomed-production.up.railway.app`
+**2026-07-29** · Local SQLite · 42/42 checks passing · 25 unit tests passing
 
-## Test Results
+## E2E Test Suite (`scripts/e2e_test.py`)
 
-| # | Test | Method | Path | Expected | Actual | Status |
-|---|---|---|---|---|---|---|
-| 1 | Health check | GET | `/health` | 200 | 200 ✓ | ✅ |
-| 2 | Unauth products (no auth required) | GET | `/api/products` | 200 | 200 ✓ | ✅ |
+### WhatsApp Channel — 20/20 ✅
+
+| # | Step | Action | Result |
+|---|---|---|---|
+| 1 | Welcome | "hi" → interactive_welcome | ✅ |
+| 2 | Help | "help" → text with web URL | ✅ |
+| 3 | Catalogue | "menu" → catalogue_web (web link) | ✅ |
+| 4 | Parse order | "2 Rose Oud" → confirm_order | ✅ |
+| 5 | Product match | Rose Oud matched correctly | ✅ |
+| 6 | Quantity | 2 units at R170 total | ✅ |
+| 7 | Confirm | "add_confirm" → order_confirmed | ✅ |
+| 8 | Cart items | 1 item in cart | ✅ |
+| 9 | Cart total | R170.00 | ✅ |
+| 10 | Multi-product | "1 Amber Woods" parsed | ✅ |
+| 11 | Second confirm | 2 items in cart | ✅ |
+| 12 | View cart | "cart" → cart_summary | ✅ |
+| 13 | Checkout | "done" → address_collection_started | ✅ |
+| 14 | Address (7 fields) | All collected | ✅ |
+| 15 | Order created | Address complete → order_created | ✅ |
+| 16 | EFT payment | "eft" → bank_details | ✅ |
+| 17 | POP upload | Image → pop_received | ✅ |
+| 18 | Repeat order | "repeat" → repeat_order (restores Rose Oud) | ✅ |
+| 19 | Cancel | "cancel" → order_cancelled | ✅ |
+| 20 | Stock check | "stock 1" → stock_info | ✅ |
+
+### Web Store Channel — 10/10 ✅
+
+| # | Step | Action | Result |
+|---|---|---|---|
+| 1 | Product search | 4 products found | ✅ |
+| 2 | Scent families | 4 distinct scents | ✅ |
+| 3 | Gender filter | 2 men's products | ✅ |
+| 4 | Product detail | Has gender field | ✅ |
+| 5 | Product detail | Has scent_family field | ✅ |
+| 6 | Product detail | Has top_notes field | ✅ |
+| 7 | Product detail | Has stock_quantity field | ✅ |
+| 8 | Web order | Created via service | ✅ |
+| 9 | Order number | ORD- prefix | ✅ |
+| 10 | Customer orders | Listed correctly | ✅ |
+
+### Cross-Channel — 2/2 ✅
+
+| # | Step | Result |
+|---|---|---|
+| 1 | Both channels produce orders in same DB | ✅ |
+| 2 | Stock tracked across both channels | ✅ |
+
+## Unit Tests — 25/25 ✅
+
+```
+test_admin_services.py ................ 1 passed
+test_catalog_admin.py ................. 1 passed
+test_manufacturer_forwarding.py ....... 2 passed
+test_message_templates.py ............. 1 passed
+test_order_flow.py .................... 8 passed
+test_order_parser.py .................. 5 passed
+test_persistence_helpers.py ........... 2 passed
+test_whatsapp_sender.py ............... 3 passed
+test_whatsapp_webhook.py .............. 2 passed
+```
 | 3 | Unauth orders blocked | GET | `/api/orders` | 401 | 401 ✓ | ✅ |
 | 4 | Auth products list | GET | `/api/products` | 200 | 200 ✓ | ✅ |
 | 5 | Auth create product | POST | `/api/products` | 200 | 401 ✗ | ❌ API key mismatch |

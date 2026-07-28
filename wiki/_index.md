@@ -1,6 +1,7 @@
 # Zen Fragrances — Wiki Index
 
 **Project:** Zen Fragrances (WhatsApp-first perfume dropshipping & reseller platform)
+**Last updated:** 2026-07-29
 **Repo:** `TownShipCode/perfume`
 **Global Wiki:** [`TownShipCode/wiki`](https://github.com/TownShipCode/wiki)
 
@@ -12,11 +13,25 @@
 |:-----:|------|-----|
 | 1 | [learnings.md](learnings.md) | Latest session outcomes, known issues, token waste patterns (~1 min) |
 | 2 | [status.md](status.md) | Current feature status, pending items, config (~1 min) |
-| 3 | [architecture.md](architecture.md) | Stack, request flow, key files, state machine (~2 min) |
+| 3 | [architecture.md](architecture.md) | Stack, two-channel flow, key files, WhatsApp commands (~2 min) |
 
 **Before deploying:** Read [wiki/patterns/pre-deploy-checklist.md](https://github.com/TownShipCode/wiki/blob/main/patterns/pre-deploy-checklist.md) in the global wiki.
 
 ---
+
+## Wiki Index
+
+| Document | Description | Updated |
+|---|---|---|
+| [status.md](status.md) | Feature summary, config, launch checklist | 2026-07-29 |
+| [architecture.md](architecture.md) | Stack, two-channel flow, key files, WhatsApp commands | 2026-07-29 |
+| [learnings.md](learnings.md) | Session log, errors, decisions, patterns | 2026-07-29 |
+| [competitors.md](competitors.md) | 12 competitor profiles, pricing comparison | 2026-07-28 |
+| [e2e-test-results.md](e2e-test-results.md) | 42 e2e + 25 unit tests passing | 2026-07-29 |
+| [security-review.md](security-review.md) | Auth, rate limiting, endpoint coverage | 2026-07-24 |
+| [retrospective.md](retrospective.md) | What worked, challenges, Kapso post-mortem | 2026-07-26 |
+| [kapso-debugging.md](kapso-debugging.md) | Kapso webhook format guide, common mistakes | 2026-07-24 |
+| [adding-products.md](adding-products.md) | How to add products: seed, dashboard, or API | 2026-07-24 |
 
 ## Wiki Documents
 

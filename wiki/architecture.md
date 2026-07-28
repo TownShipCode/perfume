@@ -1,6 +1,6 @@
 # Zen Fragrances — Architecture Reference
 
-**2026-07-26** · For future sessions / new developers
+**2026-07-29** · For future sessions / new developers
 
 ## Stack
 
@@ -8,9 +8,63 @@
 |---|---|
 | Backend | Python 3.12, FastAPI, asyncpg (Postgres), sqlite3 (local dev) |
 | Database | PostgreSQL on Railway, SQLite for local testing |
-| WhatsApp | Kapso gateway → Meta Cloud API v24.0, phone_id=1235032529693241 |
-| Dashboard | React + Vite, deployed on Vercel |
-| Deploy | Railway (backend, auto-deploy from GitHub), Vercel (dashboard) |
+| WhatsApp | Kapso gateway → Meta Cloud API v24.0 |
+| Web Store | React 19 + Vite 7 + Tailwind CSS, deployed on Vercel |
+| Payments | Yoco Checkout API + EFT / POP |
+| Deploy | Railway (backend, auto-deploy from GitHub), Vercel (web store) |
+
+## Two-Channel Architecture
+
+```
+┌──────────────┐     ┌──────────────────┐     ┌──────────────┐
+│  WHATSAPP    │────▶│   FASTAPI        │◀────│  WEB STORE   │
+│  (agents)    │     │   (same DB)      │     │  (everyone)  │
+└──────────────┘     └──────────────────┘     └──────────────┘
+                            │
+                     ┌──────┴──────┐
+                     │  PostgreSQL │
+                     │  (Railway)  │
+                     └─────────────┘
+```
+
+## Key Files — Current
+
+| File | Purpose |
+|---|---|
+| `src/main.py` | FastAPI app, lifespan, security headers, all routers |
+| `src/config.py` | `Settings` dataclass — 40+ env vars, `@lru_cache` |
+| `src/api/webhook.py` | WhatsApp webhook — signature verify, event extract, idempotency |
+| `src/api/orders.py` | Order API + `POST /api/orders/web` (web checkout) |
+| `src/api/products.py` | Product search, categories, scents, detail |
+| `src/api/auth.py` | Login, register, forgot password |
+| `src/api/agent_tools.py` | Price list PDF, agent locator search, profile |
+| `src/services/order_flow.py` | `handle_text_message()` — state router, all WhatsApp commands |
+| `src/services/order_service.py` | `create_order()`, stock management, POP, shipping |
+| `src/services/message_templates.py` | `build_customer_reply()` — all action → reply mappings |
+| `src/services/whatsapp_buttons.py` | Welcome, confirm, cart, quantity, payment buttons |
+| `src/services/catalog_service.py` | Products, keywords, search, pagination |
+| `src/services/yoco_payment.py` | Yoco checkout + webhook |
+| `src/db/connection.py` | Dual Postgres/SQLite, `_sqlite_compat()` DDL translator |
+| `scripts/e2e_test.py` | 42-check e2e: WhatsApp + Web + Cross-Channel |
+
+## WhatsApp Commands
+
+| Command | Action |
+|---|---|
+| `hi`, `hello` | Welcome with [🛍️ Browse Store] [🛒 View Cart] [ℹ️ Help] |
+| `5 Rose Oud` | Parse → confirm → add to cart |
+| `cart` | Cart summary with [➕ Add More] [🛒 Checkout] |
+| `checkout`, `done` | Address collection → order creation |
+| `repeat`, `reorder` | Restore last order to cart |
+| `stock 1` | Check stock for product #1 |
+| `info 1` | Product detail with image + web link |
+| `menu`, `catalogue` | Web store link (no text wall) |
+| `price list` | Agent wholesale price list URL |
+| `agent`, `become an agent` | Agent referral pitch + register link |
+| `join AGENT123` | Join under a team member |
+| `recover AGENT123` | Lost number recovery |
+| `cancel` | Cancel current order |
+| `help`, `?` | Web link + quick reference |
 
 ## Request Flow (WhatsApp message)
 
