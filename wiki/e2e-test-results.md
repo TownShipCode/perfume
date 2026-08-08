@@ -72,7 +72,7 @@ test_whatsapp_webhook.py .............. 2 passed
 | 8 | Webhook POST (message) | POST | `/webhook` | 200 | 200 ✓ | ✅ |
 | 9 | Auth analytics | GET | `/api/analytics/summary` | 200 | 401 ✗ | ❌ API key mismatch |
 | 10 | Auth templates | GET | `/api/templates` | 200 | 401 ✗ | ❌ API key mismatch |
-| 11 | FL POP preview | POST | `/api/orders/1/fl-pop` | 200 | 401 ✗ | ❌ API key mismatch |
+| 11 | Manufacturer POP preview | POST | `/api/orders/1/fl-pop` | 200 | 401 ✗ | ❌ API key mismatch |
 | 12 | Wrong API key | GET | `/api/products` | 401 | 200* | ⚠️ No auth on GET |
 | 13 | Bearer auth | GET | `/api/products` | 200 | 200 ✓ | ✅ |
 

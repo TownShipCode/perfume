@@ -44,6 +44,21 @@ DEFAULT_TEMPLATES = {
 }
 
 
+def _visit_store_reply(body_text: str, web_url: str) -> dict[str, Any]:
+    """Build an interactive reply with a click-through 'Visit Store' URL button.
+
+    URL buttons open the browser directly when tapped (no raw URL text shown).
+    fallback_text keeps a URL as a last resort if the interactive send fails.
+    """
+    from src.services.whatsapp_buttons import build_visit_store_buttons
+
+    return {
+        "type": "interactive",
+        "payload": build_visit_store_buttons(body_text, web_url),
+        "fallback_text": f"{body_text}\n🔗 {web_url}",
+    }
+
+
 async def build_customer_reply(database: Database, result: dict[str, object] | None) -> dict[str, Any] | None:
     if result is None:
         return None
@@ -90,7 +105,10 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
 
     if action == "catalogue_web":
         web_url = result.get("web_url", "")
-        return {"text": f"🛍️ *Browse Our Catalogue*\n\nView all fragrances with images, filters & scent notes:\n\n🔗 {web_url}\n\n⚡ Or order directly here — type a product name, e.g. _\"5 Rose Oud\"_."}
+        return _visit_store_reply(
+            "🛍️ *Browse Our Catalogue*\n\nView all fragrances with images, filters & scent notes.\n\n⚡ Or order directly here — type a product name, e.g. _\"5 Rose Oud\"_.",
+            web_url,
+        )
 
     if action == "welcome_catalogue":
         customer_name = result.get("customer_name") or ""
@@ -117,7 +135,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         fallback = f"👋 Hi{greeting}! Welcome to Zen Fragrances.\n\n⚡ Type a product name to order (e.g. \"5 Rose Oud\")\n🛍️ Browse catalogue: {web_url}\n📋 Type HELP for all commands."
         return {
             "type": "interactive",
-            "payload": build_welcome_buttons(body),
+            "payload": build_welcome_buttons(body, web_url),
             "fallback_text": fallback,
         }
 
@@ -228,13 +246,19 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
     if action == "checkout_blocked":
         settings = get_settings()
         web_url = settings.web_base_url.rstrip("/")
-        return {"text": f"🛒 *Your cart is empty!*\n\n🛍️ Browse our catalogue online:\n{web_url}/catalogue\n\nOr type a product name here, e.g. _\"5 Rose Oud\"_."}
+        return _visit_store_reply(
+            "🛒 *Your cart is empty!*\n\nBrowse our store, or type a product name here, e.g. _\"5 Rose Oud\"_.",
+            f"{web_url}/catalogue",
+        )
 
     if action == "product_not_found":
         attempted = result.get("attempted_number", "?")
         settings = get_settings()
         web_url = settings.web_base_url.rstrip("/")
-        return {"text": f"❓ Product #{attempted} not found.\n\n🛍️ Browse our full catalogue online:\n{web_url}/catalogue\n\nOr type a product name directly, e.g. _\"5 Rose Oud\"_."}
+        return _visit_store_reply(
+            f"❓ Product #{attempted} not found.\n\nBrowse our full store, or type a product name directly, e.g. _\"5 Rose Oud\"_.",
+            f"{web_url}/catalogue",
+        )
 
     if action == "unmatched":
         return {"text": await render_template(database, "unmatched")}
@@ -248,8 +272,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
     if action == "product_detail":
         image_url = result.get("image_url")
         product_url = result.get("product_url", "")
-        web_link = f"\n\n🔗 View online: {product_url}" if product_url else ""
-        return {
+        base = {
             "text": await render_template(
                 database,
                 "product_detail",
@@ -257,9 +280,23 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
                 description=result.get("description", ""),
                 price=result.get("price", "0"),
                 currency=settings.store_currency,
-            ) + web_link,
-            **(({"image_url": image_url} if image_url else {})),
+            ),
         }
+        if image_url:
+            base["image_url"] = image_url
+        if product_url:
+            # Click-through URL button instead of raw URL text
+            button = _visit_store_reply("🔗 *View this product on our website*", product_url)
+            return [base, button]
+        return base
+
+    if action == "help_menu":
+        settings = get_settings()
+        web_url = result.get("web_url") or f"{settings.web_base_url.rstrip('/')}/catalogue"
+        return _visit_store_reply(
+            f"💡 *{settings.store_name}*\n\n⚡ Quick order via WhatsApp:\n• Type a product name: e.g. _\"5 Rose Oud\"_\n• Check stock: _\"stock 1\"_\n• View cart: _\"cart\"_\n• Checkout: _\"checkout\"_\n• Cancel: _\"cancel\"_",
+            web_url,
+        )
 
     if action == "confirm_order":
         from src.services.whatsapp_buttons import build_confirm_order_buttons
@@ -355,7 +392,11 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
 
     if action == "catalog_link":
         catalog_url = result.get("catalog_url", "")
-        return {"text": f"🛍️ *WhatsApp Catalog*\n\nBrowse our full product catalog on WhatsApp:\n{catalog_url}\n\nTap the link to view all fragrances with images and prices."}
+        # Deliberately a TEXT link, NOT a URL button:
+        #  - WhatsApp auto-hyperlinks wa.me/c/... → already a click-through link
+        #  - opens INSIDE WhatsApp (data-friendly)
+        #  - text links can be FORWARDED/shared to customers; interactive URL buttons cannot
+        return {"text": f"🛍️ *WhatsApp Catalog*\n\nView all our fragrances inside WhatsApp.\n\n{catalog_url}\n\n_Tap to open, or forward to share with customers._"}
 
     if action == "become_agent":
         customer_name = result.get("customer_name", "")

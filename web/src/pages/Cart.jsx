@@ -47,7 +47,20 @@ export default function Cart() {
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-2 text-sm">
         <div className="flex justify-between"><span>Subtotal</span><span>R{total.toFixed(2)}</span></div>
         <div className="flex justify-between"><span>Delivery</span><span>{shipping === 0 ? <span className="text-green-600">FREE</span> : `R${shipping}.00`}</span></div>
-        {shipping > 0 && <p className="text-xs text-gray-400">Free delivery on orders over R{settings.freeThreshold}</p>}
+        {shipping > 0 && (() => {
+          const remaining = Math.max(0, settings.freeThreshold - total);
+          const pct = Math.min(100, (total / settings.freeThreshold) * 100);
+          return (
+            <div className="pt-1">
+              <div className="h-1.5 bg-purple-100 rounded-full overflow-hidden">
+                <div className="h-full bg-purple-700 rounded-full transition-all" style={{ width: `${pct}%` }} />
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {remaining > 0 ? `Add R${remaining.toFixed(0)} more for FREE delivery` : 'Free delivery unlocked! 🎉'}
+              </p>
+            </div>
+          );
+        })()}
         <div className="flex justify-between font-bold text-lg pt-2 border-t"><span>Total</span><span className="text-purple-700">R{(total + shipping).toFixed(2)}</span></div>
       </div>
 

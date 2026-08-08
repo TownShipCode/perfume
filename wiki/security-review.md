@@ -69,7 +69,7 @@
 
 | # | Question |
 |---|---|
-| Q1 | Is the MANUFACTURER_PHONE shared with FL? Any privacy concerns? |
+| Q1 | Is the MANUFACTURER_PHONE shared with our manufacturer? Any privacy concerns? |
 | Q2 | Should customer POP images be stored in Vercel Blob (CDN) vs as raw URLs? |
 | Q3 | Do we need multi-user dashboard access (different admin roles)? |
 | Q4 | What's the data retention policy for customer orders/addresses? |

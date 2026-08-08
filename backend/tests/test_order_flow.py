@@ -237,8 +237,10 @@ def test_order_flow_returns_catalogue_for_menu_command(tmp_path, monkeypatch) ->
 
             reply = await build_customer_reply(database, result)
             assert reply is not None
-            assert "Browse Our Catalogue" in reply["text"]
-            assert result["web_url"] in reply["text"]
+            assert reply["type"] == "interactive"
+            buttons = reply["payload"]["interactive"]["action"]["buttons"]
+            assert any(b.get("type") == "url" and "catalogue" in b.get("url", "") for b in buttons)
+            assert "Browse Our Catalogue" in reply["payload"]["interactive"]["body"]["text"]
 
             session = await get_session_by_phone(database, "27820000000")
             assert session is not None
@@ -322,10 +324,10 @@ def test_order_flow_returns_welcome_catalogue_for_greeting(tmp_path, monkeypatch
             assert reply is not None
             assert reply["type"] == "interactive"
             assert "payload" in reply
-            # Interactive payload should contain welcome buttons
+            # Interactive payload should contain a click-through Visit Store URL button + reply buttons
             buttons = reply["payload"]["interactive"]["action"]["buttons"]
-            assert any(b["reply"]["id"] == "browse_store" for b in buttons)
-            assert any(b["reply"]["id"] == "view_cart" for b in buttons)
+            assert any(b.get("type") == "url" and "Visit Store" in b.get("title", "") for b in buttons)
+            assert any(b.get("type") == "reply" and b.get("reply", {}).get("id") == "view_cart" for b in buttons)
         finally:
             await close_database(database)
 

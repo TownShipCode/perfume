@@ -45,6 +45,7 @@ export default function ProductDetail() {
           <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{product.name}</h1>
+              <p className="text-sm text-gray-500 mt-1">Inspired by your favourite designer scent — not a dupe.</p>
               {product.categories?.length > 0 && (
                 <p className="text-sm text-gray-500 mt-1">
                   {product.categories.map(c => (

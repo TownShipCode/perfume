@@ -62,6 +62,8 @@ def make_settings(**overrides: object) -> Settings:
         "payment_methods_enabled": ("eft",),
         "commission_percent": "5",
         "low_stock_threshold": 5,
+        "flyer_whatsapp": None,
+        "flyer_featured_ids": (),
     }
     values.update(overrides)
     return Settings(**values)

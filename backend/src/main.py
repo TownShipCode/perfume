@@ -14,6 +14,8 @@ from src.api.agent_tools import router as agent_tools_routes
 from src.api.analytics import router as analytics_routes
 from src.api.auth import router as auth_routes
 from src.api.customers import router as customer_routes
+from src.api.flyer import router as flyer_routes
+from src.api.newsletter import router as newsletter_routes
 from src.api.orders import router as order_routes
 from src.api.payments import router as payment_routes
 from src.api.products import router as product_routes
@@ -94,6 +96,8 @@ app.include_router(product_routes)
 app.include_router(order_routes)
 app.include_router(payment_routes)
 app.include_router(customer_routes)
+app.include_router(flyer_routes)
+app.include_router(newsletter_routes)
 app.include_router(template_routes)
 app.include_router(webhook_routes)
 

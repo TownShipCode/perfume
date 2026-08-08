@@ -40,6 +40,8 @@ class Settings:
     yoco_webhook_secret: str | None
     admin_phone: str | None
     manufacturer_phone: str | None
+    flyer_whatsapp: str | None
+    flyer_featured_ids: tuple[int, ...]
     shipping_fee: Decimal
     free_shipping_threshold: Decimal
     whatsapp_greeting_commands: tuple[str, ...]
@@ -145,6 +147,10 @@ def get_settings() -> Settings:
         dashboard_api_key=_optional("DASHBOARD_API_KEY"),
         admin_phone=_optional("ADMIN_PHONE"),
         manufacturer_phone=_optional("MANUFACTURER_PHONE"),
+        flyer_whatsapp=_optional("FLYER_WHATSAPP"),
+        flyer_featured_ids=tuple(
+            int(v.strip()) for v in os.getenv("FLYER_FEATURED_IDS", "").split(",") if v.strip().isdigit()
+        ),
         whatsapp_greeting_commands=whatsapp_greeting_commands,
         whatsapp_catalog_commands=whatsapp_catalog_commands,
         whatsapp_checkout_commands=whatsapp_checkout_commands,

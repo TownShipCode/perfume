@@ -20,13 +20,12 @@ await create_product(
     database,
     ProductInput(
         product_number=2,
-        name="Focus Logic Herbal Blend 500ml",
-        price="180.00",
-        image_url="https://biomed-production.up.railway.app/static/focus-logic-500ml.png",
-        description="Half-size 500ml bottle. Same blend. 1/4 cup daily.",
+        name="Rose Oud 100ml",
+        price="85.00",
+        image_url="https://zenfragrances.vercel.app/static/rose-oud.png",
+        description="Warm rose & oud — our signature scent.",
         keywords=[
-            "500ml", "500 ml", "half", "small",
-            "focus logic 500ml", "fl 500ml",
+            "rose", "oud", "rose oud", "100ml",
         ],
     ),
 )
@@ -47,11 +46,11 @@ curl -X POST https://biomed-production.up.railway.app/api/products \
   -H "Content-Type: application/json" \
   -d '{
     "product_number": 2,
-    "name": "Focus Logic 500ml",
-    "price": "180.00",
-    "image_url": "https://biomed-production.up.railway.app/static/focus-logic-500ml.png",
-    "description": "Half-size bottle",
-    "keywords": ["500ml", "half", "small"]
+    "name": "Rose Oud 100ml",
+    "price": "85.00",
+    "image_url": "https://zenfragrances.vercel.app/static/rose-oud.png",
+    "description": "Warm rose & oud — our signature scent.",
+    "keywords": ["rose", "oud", "rose oud"]
   }'
 ```
 
@@ -66,13 +65,13 @@ Images must be publicly accessible URLs (WhatsApp fetches them). Current approac
 
 ## Keyword tips
 
-- Keywords are what users type to match products (e.g., "1 FL 1L" matches keyword "fl 1l")
+- Keywords are what users type to match products (e.g., "rose oud 1l" matches keyword "rose oud")
 - Include common misspellings and shorthand
-- Longer keywords are matched first (e.g., "focus logic 1l" before "focus")
+- Longer keywords are matched first (e.g., "rose oud 1l" before "rose")
 - Add the product number as a keyword if users might order by number
 
 ## Current products
 
 | # | Name | Price | Image |
 |---|------|-------|-------|
-| 1 | Focus Logic Herbal Blend 1L | R330.00 | `/static/focus-logic-1L.png` |
+| 1 | Rose Oud 100ml | R85.00 | `/static/rose-oud.png` |

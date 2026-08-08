@@ -166,7 +166,11 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
                 "state": session.get("state", State.IDLE),
                 "catalog_url": f"https://wa.me/c/{catalog_id}",
             }
-        return {"action": "text", "text": "📋 View our catalogue here:\n{}/catalogue".format(settings.api_base_url.replace("/api", ""))}
+        return {
+            "action": "catalogue_web",
+            "state": session.get("state", State.IDLE),
+            "web_url": f"{settings.web_base_url.rstrip('/')}/catalogue",
+        }
 
     # ── Agent referral: customer can become an agent ──
     if lowered == "agent" or lowered == "become agent" or lowered == "become an agent":
@@ -303,8 +307,9 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
     if lowered in ("help", "?"):
         web_url = settings.web_base_url.rstrip("/")
         return {
-            "action": "text",
-            "text": f"💡 *{settings.store_name}*\n\n🛍️ Browse & order online:\n{web_url}/catalogue\n\n⚡ Quick order via WhatsApp:\n• Type product name: e.g. _\"5 Rose Oud\"_\n• Check stock: _\"stock 1\"_\n• View cart: _\"cart\"_\n• Checkout: _\"checkout\"_\n• Cancel: _\"cancel\"_",
+            "action": "help_menu",
+            "state": session.get("state", State.IDLE),
+            "web_url": f"{web_url}/catalogue",
         }
 
     # Bare number shortcut or quantity input
@@ -693,7 +698,8 @@ async def _add_pending_to_cart(
         return {
             "action": "interactive_welcome",
             "customer_name": "",
-            "greeting": f"👋 *Welcome to {settings.store_name}!* 🫖\n\nYour natural health store on WhatsApp.\nWhat would you like to do?",
+            "greeting": f"👋 *Welcome to {settings.store_name}!* ✨\n\nWholesale perfumes for resellers.\nType a product name to order — e.g. \"5 Rose Oud\".\nWhat would you like to do?",
+            "web_url": f"{settings.web_base_url.rstrip('/')}/catalogue",
         }
 
     if quantity > settings.max_quantity:

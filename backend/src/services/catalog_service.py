@@ -46,7 +46,7 @@ async def list_active_products(database: Database) -> list[dict]:
     rows = await fetch_all(
         database,
         f"""
-        SELECT id, product_number, name, price, bio_med_margin, image_url, description, is_active, created_at, updated_at
+        SELECT id, product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, gender, scent_family, top_notes, stock_quantity, is_active, created_at, updated_at
         FROM products
         {where_clause}
         ORDER BY product_number
@@ -68,7 +68,7 @@ async def build_catalog_lines(database: Database) -> list[str]:
 
 
 def _product_emoji(product_number: int) -> str:
-    return {1: "🫖", 2: "🛡️", 3: "🍵", 4: "🦴"}.get(product_number, "📦")
+    return {1: "🌹", 2: "🌊", 3: "🌿", 4: "🫧"}.get(product_number, "🧴")
 
 
 async def list_all_products(database: Database) -> list[dict]:
@@ -142,9 +142,9 @@ async def create_product(database: Database, payload: ProductInput) -> dict[str,
         row = await fetch_one(
             database,
             """
-            INSERT INTO products (product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, is_active)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING id, product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, is_active, created_at, updated_at
+            INSERT INTO products (product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, gender, scent_family, top_notes, stock_quantity, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING id, product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, gender, scent_family, top_notes, stock_quantity, is_active, created_at, updated_at
             """,
             payload.product_number,
             payload.name,
@@ -153,6 +153,10 @@ async def create_product(database: Database, payload: ProductInput) -> dict[str,
             payload.image_url,
             payload.thumbnail_url,
             payload.description,
+            payload.gender,
+            payload.scent_family,
+            payload.top_notes,
+            payload.stock_quantity,
             payload.is_active,
         )
         assert row is not None
@@ -168,8 +172,8 @@ async def create_product(database: Database, payload: ProductInput) -> dict[str,
     await execute(
         database,
         """
-        INSERT INTO products (product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO products (product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, gender, scent_family, top_notes, stock_quantity, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         payload.product_number,
         payload.name,
@@ -178,12 +182,16 @@ async def create_product(database: Database, payload: ProductInput) -> dict[str,
         payload.image_url,
         payload.thumbnail_url,
         payload.description,
+        payload.gender,
+        payload.scent_family,
+        payload.top_notes,
+        payload.stock_quantity,
         1 if payload.is_active else 0,
     )
     row = await fetch_one(
         database,
         """
-        SELECT id, product_number, name, price, bio_med_margin, image_url, is_active, created_at, updated_at
+        SELECT id, product_number, name, price, bio_med_margin, image_url, thumbnail_url, description, gender, scent_family, top_notes, stock_quantity, is_active, created_at, updated_at
         FROM products
         WHERE product_number = ?
         """,

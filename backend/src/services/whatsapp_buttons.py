@@ -1,5 +1,5 @@
 """
-WhatsApp interactive button builders for BioMed.
+WhatsApp interactive button builders for Zen Fragrances.
 Adopts miana's _build_help_buttons / _BUTTON_TO_CMD pattern.
 """
 
@@ -36,10 +36,11 @@ def register_quantity_mappings(quantity_options: tuple[int, ...]) -> None:
         BUTTON_TO_CMD[f"qty_{qty}"] = str(qty)
 
 
-def build_welcome_buttons(body_text: str) -> dict[str, Any]:
+def build_welcome_buttons(body_text: str, web_url: str) -> dict[str, Any]:
     """
     Welcome buttons shown when a customer says "hi" / "hello".
     WhatsApp allows up to 3 buttons per interactive message.
+    The first button is a click-through URL button to the web store (no raw URL text).
     """
     return {
         "type": "interactive",
@@ -48,9 +49,29 @@ def build_welcome_buttons(body_text: str) -> dict[str, Any]:
             "body": {"text": body_text},
             "action": {
                 "buttons": [
-                    {"type": "reply", "reply": {"id": "browse_store", "title": "🛍️ Browse Store"}},
+                    {"type": "url", "title": "🛍️ Visit Store", "url": web_url},
                     {"type": "reply", "reply": {"id": "view_cart", "title": "🛒 View Cart"}},
                     {"type": "reply", "reply": {"id": "help", "title": "ℹ️ Help"}},
+                ]
+            },
+        },
+    }
+
+
+def build_visit_store_buttons(body_text: str, web_url: str) -> dict[str, Any]:
+    """A single click-through URL button message to the web store.
+
+    Meta Cloud API URL buttons open the browser directly when tapped,
+    unlike reply buttons which only send a webhook back to us.
+    """
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body_text},
+            "action": {
+                "buttons": [
+                    {"type": "url", "title": "🛍️ Visit Store", "url": web_url},
                 ]
             },
         },

@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api';
+import FlintChart from '../../components/FlintChart';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
+  const [daily, setDaily] = useState([]);
 
   useEffect(() => {
     api('/api/analytics/summary').then(setStats).catch(() => setStats({}));
+    api('/api/analytics/daily').then(d => setDaily(d.daily || [])).catch(() => setDaily([]));
   }, []);
 
   return (
@@ -24,6 +27,26 @@ export default function AdminDashboard() {
               <p className="text-2xl font-bold mt-1">{s.value}</p>
             </div>
           ))}
+        </div>
+      )}
+      {daily.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <FlintChart
+            title="Revenue (daily)"
+            values={daily}
+            semanticTypes={{ day: 'YearMonthDay', revenue: 'Quantity' }}
+            chartType="Line Chart"
+            xField="day"
+            yField="revenue"
+          />
+          <FlintChart
+            title="Orders (daily)"
+            values={daily}
+            semanticTypes={{ day: 'YearMonthDay', orders: 'Quantity' }}
+            chartType="Bar Chart"
+            xField="day"
+            yField="orders"
+          />
         </div>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

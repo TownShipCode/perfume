@@ -8,8 +8,8 @@
 |---|---|
 | **Database abstraction** | `connection.py` dual Postgres/SQLite support made local testing fast. Adding `_sqlite_compat()` was a 20-line function that unlocked all migrations for local dev. |
 | **State machine design** | The `State` enum (IDLE → ORDERING → ADDRESS_COLLECTION → CONFIRMATION → POP_WAITING → CONFIRMED) made extending the flow trivial. Adding 4 new steps required zero state machine changes — just extending `ADDRESS_STEPS`. |
-| **Template-driven messages** | All customer/FL replies are DB-backed templates editable via dashboard. Changing the manufacturer format to Focus Logic's form was a one-line template edit. |
-| **env-driven config** | Every business rule (shipping fee, margin, courier name, FL username, auto-forward toggle) is an env var. No hardcoded values. Railway deploy = set vars, done. |
+| **Template-driven messages** | All customer/manufacturer replies are DB-backed templates editable via dashboard. Changing the manufacturer format was a one-line template edit. |
+| **env-driven config** | Every business rule (shipping fee, margin, courier name, manufacturer username, auto-forward toggle) is an env var. No hardcoded values. Railway deploy = set vars, done. |
 | **Backward-compatible changes** | `save_customer_profile()` wraps `save_customer_address()` — old callers (tests, catalog admin) still work. |
 | **Two-message forward** | Sending FL the form text THEN the POP image mimics natural WhatsApp behavior. No API hack — just added `send_image_message()`. |
 | **Live flow test** | Thandi's complete 13-step journey tested end-to-end against live Railway + Kapso. Order created, POP received, all 7 profile fields saved. Kapso webhook accepting and delivering real WhatsApp messages. |
@@ -104,7 +104,7 @@ Our `extract_message_event()` only handled Meta format, direct format, and batch
 
 | # | Question | Why it matters |
 |---|---|---|
-| Q1 | **What's the Focus Logic order intake format?** | We built the manufacturer template first, then had to rewrite it. Would have saved one iteration. |
+| Q1 | **What's the manufacturer order intake format?** | We built the manufacturer template first, then had to rewrite it. Would have saved one iteration. |
 | Q2 | **Is there a per-product margin or a flat rate?** | We defaulted to flat R70 then added per-product margin. Knowing this upfront would have simplified the schema. |
 | Q3 | **Does BioMed pay FL before or after customer pays BioMed?** | Determines the two-POP model. We guessed right, but this is a critical business flow question. |
 | Q4 | **What's the courier name and fee?** | Hardcoded "The Courier Guy, R150" then made configurable. Should have been config from day one. |
@@ -124,14 +124,14 @@ Our `extract_message_event()` only handled Meta format, direct format, and batch
 | isiZulu translations | Low | 17 templates need isiZulu text. Infrastructure ready, just content. |
 | No product images | Low | Vercel Blob recommended but not set up. WhatsApp catalog shows text only. |
 | `APP_ENV=development` | Medium | HMAC signatures skip in dev mode. Webhook is less secure. |
-| `MANUFACTURER_PHONE` not set | High | Auto-forward won't work until FL's number is configured. |
+| `MANUFACTURER_PHONE` not set | High | Auto-forward won't work until the manufacturer's number is configured. |
 
 ## Architecture Decisions
 
 | Decision | Rationale |
 |---|---|
 | Two-POP model (not auto-forward on customer POP) | BioMed must pay FL first. Auto-forward on customer POP would send without BioMed's payment proof. |
-| Preview-then-confirm for FL POP | Prevents accidental sends. Admin sees the FL message before it goes out. |
+| Preview-then-confirm for manufacturer POP | Prevents accidental sends. Admin sees the message before it goes out. |
 | `AUTO_FORWARD_TO_MANUFACTURER=true` toggle | Can disable automation without code change. Useful during testing or if FL changes their number. |
 | In-memory rate limiter (not Redis) | Simpler for single-instance Railway deploy. Add Redis if scaling to multiple instances. |
 | SQLite for local dev, Postgres for prod | Tests run 5x faster locally. `connection.py` abstraction makes this seamless. |

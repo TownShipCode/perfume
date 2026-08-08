@@ -320,3 +320,55 @@ East London, Port Elizabeth, Bloemfontein, Randburg, Vereeniging, Eastgate, Pret
 
 **Our advantage:** Instant agent registration, Yoco/EFT payments, R65 shipping, team hierarchy, stock commands.
 **Their advantage:** Physical store, gamification, newsletter capture, scent note filters, multiple sizes, active social media.
+
+---
+
+### 13. M-Scents 🟠 STRONG COMPETITOR — BRANDED DISTRIBUTOR (KZN)
+
+**Researched:** 2026-08-08. Source: m-scents.co.za (Reseller Shop 241 products, Store Locator, starter packs).
+
+| Field | Detail |
+|-------|--------|
+| **Website** | [m-scents.co.za](https://m-scents.co.za) |
+| **Type** | Branded fragrance DISTRIBUTOR + reseller platform (WooCommerce) |
+| **Value Prop** | "Start your own business with M-Scents" — distribute a portfolio of real registered brands |
+| **Brands Distributed** | Motala (registered), Paris 2 Dubai (P2D), Parfumo, KAM + house lines (Acqua D'Africa, Oud D'Africa, Aura, Serenity, Daakin, Frosted Blue, Black Oud, Gold Python) |
+| **Price ladder (reseller)** | R15 spritzers → R30 Parfumo 50ml → R80 KAM 100ml → R90 gift sets → R100 sale → R150 "150 Range" 95–100ml → R200 premium Oud → R500–1,200 combos |
+| **Starter packs** | R800 / R1,300 / R2,100 / R2,000 / R3,040 / R3,750 (activation barrier) |
+| **Sizes** | 15ml–200ml + gift sets + roll-ons + spritzers + cosmetics |
+| **Physical stores** | **21 — ALL in KwaZulu-Natal** (8 Durban CBD, 2 Durban area, 3 PMB, 9 KZN towns). See [competitive-geography.md](competitive-geography.md). |
+| **⚠️ Mthatha (EC)** | Reported open by user. NOT on store locator yet (all listed = KZN). Unverified. Would be first Eastern Cape store = expansion signal. TODO: verify. |
+| **Ordering** | Web only (WooCommerce basket) + email. NO WhatsApp. NO team commissions. NO dashboards. |
+| **Social** | Facebook, Instagram (@m_scents.za), TikTok (@officialmscents) |
+
+**Model Map:** branded portfolio → reseller buys starter pack (R800–R3,750) → rebuys from "Reseller Shop" at set prices → marks up for customers. Web-only; no WhatsApp, no team hierarchy.
+
+**Our advantage over them:** WhatsApp-first, zero starter pack, team commissions + multi-role dashboards, lower entry price (R40–R100 vs R80–R200), two-sided earnings, Gauteng/township focus.
+
+**Their advantage over us:** registered brand portfolio = trust, price ladder (R30/R150/R200), gift sets + multiple sizes, 21 physical stores, proven model (241 live products, 5-star reviews).
+
+**Key takeaway:** replicate branded distribution + a price ladder — do NOT manufacture. Distribute brands instead. Full geography contrast in [competitive-geography.md](competitive-geography.md).
+
+---
+
+### 14. ⚠️ NAMESAKE — Zen Fragrances (zenfragrances.com, Canada) 🟠
+
+**Researched:** 2026-08-08. **This is a DIFFERENT company** — a Canada-based Shopify store, NOT our project. Brand-name collision flag for our own-brand strategy.
+
+| Field | Detail |
+|-------|--------|
+| **Website** | [zenfragrances.com](https://zenfragrances.com) (Shopify, CAD pricing) |
+| **Market** | Canada (CAD $14.99+ from) — not SA |
+| **Product** | Oil-based, 100% alcohol-free "inspired by" fragrances (not "dupe"), 100+ SKUs |
+| **Categories** | Men / Women / Unisex; "New Collection 2026" |
+| **Extras** | Discovery Set (10ml samples), Precision Atomizer accessory, free ship over $80 |
+| **Social proof** | 4.75★ / 35 reviews wall; email capture; Instagram + TikTok |
+| **Ordering** | Shopify checkout only — NO WhatsApp, NO agents, NO commissions |
+
+**Their model (proven):** "inspired by, not dupe" framing · oil-based differentiator strip · sample set for low-friction entry · accessory upsell · free-ship threshold · reviews wall · email capture.
+
+**Ideas to adopt in OUR store:** the "inspired by" language (solves counterfeit stigma), oil-based/alcohol-free value strip, Discovery Set 10ml SKU, atomizer accessory, email capture (we have none), FAQ block, reviews wall (seed in month 1).
+
+**Our edge over them:** WhatsApp-first, agent/hawker network + team commissions, SA township pricing (R30/R60 vs ~R350), monthly flyer + offline distribution.
+
+**Brand note:** they own `zenfragrances.com` — flag for our own-brand/trademark decision (different market, but name collision exists).

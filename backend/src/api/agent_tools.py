@@ -55,7 +55,8 @@ PRICE_LIST_HTML = """<!DOCTYPE html>
 <body>
 <div class="header">
   <h1>{store_name}</h1>
-  <p>Wholesale Price List — {date}</p>
+  <p>Wholesale Price List — <strong>Edition {edition}</strong></p>
+  <p style="font-size:12px;color:#6b7280;margin-top:2px;">Valid from {valid_from} · Valid until {valid_until}</p>
 </div>
 <div class="note">
   <strong>📋 For Agents Only</strong><br>
@@ -81,7 +82,7 @@ PRICE_LIST_HTML = """<!DOCTYPE html>
 <p style="font-size:12px;color:#9ca3af;margin-top:8px;">* Suggested retail price (2× wholesale). Agents set their own prices.</p>
 <div class="footer">
   <p>{store_name} — WhatsApp: {whatsapp} — Powered by Zen Fragrances</p>
-  <p>Generated on {date_full}</p>
+  <p>Edition {edition} · Generated on {date_full}</p>
 </div>
 </body>
 </html>"""
@@ -121,8 +122,15 @@ async def agent_price_list(request: Request) -> HTMLResponse:
         ))
 
     today = date.today()
+    import calendar
+    first = today.replace(day=1)
+    last = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+    edition = today.strftime("%Y-%m")
     html_content = PRICE_LIST_HTML.format(
         store_name=settings.store_name,
+        edition=edition,
+        valid_from=first.strftime("%d %B %Y"),
+        valid_until=last.strftime("%d %B %Y"),
         date=today.strftime("%d %B %Y"),
         date_full=datetime.now().strftime("%d %B %Y at %H:%M"),
         whatsapp=getattr(settings, 'manufacturer_phone', '') or '',

@@ -58,13 +58,40 @@
 | `repeat`, `reorder` | Restore last order to cart |
 | `stock 1` | Check stock for product #1 |
 | `info 1` | Product detail with image + web link |
-| `menu`, `catalogue` | Web store link (no text wall) |
+| `menu`, `catalogue` | **PDF flyer** + web store link (no text wall) — agents share/print the PDF as their catalogue |
 | `price list` | Agent wholesale price list URL |
 | `agent`, `become an agent` | Agent referral pitch + register link |
 | `join AGENT123` | Join under a team member |
 | `recover AGENT123` | Lost number recovery |
 | `cancel` | Cancel current order |
 | `help`, `?` | Web link + quick reference |
+
+## Visit Store Link — Placement Strategy (2026-08-08)
+
+**Rule:** the "Visit Store" web link appears at every *decision point*, never mid-action.
+
+| Priority | Touchpoint | Status | Why |
+|---|---|---|---|
+| 🏆 Primary | **Welcome message** — `[🛍️ Visit Store]` button (first CTA) | ✅ exists (as "Browse Store") | Front door — seen on every new conversation (agent or consumer) |
+| 🥈 Add | **After checkout / order confirmed** | ❌ missing | Repeat/upsell moment — append "browse for your next order" |
+| 🥉 Keep | **Product not found / out of stock** | ✅ exists | Recovery — don't lose the sale, redirect to store |
+| On-demand | `menu`/`catalogue`, empty cart, `help` | ✅ exists | Explicit request |
+
+**Do NOT place:** during address collection / mid-order (don't interrupt an active purchase), or in the confirm-before-cart prompt (keep it focused).
+
+The link lives at: welcome (front door) → product-not-found (recovery) → post-checkout (upsell) → on-demand (`menu`/`help`).
+
+**IMPLEMENTED 2026-08-08 — all store links are click-through URL buttons, NO raw URLs in text:**
+- `whatsapp_buttons.py`: `build_welcome_buttons(body, web_url)` — first button is now `type: url` "🛍️ Visit Store"; new `build_visit_store_buttons(body, web_url)` helper
+- `message_templates.py`: new `_visit_store_reply()` helper; `catalogue_web`, `checkout_blocked`, `product_not_found`, `help_menu` all return interactive URL-button replies (fallback_text keeps URL only if interactive send fails); `product_detail` sends text/image + a URL-button follow-up
+- `order_flow.py`: `help` → `help_menu` action (URL button); WhatsApp-catalog fallback (no catalog_id) → `catalogue_web`; greeting path passes `web_url`
+- **Meta Cloud API URL buttons** (`type: url`) open the browser directly when tapped — true click-through, unlike reply buttons which only webhook back.
+- ⚠️ **EXCEPTION — WhatsApp Catalog link (`wa.me/c/...`) stays a TEXT link, NOT a URL button** (2026-08-08):
+  - URL buttons CANNOT be forwarded/shared; text links can (customer shares catalog to others)
+  - `wa.me/c/...` auto-hyperlinks in WhatsApp → already a click-through link
+  - opens INSIDE WhatsApp (data-friendly), not the external browser
+  - `catalog_link` reply: text + "_Tap to open, or forward to share with customers._"
+- Tests updated: `test_order_flow.py` asserts URL buttons + reply buttons. 23 tests passing.
 
 ## Request Flow (WhatsApp message)
 
@@ -113,9 +140,9 @@ LANGUAGE_SELECTION (disabled, auto-migrates to IDLE)
 | `src/services/whatsapp_sender.py` | `deliver_reply()`, `send_text_message()`, `send_image_message()`, `send_interactive_message()` |
 | `src/services/whatsapp_buttons.py` | `build_welcome_buttons()`, `build_quantity_buttons()`, `build_cart_buttons()`, `build_confirm_buttons()` |
 | `src/services/catalog_service.py` | `build_catalog_lines()` (clean one-liner: `🫖 *1.* Product — R330`), `get_product_by_number()` |
-| `src/services/manufacturer_forwarding.py` | FL 14-field form — sends text + POP image to `MANUFACTURER_PHONE` |
+| `src/services/manufacturer_forwarding.py` | Manufacturer form — sends text + POP image to `MANUFACTURER_PHONE` |
 | `src/services/customer_service.py` | `save_customer_profile()` (7 fields), `save_customer_address()` (backward compat wrapper) |
-| `src/services/order_service.py` | `record_fl_pop()`, `update_order_status()`, `cancel_pending_pop_order()` |
+| `src/services/order_service.py` | POP recording, `update_order_status()`, `cancel_pending_pop_order()` |
 | `src/db/connection.py` | Dual Postgres/SQLite — `fetch_all`, `fetch_one`, `execute`, `_sqlite_compat()` DDL translator |
 
 ## Message Reply Format
@@ -134,11 +161,11 @@ LANGUAGE_SELECTION (disabled, auto-migrates to IDLE)
 | `WHATSAPP_PROVIDER` | `kapso` | `kapso` or `meta` |
 | `WHATSAPP_API_KEY` | — | Kapso or Meta API key |
 | `WHATSAPP_PHONE_NUMBER_ID` | `1235032529693241` | Meta phone ID |
-| `MANUFACTURER_PHONE` | — | Focus Logic WhatsApp number |
-| `AUTO_FORWARD_TO_MANUFACTURER` | `true` | Auto-forward on FL POP upload |
-| `COURIER_NAME` | `The Courier Guy` | FL form COURIER field |
+| `MANUFACTURER_PHONE` | — | Manufacturer WhatsApp number |
+| `AUTO_FORWARD_TO_MANUFACTURER` | `true` | Auto-forward on manufacturer POP upload |
+| `COURIER_NAME` | `The Courier Guy` | Manufacturer form COURIER field |
 | `COURIER_FEE` | `150.00` | Shipping fee per order |
-| `FL_USERNAME` | — | FL form FL USERNAME field |
+| `MFG_USERNAME` | — | Manufacturer form username field |
 | `WHATSAPP_CATALOG_ID` | — | Meta catalog ID (not yet configured) |
 | `WHATSAPP_QUANTITY_OPTIONS` | `1,2,3,4,5,6` | Comma-separated quantity button values |
 
@@ -156,7 +183,7 @@ LANGUAGE_SELECTION (disabled, auto-migrates to IDLE)
 | 008 | `admin_sessions` table | Dashboard auth |
 | 009 | `surname`, `postal_code`, `email`, `province` on customers | Profile fields |
 | 010 | `bio_med_margin` on products | Margin tracking |
-| 011 | `fl_pop_image_url`, `fl_pop_uploaded_at`, `fl_amount` on orders | FL POP (two-POP model) |
+| 011 | manufacturer POP fields on orders | POP (two-POP model) |
 | 012 | `thumbnail_url` on products | Multi-channel images |
 
 ## Gotchas & Pitfalls

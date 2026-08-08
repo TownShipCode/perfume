@@ -41,12 +41,13 @@
 | R3 | Manufacturer dashboard wrong API URL | Use `PUT /api/orders/${id}/status` |
 | R4 | Admin dashboard stats key mismatch | Fix `total_revenue` → `revenue` |
 | R5 | No forgot-password flow | Add reset via email |
-| R6 | `ProductInput` missing `gender/scent_family/top_notes/stock_quantity` | Update Pydantic model |
+| R6 | `ProductInput` missing `gender/scent_family/top_notes/stock_quantity` | ✅ Fixed 2026-08-08 — `create_product` now persists gender/scent_family/top_notes/stock_quantity (both Postgres + SQLite branches); `list_active_products` SELECT extended |
 
 ## 🟡 Week 4 — UX + Polish
 
 | # | What | Fix |
 |---|------|-----|
+| U0 | Legacy manufacturer identifiers in backend code | Rename `FL_USERNAME` → `MFG_USERNAME`, `fl_pop_*` fields, `record_fl_pop()` → `record_manufacturer_pop()` (Focus Logic was another project — docs already scrubbed) |
 | U1 | No debounce on catalogue search | Add 300ms debounce |
 | U2 | `alert()` for errors in dashboard | Use inline error display |
 | U3 | API base URL hardcoded to `biomed-production` | Use `VITE_API_URL` env var everywhere |

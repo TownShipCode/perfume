@@ -135,7 +135,7 @@ async def forward_order(request: Request, order_id: int, payload: ForwardOrderRe
 
 @router.post("/{order_id}/fl-pop", dependencies=[Depends(require_dashboard_api_key)])
 async def upload_fl_pop(request: Request, order_id: int, payload: FlPopRequest) -> dict[str, object]:
-    """Upload BioMed's POP to Focus Logic — shows preview, does NOT forward."""
+    """Upload the manufacturer's POP — shows preview, does NOT forward."""
     order = await get_order_by_id(request.app.state.database, order_id)
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
