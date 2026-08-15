@@ -30,3 +30,4 @@ backend/data/
 
 # Frontend dependency caches
 node_modules/
+wiki/
