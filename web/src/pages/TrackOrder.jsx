@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { api } from '../api';
 
 const STATUS_LABELS = {
-  pending: { label: '⏳ Pending', css: 'bg-amber-100 text-amber-800' },
-  pop_waiting: { label: '📸 Waiting for POP', css: 'bg-amber-100 text-amber-800' },
-  confirmed: { label: '✅ Confirmed', css: 'bg-blue-100 text-blue-800' },
-  shipped: { label: '🚚 Shipped', css: 'bg-green-100 text-green-800' },
-  cancelled: { label: '❌ Cancelled', css: 'bg-red-100 text-red-800' },
+  pending: { label: 'Pending', css: 'bg-gray-100 text-gray-800' },
+  pop_waiting: { label: 'Waiting for POP', css: 'bg-gray-100 text-gray-800' },
+  confirmed: { label: 'Confirmed', css: 'bg-blue-100 text-blue-800' },
+  shipped: { label: 'Shipped', css: 'bg-green-100 text-green-800' },
+  cancelled: { label: 'Cancelled', css: 'bg-red-100 text-red-800' },
 };
 
 export default function TrackOrder() {

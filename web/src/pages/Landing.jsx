@@ -37,10 +37,10 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 items-center">
             <div className="p-8 md:p-12 text-white">
               <span className="inline-block bg-white/15 text-purple-100 text-xs font-semibold px-3 py-1 rounded-full mb-5">
-                ⚡ Wholesale perfumes for resellers
+                Wholesale perfumes for resellers
               </span>
               <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Inspired by your favourite designer scents — <span className="text-amber-300">not a dupe</span>.
+                Inspired by your favourite designer scents — <span className="text-purple-200">not a dupe</span>.
               </h1>
               <p className="text-lg text-purple-200 max-w-md mb-6">
                 Buy at wholesale, sell at your price. No starter pack, no minimum order — order on WhatsApp in seconds.
@@ -51,26 +51,26 @@ export default function Landing() {
                 ))}
               </div>
               <div className="flex gap-3 flex-wrap">
-                <Link to="/catalogue" className="bg-amber-400 text-purple-900 px-7 py-3 rounded-xl font-bold text-lg hover:bg-amber-300 transition-colors shadow-lg">
+                <Link to="/catalogue" className="bg-white text-purple-800 px-7 py-3 rounded-xl font-bold text-lg hover:bg-purple-50 transition-colors shadow-lg">
                   Browse Catalogue
                 </Link>
                 <Link to="/quick-order" className="bg-white/10 text-white px-7 py-3 rounded-xl font-medium text-lg hover:bg-white/20 transition-colors border border-white/20">
-                  ⚡ Quick Order
+                  Quick Order
                 </Link>
-                <Link to="/register/agent" className="text-amber-200 px-2 py-3 font-medium text-lg hover:text-amber-100 transition-colors">
+                <Link to="/register/agent" className="text-purple-200 px-2 py-3 font-medium text-lg hover:text-white transition-colors">
                   Become an Agent →
                 </Link>
               </div>
             </div>
             {/* Featured bottle visual (emoji tile — on-brand, no asset needed) */}
             <div className="hidden md:flex items-center justify-center p-12 relative">
-              <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle at 50% 60%, #fbbf24 0%, transparent 60%)' }} />
+              <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle at 50% 60%, #c4b5fd 0%, transparent 60%)' }} />
               <div className="relative text-center">
-                <p className="text-7xl drop-shadow-lg">🖤</p>
+                <p className="text-7xl font-serif drop-shadow-lg">S</p>
                 <p className="mt-3 text-xs uppercase tracking-widest text-purple-200">This month's pick</p>
                 <p className="text-2xl font-bold text-white">SCANDAL</p>
                 <p className="text-sm text-purple-300">by Jean Paul Gaultier</p>
-                <p className="mt-2 inline-block bg-amber-400 text-purple-900 text-sm font-bold px-4 py-1.5 rounded-full">R30 wholesale</p>
+                <p className="mt-2 inline-block bg-white text-purple-800 text-sm font-bold px-4 py-1.5 rounded-full">R30 wholesale</p>
               </div>
             </div>
           </div>
@@ -97,17 +97,17 @@ export default function Landing() {
           <h2 className="text-3xl font-bold mb-6">Why Zen Fragrances</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
             <div>
-              <p className="text-3xl mb-2">🌱</p>
+              <p className="text-3xl font-serif font-bold text-purple-700">1</p>
               <h3 className="font-semibold mb-1">Oil-based, not watered down</h3>
               <p className="text-sm text-gray-500">High fragrance dosage, alcohol-free, and built to last. Inspired by your favourite designer scents — not a dupe.</p>
             </div>
             <div>
-              <p className="text-3xl mb-2">🤝</p>
+              <p className="text-3xl font-serif font-bold text-purple-700">2</p>
               <h3 className="font-semibold mb-1">Built for resellers</h3>
               <p className="text-sm text-gray-500">No starter pack, no minimum order. Buy wholesale, set your own retail price, and earn 5% from agents you recruit.</p>
             </div>
             <div>
-              <p className="text-3xl mb-2">💬</p>
+              <p className="text-3xl font-serif font-bold text-purple-700">3</p>
               <h3 className="font-semibold mb-1">WhatsApp-native</h3>
               <p className="text-sm text-gray-500">Order in seconds on WhatsApp. No apps, no portals — just message us and we confirm your order.</p>
             </div>
@@ -118,22 +118,22 @@ export default function Landing() {
       {/* Category cards (Guerlain / Acqua di Parma style) */}
       <section className="max-w-5xl mx-auto pb-16 px-4 grid grid-cols-2 md:grid-cols-4 gap-4">
         <Link to="/catalogue?gender=men" className="bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
-          <span className="text-3xl">👨</span>
+          <span className="text-3xl font-serif font-bold text-purple-700">M</span>
           <h3 className="font-semibold mt-2 group-hover:text-purple-700">Men's Scents</h3>
           <p className="text-xs text-gray-500 mt-1">Bold, fresh &amp; confident</p>
         </Link>
-        <Link to="/catalogue?gender=women" className="bg-gradient-to-br from-amber-100 to-amber-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
-          <span className="text-3xl">👩</span>
+        <Link to="/catalogue?gender=women" className="bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
+          <span className="text-3xl font-serif font-bold text-purple-700">W</span>
           <h3 className="font-semibold mt-2 group-hover:text-purple-700">Women's Scents</h3>
           <p className="text-xs text-gray-500 mt-1">Elegant, floral &amp; warm</p>
         </Link>
-        <Link to="/scent-finder" className="bg-gradient-to-br from-purple-50 to-amber-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
-          <span className="text-3xl">✨</span>
+        <Link to="/scent-finder" className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 text-center hover:shadow-md transition-all group">
+          <span className="text-3xl font-serif font-bold text-purple-700">?</span>
           <h3 className="font-semibold mt-2 group-hover:text-purple-700">Find Your Scent</h3>
           <p className="text-xs text-gray-500 mt-1">A 30-second quiz</p>
         </Link>
         <Link to="/register/agent" className="bg-gradient-to-br from-green-100 to-green-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
-          <span className="text-3xl">🚀</span>
+          <span className="text-3xl font-serif font-bold text-green-700">A</span>
           <h3 className="font-semibold mt-2 group-hover:text-green-700">Become an Agent</h3>
           <p className="text-xs text-gray-500 mt-1">Sell at 2× wholesale</p>
         </Link>
@@ -141,17 +141,17 @@ export default function Landing() {
 
       <section className="max-w-5xl mx-auto pb-16 px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
         <Link to="/quick-order" className="bg-white rounded-xl p-6 shadow-sm border border-purple-100 hover:border-purple-300 hover:shadow-md transition-all text-center group">
-          <span className="text-3xl">⚡</span>
+          <span className="text-3xl font-serif font-bold text-purple-700">Q</span>
           <h3 className="font-semibold mt-2 group-hover:text-purple-700">Quick Order</h3>
           <p className="text-sm text-gray-500 mt-1">Add quantities and send your order in one tap</p>
         </Link>
         <Link to="/blog" className="bg-white rounded-xl p-6 shadow-sm border border-purple-100 hover:border-purple-300 hover:shadow-md transition-all text-center group">
-          <span className="text-3xl">📝</span>
+          <span className="text-3xl font-serif font-bold text-purple-700">B</span>
           <h3 className="font-semibold mt-2 group-hover:text-purple-700">Fragrance Blog</h3>
           <p className="text-sm text-gray-500 mt-1">Guides, tips, and industry insights for resellers</p>
         </Link>
         <Link to="/agents" className="bg-white rounded-xl p-6 shadow-sm border border-purple-100 hover:border-purple-300 hover:shadow-md transition-all text-center group">
-          <span className="text-3xl">🔍</span>
+          <span className="text-3xl font-serif font-bold text-purple-700">A</span>
           <h3 className="font-semibold mt-2 group-hover:text-purple-700">Find an Agent</h3>
           <p className="text-sm text-gray-500 mt-1">Find a Zen Fragrances agent in your area</p>
         </Link>
@@ -186,7 +186,7 @@ export default function Landing() {
           <h2 className="text-2xl font-bold mb-2">Get launch updates</h2>
           <p className="text-gray-500 text-sm mb-6">New fragrances, deals and restock alerts straight to your inbox. No spam.</p>
           {subscribed ? (
-            <p className="text-green-600 font-medium">✅ Thanks! You're on the list.</p>
+            <p className="text-green-600 font-medium">Thanks! You're on the list.</p>
           ) : (
             <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2">
               <input

@@ -48,7 +48,7 @@ export default function ManufacturerDashboard() {
                   <td className="px-4 py-3 font-medium">R{o.total}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      o.status === 'pop_waiting' ? 'bg-amber-100 text-amber-800' :
+                      o.status === 'pop_waiting' ? 'bg-purple-100 text-purple-800' :
                       o.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
                       o.status === 'shipped' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
                     }`}>{o.status}</span>
@@ -66,7 +66,7 @@ export default function ManufacturerDashboard() {
                         Ship
                       </button>
                     )}
-                    {o.status === 'shipped' && <span className="text-green-600 text-xs">✅</span>}
+                    {o.status === 'shipped' && <span className="text-green-600 text-xs">Shipped</span>}
                   </td>
                 </tr>
               ))}

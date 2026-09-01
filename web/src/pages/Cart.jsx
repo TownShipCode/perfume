@@ -12,7 +12,7 @@ export default function Cart() {
 
   if (items.length === 0) return (
     <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-      <p className="text-5xl mb-4">🛒</p>
+      <p className="text-5xl mb-4 font-serif font-bold text-purple-700">0</p>
       <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
       <p className="text-gray-500 mb-6">Browse our catalogue and add some fragrances.</p>
       <Link to="/catalogue" className="bg-purple-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-800 transition-colors inline-block">
@@ -23,7 +23,7 @@ export default function Cart() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">🛒 Your Cart ({count} items)</h1>
+      <h1 className="text-2xl font-bold mb-6">Your Cart ({count} items)</h1>
 
       <div className="space-y-3 mb-8">
         {items.map(item => (
@@ -60,7 +60,7 @@ export default function Cart() {
                 <div className="h-full bg-purple-700 rounded-full transition-all" style={{ width: `${pct}%` }} />
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                {remaining > 0 ? `Add R${remaining.toFixed(0)} more for FREE delivery` : 'Free delivery unlocked! 🎉'}
+                {remaining > 0 ? `Add R${remaining.toFixed(0)} more for FREE delivery` : 'Free delivery unlocked'}
               </p>
             </div>
           );

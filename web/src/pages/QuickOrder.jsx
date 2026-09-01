@@ -49,7 +49,7 @@ export default function QuickOrder() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">⚡ Quick Order</h1>
+          <h1 className="text-2xl font-bold">Quick Order</h1>
           <p className="text-sm text-gray-500 mt-1">Add quantities and send your order via WhatsApp</p>
         </div>
         <Link to="/catalogue" className="text-purple-700 text-sm hover:underline">&larr; Browse with filters</Link>
@@ -84,7 +84,7 @@ export default function QuickOrder() {
                     className="w-7 h-7 rounded bg-purple-100 text-purple-700 text-sm font-bold hover:bg-purple-200">+</button>
                 </div>
                 {p.stock_quantity != null && p.stock_quantity <= 5 && (
-                  <p className="text-amber-600 text-[10px] mt-0.5">⚠️ {p.stock_quantity} left</p>
+                  <p className="text-purple-600 text-[10px] mt-0.5">{p.stock_quantity} left</p>
                 )}
               </div>
             </div>
@@ -104,7 +104,7 @@ export default function QuickOrder() {
               <span className="font-bold text-purple-700">R{total.toFixed(2)}</span>
               <a href={waLink} target="_blank" rel="noopener noreferrer"
                 className="bg-green-600 text-white px-5 py-2 rounded-lg font-medium text-sm hover:bg-green-700 transition-colors">
-                📱 Send via WhatsApp
+                Send via WhatsApp
               </a>
               <button onClick={() => setQuantities({})}
                 className="text-gray-500 hover:text-red-600 text-sm">Clear</button>

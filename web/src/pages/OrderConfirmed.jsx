@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 export default function OrderConfirmed() {
   return (
     <div className="max-w-lg mx-auto px-4 py-16 text-center">
-      <p className="text-5xl mb-4">✅</p>
+      <p className="text-5xl mb-4 font-serif font-bold text-green-600">✓</p>
       <h1 className="text-2xl font-bold mb-2">Order Confirmed!</h1>
       <p className="text-gray-500 mb-6">
         Your order has been placed. We'll process it and notify you once it's on the way.

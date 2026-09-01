@@ -4,7 +4,7 @@ import { api } from '../api';
 import { useCart } from '../useCart';
 import { productEmoji } from '../productEmoji';
 
-const GENDER_ICONS = { men: '👨', women: '👩', unisex: '👥' };
+const GENDER_ICONS = { men: 'Men', women: 'Women', unisex: 'Unisex' };
 
 function useQuery() {
   return new URLSearchParams(window.location.search);
@@ -87,7 +87,7 @@ export default function Catalogue() {
         </select>
         <select value={sort} onChange={e => setSort(e.target.value)}
           className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white">
-          <option value="featured">⭐ Featured</option>
+          <option value="featured">Featured</option>
           <option value="price_asc">Price: Low to High</option>
           <option value="price_desc">Price: High to Low</option>
         </select>
@@ -115,9 +115,9 @@ export default function Catalogue() {
           {scents.map(s => (
             <button key={s} onClick={() => setScentFamily(scentFamily === s ? '' : s)}
               className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                scentFamily === s ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-400'
+                scentFamily === s ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
               }`}>
-              🌿 {s}
+              {s}
             </button>
           ))}
         </div>
@@ -129,7 +129,7 @@ export default function Catalogue() {
           <span>Filters:</span>
           {category && <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs">{category}</span>}
           {gender && <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">{gender}</span>}
-          {scentFamily && <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs">{scentFamily}</span>}
+          {scentFamily && <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs">{scentFamily}</span>}
           <button onClick={clearAll} className="text-purple-600 hover:underline text-xs ml-2">Clear all</button>
         </div>
       )}
@@ -151,12 +151,12 @@ export default function Catalogue() {
               <div className="p-3">
                 <h3 className="font-medium text-sm truncate">{p.name}</h3>
                 <div className="flex items-center gap-1 mt-0.5">
-                  {p.gender && <span className="text-xs text-gray-400">{GENDER_ICONS[p.gender] || p.gender}</span>}
+                  {p.gender && <span className="text-xs text-gray-400">{p.gender}</span>}
                   {p.scent_family && <span className="text-xs text-gray-400">· {p.scent_family}</span>}
                 </div>
                 <p className="text-purple-700 font-bold mt-1">R{p.price}</p>
                 {p.stock_quantity != null && (
-                  <p className={`text-xs mt-1 ${p.stock_quantity > 5 ? 'text-green-600' : p.stock_quantity > 0 ? 'text-amber-600' : 'text-red-600'}`}>
+                  <p className={`text-xs mt-1 ${p.stock_quantity > 5 ? 'text-green-600' : p.stock_quantity > 0 ? 'text-purple-600' : 'text-red-600'}`}>
                     {p.stock_quantity > 0 ? `${p.stock_quantity} in stock` : 'Out of stock'}
                   </p>
                 )}
@@ -165,7 +165,7 @@ export default function Catalogue() {
               <div className="px-3 pb-3">
                 <button onClick={(e) => { e.preventDefault(); addItem(p); }}
                   className={`w-full text-xs font-medium py-1.5 rounded-lg transition-colors ${inCart ? 'bg-purple-100 text-purple-700' : 'bg-purple-600 text-white hover:bg-purple-700'}`}>
-                  {inCart ? `🛒 In Cart (${inCart.qty})` : '+ Add to Cart'}
+                  {inCart ? `In Cart (${inCart.qty})` : '+ Add to Cart'}
                 </button>
               </div>
             </div>

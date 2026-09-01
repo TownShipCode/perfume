@@ -26,7 +26,7 @@ export default function Register() {
 
   if (success) return (
     <div className="max-w-sm mx-auto px-4 py-16 text-center">
-      <p className="text-green-600 text-lg font-medium">✅ Registered! Redirecting to sign in...</p>
+      <p className="text-green-600 text-lg font-medium">Registered! Redirecting to sign in...</p>
     </div>
   );
 

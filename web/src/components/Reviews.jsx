@@ -7,7 +7,7 @@ const REVIEWS = [
 ];
 
 function Stars({ n }) {
-  return <span className="text-amber-400 text-sm">{'★'.repeat(n)}</span>;
+  return <span className="text-purple-500 text-sm">{'★'.repeat(n)}</span>;
 }
 
 export default function Reviews() {

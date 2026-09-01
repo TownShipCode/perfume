@@ -42,18 +42,18 @@ export default function RegisterAgent() {
   if (result) return (
     <div className="max-w-lg mx-auto px-4 py-16 text-center">
       <div className="bg-green-50 border border-green-200 rounded-2xl p-8">
-        <p className="text-4xl mb-4">🎉</p>
+        <p className="text-4xl mb-4 font-serif font-bold text-purple-700">✓</p>
         <p className="text-green-700 text-2xl font-bold mb-2">Welcome, Agent!</p>
         <p className="text-gray-600 mb-4">Your agent code is:</p>
         <p className="text-3xl font-mono font-bold text-purple-700 tracking-wider bg-purple-50 inline-block px-6 py-2 rounded-lg">{result.agent_code}</p>
-        <p className="text-red-600 font-bold mt-4">⚠️ Save your recovery PIN now — it will not be shown again.</p>
+        <p className="text-red-600 font-bold mt-4">Save your recovery PIN now — it will not be shown again.</p>
         <div className="mt-6 space-y-3">
           <p className="text-sm text-gray-500">You can now order via WhatsApp or sign in to your dashboard.</p>
           <div className="flex gap-3 justify-center flex-wrap">
             <Link to="/login" className="bg-purple-700 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-purple-800 transition-colors">Sign In to Dashboard</Link>
             <a href="https://wa.me/27605283020" target="_blank" rel="noopener noreferrer"
               className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors">
-              📱 Order via WhatsApp
+              Order via WhatsApp
             </a>
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function RegisterAgent() {
       {/* ── HERO ── */}
       <section className="bg-gradient-to-b from-purple-700 to-purple-900 text-white py-16 px-4 text-center">
         <span className="inline-block bg-purple-500/40 text-purple-100 text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          🚀 NO STARTER PACK REQUIRED
+          NO STARTER PACK REQUIRED
         </span>
         <h1 className="text-3xl md:text-4xl font-bold mb-3">
           Turn your phone into a perfume business
@@ -82,7 +82,7 @@ export default function RegisterAgent() {
           </button>
           <a href="https://wa.me/27605283020" target="_blank" rel="noopener noreferrer"
             className="border-2 border-purple-300 text-white px-8 py-3 rounded-xl font-medium text-lg hover:bg-purple-600 transition-colors">
-            📱 Ask on WhatsApp
+            Ask on WhatsApp
           </a>
         </div>
       </section>
@@ -92,12 +92,12 @@ export default function RegisterAgent() {
         <h2 className="text-2xl font-bold text-center mb-10">How it works</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { step: '1', icon: '📝', title: 'Register', desc: 'Fill in your details below. Get your agent code instantly. No approval. No waiting.' },
-            { step: '2', icon: '📱', title: 'Order via WhatsApp', desc: 'Type "5 Rose Oud" on WhatsApp. Confirm. We deliver to your door in 3-5 days. R65 flat rate.' },
-            { step: '3', icon: '💰', title: 'Sell at Your Price', desc: 'Sell to your customers at ~2× wholesale. Keep 100% of your markup. Build a team, earn 5% from their orders.' },
+            { step: '1', icon: '1', title: 'Register', desc: 'Fill in your details below. Get your agent code instantly. No approval. No waiting.' },
+            { step: '2', icon: '2', title: 'Order via WhatsApp', desc: 'Type "5 Rose Oud" on WhatsApp. Confirm. We deliver to your door in 3-5 days. R65 flat rate.' },
+            { step: '3', icon: '3', title: 'Sell at Your Price', desc: 'Sell to your customers at ~2× wholesale. Keep 100% of your markup. Build a team, earn 5% from their orders.' },
           ].map(item => (
             <div key={item.step} className="text-center">
-              <div className="w-16 h-16 bg-purple-100 text-purple-700 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">{item.icon}</div>
+              <div className="w-16 h-16 bg-purple-100 text-purple-700 rounded-2xl flex items-center justify-center text-2xl font-serif font-bold mx-auto mb-4">{item.icon}</div>
               <div className="text-xs font-bold text-purple-400 mb-1">STEP {item.step}</div>
               <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
               <p className="text-sm text-gray-500">{item.desc}</p>
@@ -122,12 +122,12 @@ export default function RegisterAgent() {
               <tbody className="divide-y divide-gray-100">
                 {[
                   ['Starter cost', 'R0 — start with 1 bottle', 'R960 starter pack'],
-                  ['Ordering', '📱 WhatsApp — instant', '🖥️ Website only'],
+                  ['Ordering', 'WhatsApp — instant', 'Website only'],
                   ['Agent margin', '100% markup (2× wholesale)', '100% markup'],
-                  ['Team commissions', '✅ 5% on agent orders', '❌ None'],
+                  ['Team commissions', '5% on agent orders', 'None'],
                   ['Stock check', 'WhatsApp: "stock 1"', 'Login + browse website'],
                   ['Delivery', 'R65 nationwide', 'R65 nationwide'],
-                  ['Agent dashboard', '✅ Track orders, earnings, team', '✅ Account management'],
+                  ['Agent dashboard', 'Track orders, earnings, team', 'Account management'],
                   ['Fragrances', '99+ (expanding)', '42'],
                 ].map(([label, zen, ffc], i) => (
                   <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
@@ -240,7 +240,7 @@ export default function RegisterAgent() {
               className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-purple-400" />
             <button type="submit"
               className="bg-purple-700 text-white py-3 rounded-lg font-semibold text-lg hover:bg-purple-800 transition-colors mt-2">
-              🚀 Start Your Perfume Business
+              Start Your Perfume Business
             </button>
           </form>
           <p className="text-center text-sm text-gray-500 mt-4">

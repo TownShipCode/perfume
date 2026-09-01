@@ -29,13 +29,13 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col">
       {/* Trust banner strip (Fragrance Passion style) */}
       <div className="bg-purple-700 text-white text-xs py-1.5 px-4 flex items-center justify-center gap-4 flex-wrap">
-        <span>🚚 Nationwide delivery R65</span>
+        <span>Nationwide delivery R65</span>
         <span className="hidden sm:inline">·</span>
-        <span>🎁 Free shipping over R2000</span>
+        <span>Free shipping over R2000</span>
         <span className="hidden sm:inline">·</span>
-        <Link to="/register/agent" className="font-medium hover:underline">🚀 Become an Agent</Link>
+        <Link to="/register/agent" className="font-medium hover:underline">Become an Agent</Link>
         <span className="hidden sm:inline">·</span>
-        <Link to="/scent-finder" className="font-medium hover:underline">✨ Find Your Scent</Link>
+        <Link to="/scent-finder" className="font-medium hover:underline">Find Your Scent</Link>
       </div>
       <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
         <Link to="/" className="text-xl font-bold text-purple-700 tracking-tight">
@@ -48,8 +48,8 @@ export default function Layout() {
           <Link to="/agents" className="text-gray-600 hover:text-purple-700 hidden md:inline">Find Agent</Link>
           <Link to="/track" className="text-gray-600 hover:text-purple-700 hidden md:inline">Track Order</Link>
           <Link to="/cart" className="relative text-gray-600 hover:text-purple-700">
-            🛒
-            {count > 0 && <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{count}</span>}
+            Cart
+            {count > 0 && <span className="absolute -top-2 -right-3 bg-purple-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{count}</span>}
           </Link>
           {user ? (
             <>
@@ -74,12 +74,12 @@ export default function Layout() {
       {menuOpen && (
         <div className="md:hidden bg-white border-b border-gray-200 px-6 py-4 flex flex-col gap-3 text-sm">
           <Link to="/catalogue" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Catalogue</Link>
-          <Link to="/quick-order" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">⚡ Quick Order</Link>
-          <Link to="/scent-finder" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">✨ Find Your Scent</Link>
-          <Link to="/blog" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">📝 Blog</Link>
-          <Link to="/agents" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">🔍 Find an Agent</Link>
-          <Link to="/track" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">📦 Track Order</Link>
-          <Link to="/register/agent" onClick={() => setMenuOpen(false)} className="text-green-700 hover:text-green-800 font-medium">🚀 Become an Agent</Link>
+          <Link to="/quick-order" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Quick Order</Link>
+          <Link to="/scent-finder" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Find Your Scent</Link>
+          <Link to="/blog" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Blog</Link>
+          <Link to="/agents" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Find an Agent</Link>
+          <Link to="/track" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Track Order</Link>
+          <Link to="/register/agent" onClick={() => setMenuOpen(false)} className="text-green-700 hover:text-green-800 font-medium">Become an Agent</Link>
           {user ? (
             <Link to={dashboardPath} onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Dashboard</Link>
           ) : (
@@ -111,7 +111,7 @@ export default function Layout() {
           <div>
             <p className="font-semibold text-gray-700 mb-2">Get launch updates</p>
             {subscribed ? (
-              <p className="text-green-600 font-medium">✅ Thanks! You're on the list.</p>
+              <p className="text-green-600 font-medium">Thanks! You're on the list.</p>
             ) : (
               <form onSubmit={handleSubscribe} className="flex gap-2">
                 <input type="email" required value={email} onChange={e => setEmail(e.target.value)}

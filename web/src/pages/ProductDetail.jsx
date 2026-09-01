@@ -4,14 +4,14 @@ import { api } from '../api';
 import { useCart } from '../useCart';
 import { productEmoji } from '../productEmoji';
 
-const GENDER_LABELS = { men: '👨 For Men', women: '👩 For Women', unisex: '👥 Unisex' };
+const GENDER_LABELS = { men: 'For Men', women: 'For Women', unisex: 'Unisex' };
 
 const TRUST_BADGES = ['🌱 Vegan', '🐰 Cruelty Free', '🚫 Alcohol-Free', '💧 Oil-Based', '🔁 Recyclable'];
 
 function stockBadge(qty) {
   if (qty == null) return null;
   if (qty <= 0) return { label: 'Out of stock', css: 'bg-red-100 text-red-800' };
-  if (qty <= 5) return { label: `Only ${qty} left`, css: 'bg-amber-100 text-amber-800' };
+  if (qty <= 5) return { label: `Only ${qty} left`, css: 'bg-purple-100 text-purple-800' };
   return { label: `${qty} in stock`, css: 'bg-green-100 text-green-800' };
 }
 
@@ -39,7 +39,7 @@ export default function ProductDetail() {
       <Link to="/catalogue" className="text-purple-700 text-sm mb-4 inline-block hover:underline">&larr; Back to Catalogue</Link>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="aspect-[3/2] bg-gradient-to-br from-purple-50 to-amber-50 flex items-center justify-center text-8xl">
+        <div className="aspect-[3/2] bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center text-8xl">
           {product.image_url
             ? <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-4" />
             : productEmoji(product)}
@@ -68,20 +68,20 @@ export default function ProductDetail() {
               </span>
             )}
             {product.scent_family && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                🌿 {product.scent_family}
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                {product.scent_family}
               </span>
             )}
             {stock && (
               <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${stock.css}`}>
-                📦 {stock.label}
+                {stock.label}
               </span>
             )}
           </div>
 
           {(product.scent_family || product.top_notes) && (
-            <div className="bg-gradient-to-r from-purple-50 to-amber-50 rounded-xl p-4 mb-5 border border-purple-100">
-              <h3 className="text-sm font-semibold text-purple-800 mb-2">✨ Scent Profile</h3>
+            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-4 mb-5 border border-purple-100">
+              <h3 className="text-sm font-semibold text-purple-800 mb-2">Scent Profile</h3>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {product.gender && <div><span className="text-gray-500">Gender</span><p className="font-medium text-gray-800">{product.gender}</p></div>}
                 {product.scent_family && <div><span className="text-gray-500">Scent Family</span><p className="font-medium text-gray-800">{product.scent_family}</p></div>}
@@ -109,15 +109,15 @@ export default function ProductDetail() {
           <div className="flex flex-wrap gap-3 pt-2">
             <button onClick={() => addItem(product)}
               className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors">
-              {inCart ? `🛒 Add Another (${inCart.qty} in cart)` : '🛒 Add to Cart'}
+              {inCart ? `Add Another (${inCart.qty} in cart)` : 'Add to Cart'}
             </button>
             <button onClick={() => { addItem(product); navigate('/checkout'); }}
               className="inline-flex items-center gap-2 bg-purple-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-950 transition-colors">
-              ⚡ Buy It Now
+              Buy It Now
             </button>
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-700 transition-colors">
-              📱 Order via WhatsApp
+              Order via WhatsApp
             </a>
           </div>
           <p className="text-xs text-gray-400 mt-4">Prices shown are wholesale. Agents set their own retail prices (suggested: 2× wholesale).</p>

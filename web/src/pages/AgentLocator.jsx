@@ -20,7 +20,7 @@ export default function AgentLocator() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-2">🔍 Find an Agent</h1>
+      <h1 className="text-2xl font-bold mb-2">Find an Agent</h1>
       <p className="text-gray-500 mb-6 text-sm">Find a Zen Fragrances agent near you to browse and buy in person.</p>
 
       <div className="flex gap-2 mb-6">
@@ -36,9 +36,9 @@ export default function AgentLocator() {
 
       {searched && (
         agents.length === 0 ? (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-            <p className="text-amber-800 font-medium">No agents found in "{suburb}"</p>
-            <p className="text-sm text-amber-600 mt-1">Try a nearby suburb or browse our online catalogue.</p>
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-6 text-center">
+            <p className="text-purple-800 font-medium">No agents found in "{suburb}"</p>
+            <p className="text-sm text-purple-600 mt-1">Try a nearby suburb or browse our online catalogue.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -52,7 +52,7 @@ export default function AgentLocator() {
                 </div>
                 <a href={`https://wa.me/${a.phone_number}`} target="_blank" rel="noopener noreferrer"
                   className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors whitespace-nowrap">
-                  📱 WhatsApp
+                  WhatsApp
                 </a>
               </div>
             ))}

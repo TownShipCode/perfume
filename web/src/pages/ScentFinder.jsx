@@ -9,9 +9,9 @@ const STEPS = [
     key: 'gender',
     q: 'Who is it for?',
     options: [
-      { value: 'men', label: '👨 For Men' },
-      { value: 'women', label: '👩 For Women' },
-      { value: 'unisex', label: '👥 Either / Gift' },
+      { value: 'men', label: 'For Men' },
+      { value: 'women', label: 'For Women' },
+      { value: 'unisex', label: 'Either / Gift' },
     ],
   },
   {
@@ -29,7 +29,7 @@ const STEPS = [
     options: [
       { value: 'fresh', label: '💧 Fresh & clean' },
       { value: 'warm', label: '🔥 Warm & bold' },
-      { value: 'soft', label: '🌸 Soft & elegant' },
+      { value: 'soft', label: 'Soft & elegant' },
     ],
   },
 ];
@@ -68,7 +68,7 @@ export default function ScentFinder() {
 
       {result ? (
         <div className="text-center">
-          <p className="text-5xl mb-4">✨</p>
+          <p className="text-5xl mb-4 font-serif font-bold text-purple-700">?</p>
           <p className="text-gray-500 mb-1">Based on your answers, start with</p>
           <p className="text-2xl font-bold text-purple-700 mb-1">{guess || 'our bestseller'}</p>
           <p className="text-sm text-gray-500 mb-6">Then explore the catalogue and swap it for whatever smells right.</p>
@@ -84,9 +84,8 @@ export default function ScentFinder() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {STEPS[step].options.map(o => (
               <button key={o.value} onClick={() => pick(o.value)}
-                className="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-500 hover:bg-purple-50 transition-colors text-center">
-                <span className="text-2xl block mb-2">{o.label.split(' ')[0]}</span>
-                <span className="text-sm font-medium text-gray-700">{o.label.slice(2)}</span>
+                className="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                <span className="text-sm font-medium text-gray-700">{o.label}</span>
               </button>
             ))}
           </div>
