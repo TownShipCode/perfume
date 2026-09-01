@@ -31,26 +31,49 @@ export default function Landing() {
 
   return (
     <div>
-      <section className="text-center py-24 px-4 bg-gradient-to-b from-purple-50 to-white">
-        <h1 className="text-5xl font-bold text-gray-900 mb-4">Zen Fragrances</h1>
-        <p className="text-xl text-gray-600 max-w-xl mx-auto mb-4">
-          Inspired by your favourite designer scents — not a dupe. Wholesale perfumes for resellers. Buy at wholesale, sell at your price.
-        </p>
-        <div className="flex flex-wrap gap-2 justify-center mb-8">
-          {['Inspired by, not a dupe', 'Oil-based · Alcohol-free', 'Long-lasting', 'Skin-friendly'].map(v => (
-            <span key={v} className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1.5 rounded-full">{v}</span>
-          ))}
-        </div>
-        <div className="flex gap-4 justify-center flex-wrap">
-          <Link to="/catalogue" className="bg-purple-700 text-white px-8 py-3 rounded-xl font-medium text-lg hover:bg-purple-800 transition-colors">
-            Browse Catalogue
-          </Link>
-          <Link to="/quick-order" className="bg-green-600 text-white px-8 py-3 rounded-xl font-medium text-lg hover:bg-green-700 transition-colors">
-            ⚡ Quick Order
-          </Link>
-          <Link to="/register/agent" className="border-2 border-purple-700 text-purple-700 px-8 py-3 rounded-xl font-medium text-lg hover:bg-purple-50 transition-colors">
-            Become an Agent
-          </Link>
+      {/* Split hero card — left content, right featured bottle visual */}
+      <section className="max-w-6xl mx-auto px-4 pt-10 pb-6">
+        <div className="bg-gradient-to-br from-purple-700 via-purple-800 to-purple-950 rounded-3xl overflow-hidden shadow-xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0 items-center">
+            <div className="p-8 md:p-12 text-white">
+              <span className="inline-block bg-white/15 text-purple-100 text-xs font-semibold px-3 py-1 rounded-full mb-5">
+                ⚡ Wholesale perfumes for resellers
+              </span>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                Inspired by your favourite designer scents — <span className="text-amber-300">not a dupe</span>.
+              </h1>
+              <p className="text-lg text-purple-200 max-w-md mb-6">
+                Buy at wholesale, sell at your price. No starter pack, no minimum order — order on WhatsApp in seconds.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {['Inspired by, not a dupe', 'Oil-based · Alcohol-free', 'Long-lasting', 'Skin-friendly'].map(v => (
+                  <span key={v} className="bg-white/10 text-purple-50 text-xs font-semibold px-3 py-1.5 rounded-full">{v}</span>
+                ))}
+              </div>
+              <div className="flex gap-3 flex-wrap">
+                <Link to="/catalogue" className="bg-amber-400 text-purple-900 px-7 py-3 rounded-xl font-bold text-lg hover:bg-amber-300 transition-colors shadow-lg">
+                  Browse Catalogue
+                </Link>
+                <Link to="/quick-order" className="bg-white/10 text-white px-7 py-3 rounded-xl font-medium text-lg hover:bg-white/20 transition-colors border border-white/20">
+                  ⚡ Quick Order
+                </Link>
+                <Link to="/register/agent" className="text-amber-200 px-2 py-3 font-medium text-lg hover:text-amber-100 transition-colors">
+                  Become an Agent →
+                </Link>
+              </div>
+            </div>
+            {/* Featured bottle visual (emoji tile — on-brand, no asset needed) */}
+            <div className="hidden md:flex items-center justify-center p-12 relative">
+              <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle at 50% 60%, #fbbf24 0%, transparent 60%)' }} />
+              <div className="relative text-center">
+                <p className="text-7xl drop-shadow-lg">🖤</p>
+                <p className="mt-3 text-xs uppercase tracking-widest text-purple-200">This month's pick</p>
+                <p className="text-2xl font-bold text-white">SCANDAL</p>
+                <p className="text-sm text-purple-300">by Jean Paul Gaultier</p>
+                <p className="mt-2 inline-block bg-amber-400 text-purple-900 text-sm font-bold px-4 py-1.5 rounded-full">R30 wholesale</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

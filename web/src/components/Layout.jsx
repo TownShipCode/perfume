@@ -9,6 +9,7 @@ export default function Layout() {
   const { count } = useCart();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   async function handleSubscribe(e) {
     e.preventDefault();
@@ -19,6 +20,10 @@ export default function Layout() {
       setEmail('');
     } catch (err) { /* ignore */ }
   }
+
+  const dashboardPath = user
+    ? `/dashboard/${user.role === 'super_admin' ? 'admin' : user.role === 'manufacturer' ? 'manufacturer' : user.role === 'team_member' ? 'team' : 'agent'}`
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -37,28 +42,54 @@ export default function Layout() {
           Zen Fragrances
         </Link>
         <div className="flex items-center gap-4 text-sm">
-          <Link to="/catalogue" className="text-gray-600 hover:text-purple-700">Catalogue</Link>
+          <Link to="/catalogue" className="text-gray-600 hover:text-purple-700 hidden md:inline">Catalogue</Link>
           <Link to="/quick-order" className="text-gray-600 hover:text-purple-700 hidden md:inline">Quick Order</Link>
           <Link to="/blog" className="text-gray-600 hover:text-purple-700 hidden md:inline">Blog</Link>
           <Link to="/agents" className="text-gray-600 hover:text-purple-700 hidden md:inline">Find Agent</Link>
+          <Link to="/track" className="text-gray-600 hover:text-purple-700 hidden md:inline">Track Order</Link>
           <Link to="/cart" className="relative text-gray-600 hover:text-purple-700">
             🛒
             {count > 0 && <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{count}</span>}
           </Link>
           {user ? (
             <>
-              <Link to={`/dashboard/${user.role === 'super_admin' ? 'admin' : user.role === 'manufacturer' ? 'manufacturer' : user.role === 'team_member' ? 'team' : 'agent'}`}
-                className="text-gray-600 hover:text-purple-700">Dashboard</Link>
-              <span className="text-gray-400">Hi, {user.name || user.role}</span>
+              <Link to={dashboardPath} className="text-gray-600 hover:text-purple-700 hidden md:inline">Dashboard</Link>
+              <span className="text-gray-400 hidden md:inline">Hi, {user.name || user.role}</span>
             </>
           ) : (
             <>
-              <Link to="/login" className="text-purple-700 font-medium">Sign In</Link>
-              <Link to="/register" className="bg-purple-700 text-white px-4 py-1.5 rounded-lg text-sm">Register</Link>
+              <Link to="/login" className="text-purple-700 font-medium hidden md:inline">Sign In</Link>
+              <Link to="/register" className="bg-purple-700 text-white px-4 py-1.5 rounded-lg text-sm hidden md:inline">Register</Link>
+            </>
+          )}
+          {/* Mobile hamburger */}
+          <button onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu" aria-expanded={menuOpen}
+            className="md:hidden text-2xl text-gray-700 hover:text-purple-700">
+            {menuOpen ? '✕' : '☰'}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile dropdown menu */}
+      {menuOpen && (
+        <div className="md:hidden bg-white border-b border-gray-200 px-6 py-4 flex flex-col gap-3 text-sm">
+          <Link to="/catalogue" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Catalogue</Link>
+          <Link to="/quick-order" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">⚡ Quick Order</Link>
+          <Link to="/scent-finder" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">✨ Find Your Scent</Link>
+          <Link to="/blog" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">📝 Blog</Link>
+          <Link to="/agents" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">🔍 Find an Agent</Link>
+          <Link to="/track" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">📦 Track Order</Link>
+          <Link to="/register/agent" onClick={() => setMenuOpen(false)} className="text-green-700 hover:text-green-800 font-medium">🚀 Become an Agent</Link>
+          {user ? (
+            <Link to={dashboardPath} onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Dashboard</Link>
+          ) : (
+            <>
+              <Link to="/login" onClick={() => setMenuOpen(false)} className="text-purple-700 font-medium">Sign In</Link>
+              <Link to="/register" onClick={() => setMenuOpen(false)} className="bg-purple-700 text-white text-center px-4 py-2 rounded-lg">Register</Link>
             </>
           )}
         </div>
-      </nav>
+      )}
       <main className="flex-1">
         <Outlet />
       </main>
