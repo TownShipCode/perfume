@@ -6,13 +6,19 @@ import { productEmoji } from '../productEmoji';
 
 const GENDER_ICONS = { men: '👨', women: '👩', unisex: '👥' };
 
+function useQuery() {
+  return new URLSearchParams(window.location.search);
+}
+
 export default function Catalogue() {
+  const query = useQuery();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
-  const [gender, setGender] = useState('');
+  const [gender, setGender] = useState(query.get('gender') || '');
   const [scentFamily, setScentFamily] = useState('');
+  const [sort, setSort] = useState('featured');
   const [categories, setCategories] = useState([]);
   const [scents, setScents] = useState([]);
   const [genders, setGenders] = useState([]);
@@ -49,13 +55,25 @@ export default function Catalogue() {
       .finally(() => setLoading(false));
   }, [debouncedSearch, category, gender, scentFamily]);
 
+  // Client-side sort: featured = bundle/gift SKUs first, then lower price; price = asc/desc
+  const sortedProducts = [...products];
+  if (sort === 'price_asc') sortedProducts.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+  else if (sort === 'price_desc') sortedProducts.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+  else if (sort === 'featured') {
+    sortedProducts.sort((a, b) => {
+      const aBundle = /set|gift|discovery/i.test(a.name) ? 1 : 0;
+      const bBundle = /set|gift|discovery/i.test(b.name) ? 1 : 0;
+      return (bBundle - aBundle) || (parseFloat(a.price) - parseFloat(b.price));
+    });
+  }
+
   const clearAll = () => { setCategory(''); setGender(''); setScentFamily(''); setSearch(''); };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Catalogue</h1>
 
-      {/* Search + Category */}
+      {/* Search + Category + Sort */}
       <div className="flex gap-4 mb-4 flex-wrap">
         <input
           type="text" placeholder="Search fragrances..."
@@ -66,6 +84,12 @@ export default function Catalogue() {
           className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white">
           <option value="">All Categories</option>
           {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+        </select>
+        <select value={sort} onChange={e => setSort(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white">
+          <option value="featured">⭐ Featured</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
         </select>
       </div>
 
@@ -116,7 +140,7 @@ export default function Catalogue() {
         <p className="text-gray-500 text-center py-12">No products found.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map(p => {
+          {sortedProducts.map(p => {
             const inCart = items.find(i => i.id === p.id);
             return (
             <div key={p.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">

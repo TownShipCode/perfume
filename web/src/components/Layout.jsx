@@ -22,6 +22,16 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Trust banner strip (Fragrance Passion style) */}
+      <div className="bg-purple-700 text-white text-xs py-1.5 px-4 flex items-center justify-center gap-4 flex-wrap">
+        <span>🚚 Nationwide delivery R65</span>
+        <span className="hidden sm:inline">·</span>
+        <span>🎁 Free shipping over R2000</span>
+        <span className="hidden sm:inline">·</span>
+        <Link to="/register/agent" className="font-medium hover:underline">🚀 Become an Agent</Link>
+        <span className="hidden sm:inline">·</span>
+        <Link to="/scent-finder" className="font-medium hover:underline">✨ Find Your Scent</Link>
+      </div>
       <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
         <Link to="/" className="text-xl font-bold text-purple-700 tracking-tight">
           Zen Fragrances

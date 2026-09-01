@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import Reviews from '../components/Reviews';
 
 export default function Landing() {
   const [email, setEmail] = useState('');
@@ -67,6 +68,54 @@ export default function Landing() {
         ))}
       </section>
 
+      {/* Why Zen — brand story (Fragrance Passion / Guerlain style) */}
+      <section className="bg-white py-16 px-4 border-t border-gray-100">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-6">Why Zen Fragrances</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+            <div>
+              <p className="text-3xl mb-2">🌱</p>
+              <h3 className="font-semibold mb-1">Oil-based, not watered down</h3>
+              <p className="text-sm text-gray-500">High fragrance dosage, alcohol-free, and built to last. Inspired by your favourite designer scents — not a dupe.</p>
+            </div>
+            <div>
+              <p className="text-3xl mb-2">🤝</p>
+              <h3 className="font-semibold mb-1">Built for resellers</h3>
+              <p className="text-sm text-gray-500">No starter pack, no minimum order. Buy wholesale, set your own retail price, and earn 5% from agents you recruit.</p>
+            </div>
+            <div>
+              <p className="text-3xl mb-2">💬</p>
+              <h3 className="font-semibold mb-1">WhatsApp-native</h3>
+              <p className="text-sm text-gray-500">Order in seconds on WhatsApp. No apps, no portals — just message us and we confirm your order.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Category cards (Guerlain / Acqua di Parma style) */}
+      <section className="max-w-5xl mx-auto pb-16 px-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Link to="/catalogue?gender=men" className="bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
+          <span className="text-3xl">👨</span>
+          <h3 className="font-semibold mt-2 group-hover:text-purple-700">Men's Scents</h3>
+          <p className="text-xs text-gray-500 mt-1">Bold, fresh &amp; confident</p>
+        </Link>
+        <Link to="/catalogue?gender=women" className="bg-gradient-to-br from-amber-100 to-amber-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
+          <span className="text-3xl">👩</span>
+          <h3 className="font-semibold mt-2 group-hover:text-purple-700">Women's Scents</h3>
+          <p className="text-xs text-gray-500 mt-1">Elegant, floral &amp; warm</p>
+        </Link>
+        <Link to="/scent-finder" className="bg-gradient-to-br from-purple-50 to-amber-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
+          <span className="text-3xl">✨</span>
+          <h3 className="font-semibold mt-2 group-hover:text-purple-700">Find Your Scent</h3>
+          <p className="text-xs text-gray-500 mt-1">A 30-second quiz</p>
+        </Link>
+        <Link to="/register/agent" className="bg-gradient-to-br from-green-100 to-green-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
+          <span className="text-3xl">🚀</span>
+          <h3 className="font-semibold mt-2 group-hover:text-green-700">Become an Agent</h3>
+          <p className="text-xs text-gray-500 mt-1">Sell at 2× wholesale</p>
+        </Link>
+      </section>
+
       <section className="max-w-5xl mx-auto pb-16 px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
         <Link to="/quick-order" className="bg-white rounded-xl p-6 shadow-sm border border-purple-100 hover:border-purple-300 hover:shadow-md transition-all text-center group">
           <span className="text-3xl">⚡</span>
@@ -84,6 +133,9 @@ export default function Landing() {
           <p className="text-sm text-gray-500 mt-1">Find a Zen Fragrances agent in your area</p>
         </Link>
       </section>
+
+      {/* Reviews wall (Fragrance Passion style) */}
+      <Reviews />
 
       <section className="bg-white py-16 px-4">
         <div className="max-w-2xl mx-auto">

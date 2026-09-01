@@ -8,6 +8,8 @@ import Landing from './pages/Landing';
 import Catalogue from './pages/Catalogue';
 import ProductDetail from './pages/ProductDetail';
 import QuickOrder from './pages/QuickOrder';
+import ScentFinder from './pages/ScentFinder';
+import TrackOrder from './pages/TrackOrder';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirmed from './pages/OrderConfirmed';
@@ -38,6 +40,8 @@ export default function App() {
             <Route path="/catalogue" element={<Catalogue />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/quick-order" element={<QuickOrder />} />
+            <Route path="/scent-finder" element={<ScentFinder />} />
+            <Route path="/track" element={<TrackOrder />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order/:id/confirmed" element={<OrderConfirmed />} />

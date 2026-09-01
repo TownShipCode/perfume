@@ -26,6 +26,9 @@ PRODUCTS = [
     {"product_number": 14, "name": "LADY MILLION", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Orange blossom, honey", "description": "Inspired by the designer sparkling scent.", "image_url": "/static/labels/lady-million.svg"},
     {"product_number": 15, "name": "NARCISO RODRIGUEZ", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Musk, jasmine", "description": "Inspired by the designer musky scent.", "image_url": "/static/labels/narciso-rodriguez.svg"},
     {"product_number": 16, "name": "SCANDAL", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Honey, gardenia", "description": "Inspired by the designer bold feminine scent.", "image_url": "/static/labels/scandal-w.svg"},
+    # Add-on / bundle SKUs
+    {"product_number": 17, "name": "DISCOVERY SET (10ML x 3)", "price": 45.00, "gender": "unisex", "scent_family": "mix", "top_notes": "Three mini samples to explore", "description": "A low-risk way to try three scents before committing. Swap them in store.", "image_url": "/static/labels/discovery-set.svg"},
+    {"product_number": 18, "name": "GIFT SET (2 x 30ML BOXED)", "price": 55.00, "gender": "unisex", "scent_family": "mix", "top_notes": "Two 30ml bottles in a gift box", "description": "Two popular 30ml bottles in a ready-to-gift box. Perfect for gifting.", "image_url": "/static/labels/gift-set.svg"},
 ]
 
 PRODUCT_KEYWORDS = {
@@ -45,6 +48,8 @@ PRODUCT_KEYWORDS = {
     14: ["lady million"],
     15: ["narciso rodriguez", "narciso"],
     16: ["scandal ladies", "scandal women"],
+    17: ["discovery set", "samples", "mini", "sampler"],
+    18: ["gift set", "gift", "boxed", "gift box"],
 }
 
 MESSAGE_TEMPLATES = {

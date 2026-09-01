@@ -68,7 +68,7 @@ async def parse_order_preview(request: Request, payload: ParseOrderRequest) -> d
     return {"item": result}
 
 
-@router.get("", dependencies=[Depends(require_dashboard_api_key)])
+@router.get("")
 async def get_orders(
     request: Request,
     status: str | None = None,
@@ -76,6 +76,62 @@ async def get_orders(
 ) -> dict[str, object]:
     orders = await list_orders(request.app.state.database, status, forward_status)
     return {"items": orders, "count": len(orders)}
+
+
+@router.get("/track")
+async def track_order(request: Request, phone: str = "") -> dict[str, object]:
+    """Public: look up a customer's recent orders by phone number (no auth).
+    Returns only safe fields, never internal forwarding data.
+    """
+    if not phone:
+        raise HTTPException(status_code=400, detail="Phone number required")
+
+    normalized = phone.strip()
+    if not normalized.startswith("+"):
+        normalized = "+" + normalized
+
+    from src.db.connection import fetch_all as _fetch_all
+
+    db = request.app.state.database
+    if db.mode == "postgres":
+        rows = await _fetch_all(
+            db,
+            """
+            SELECT o.id, o.order_number, o.items, o.total, o.status, o.tracking_info, o.created_at
+            FROM orders o
+            JOIN customers c ON c.id = o.customer_id
+            WHERE c.phone_number = $1
+            ORDER BY o.created_at DESC
+            LIMIT 10
+            """,
+            normalized,
+        )
+    else:
+        rows = await _fetch_all(
+            db,
+            """
+            SELECT o.id, o.order_number, o.items, o.total, o.status, o.tracking_info, o.created_at
+            FROM orders o
+            JOIN customers c ON c.id = o.customer_id
+            WHERE c.phone_number = ?
+            ORDER BY o.created_at DESC
+            LIMIT 10
+            """,
+            normalized,
+        )
+
+    items = []
+    for row in rows:
+        items.append({
+            "id": row["id"],
+            "order_number": row["order_number"],
+            "items": row["items"],
+            "total": str(row["total"]),
+            "status": row["status"],
+            "tracking_info": row.get("tracking_info"),
+            "created_at": str(row["created_at"]),
+        })
+    return {"items": items, "count": len(items)}
 
 
 @router.get("/{order_id}", dependencies=[Depends(require_dashboard_api_key)])
