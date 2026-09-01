@@ -101,7 +101,7 @@ def get_settings() -> Settings:
     whatsapp_confirm_commands = _csv_values(os.getenv("WHATSAPP_CONFIRM_COMMANDS", "yes,y,ok,correct"))
     whatsapp_reject_commands = _csv_values(os.getenv("WHATSAPP_REJECT_COMMANDS", "no,n"))
 
-    shipping_fee = Decimal(os.getenv("SHIPPING_FEE", "109.00") or "109.00")
+    shipping_fee = Decimal(os.getenv("SHIPPING_FEE", "65.00") or "65.00")
     free_shipping_threshold = Decimal(os.getenv("FREE_SHIPPING_THRESHOLD", "2000.00") or "2000.00")
     whatsapp_cancel_commands = _csv_values(os.getenv("WHATSAPP_CANCEL_COMMANDS", "cancel,stop"))
     pop_expiry_hours = int(os.getenv("POP_EXPIRY_HOURS", "24") or "24")
