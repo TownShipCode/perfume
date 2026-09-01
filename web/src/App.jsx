@@ -18,6 +18,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import RegisterAgent from './pages/RegisterAgent';
 import ForgotPassword from './pages/ForgotPassword';
+import Privacy from './pages/Privacy';
+import RefundPolicy from './pages/RefundPolicy';
+import Terms from './pages/Terms';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import ManufacturerDashboard from './pages/dashboard/ManufacturerDashboard';
 import TeamDashboard from './pages/dashboard/TeamDashboard';
@@ -45,6 +48,9 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/register" element={<Register />} />
             <Route path="/register/agent" element={<RegisterAgent />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/terms" element={<Terms />} />
           </Route>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard/admin" element={<AdminDashboard />} />

@@ -1,10 +1,14 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../useCart';
+import { useConfig, shippingFee, freeThreshold } from '../useConfig';
+import { productEmoji } from '../productEmoji';
 
 export default function Cart() {
   const { items, updateQty, removeItem, total, count, clearCart } = useCart();
-  const settings = { shippingFee: 65, freeThreshold: 2000 };
-  const shipping = total >= settings.freeThreshold ? 0 : settings.shippingFee;
+  const config = useConfig();
+  const shipFee = shippingFee(config);
+  const threshold = freeThreshold(config);
+  const shipping = total >= threshold ? 0 : shipFee;
 
   if (items.length === 0) return (
     <div className="max-w-2xl mx-auto px-4 py-16 text-center">
@@ -25,7 +29,7 @@ export default function Cart() {
         {items.map(item => (
           <div key={item.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex gap-4 items-center">
             <div className="w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center text-2xl flex-shrink-0">
-              {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover rounded-lg" /> : '🫧'}
+              {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover rounded-lg" /> : productEmoji(item)}
             </div>
             <div className="flex-1 min-w-0">
               <Link to={`/product/${item.id}`} className="font-medium text-sm hover:text-purple-700 truncate block">{item.name}</Link>
@@ -48,8 +52,8 @@ export default function Cart() {
         <div className="flex justify-between"><span>Subtotal</span><span>R{total.toFixed(2)}</span></div>
         <div className="flex justify-between"><span>Delivery</span><span>{shipping === 0 ? <span className="text-green-600">FREE</span> : `R${shipping}.00`}</span></div>
         {shipping > 0 && (() => {
-          const remaining = Math.max(0, settings.freeThreshold - total);
-          const pct = Math.min(100, (total / settings.freeThreshold) * 100);
+          const remaining = Math.max(0, threshold - total);
+          const pct = Math.min(100, (total / threshold) * 100);
           return (
             <div className="pt-1">
               <div className="h-1.5 bg-purple-100 rounded-full overflow-hidden">

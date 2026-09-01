@@ -2,16 +2,20 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../useCart';
 import { api } from '../api';
+import { useConfig, shippingFee, freeThreshold } from '../useConfig';
 
 export default function Checkout() {
   const { items, total, clearCart } = useCart();
   const navigate = useNavigate();
+  const config = useConfig();
+  const shipFee = shippingFee(config);
+  const threshold = freeThreshold(config);
   const [form, setForm] = useState({ name: '', surname: '', email: '', phone: '', area: '', street: '', city: '', postal_code: '', province: '' });
   const [payment, setPayment] = useState('yoco');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const shipping = total >= 2000 ? 0 : 65;
+  const shipping = total >= threshold ? 0 : shipFee;
 
   if (items.length === 0) return (
     <div className="max-w-lg mx-auto px-4 py-16 text-center">

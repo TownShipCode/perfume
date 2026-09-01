@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="360" viewBox="0 0 360 360">
+  <rect width="360" height="360" fill="#f3f0fa"/>
+  <rect x="120" y="60" width="120" height="240" rx="14" fill="#ffffff" stroke="#ddd" stroke-width="2"/>
+  <rect x="140" y="30" width="80" height="32" rx="6" fill="#57534e"/>
+  <rect x="132" y="110" width="96" height="120" fill="#ffffff" stroke="#57534e" stroke-width="2"/>
+  <text x="180" y="132" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="13" fill="#57534e">ZEN FRAGRANCES</text>
+  <line x1="138" y1="140" x2="222" y2="140" stroke="#57534e" stroke-width="1"/>
+  <text x="180" y="158" text-anchor="middle" font-family="Arial" font-size="8" fill="#666">GENERIC OF</text>
+  <text x="180" y="176" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="11" fill="#111">LEGEND</text>
+  <text x="180" y="192" text-anchor="middle" font-family="Arial" font-size="8" fill="#111">by Montblanc</text>
+  <text x="180" y="208" text-anchor="middle" font-family="Arial" font-size="8" fill="#555">30 ML / 1.0 OZ</text>
+  <rect x="140" y="216" width="80" height="10" rx="2" fill="#57534e"/>
+  <text x="180" y="224" text-anchor="middle" font-family="Arial" font-size="7" fill="#fff">INSPIRED BY, NOT A DUPE</text>
+  <rect x="132" y="250" width="96" height="34" rx="4" fill="#fafafa" stroke="#ccc"/>
+  <text x="180" y="262" text-anchor="middle" font-family="Arial" font-size="7" fill="#333">40% FRAGRANCE DOSAGE</text>
+  <text x="180" y="274" text-anchor="middle" font-family="Arial" font-size="7" fill="#333">LONGER LASTING</text>
+  <text x="180" y="285" text-anchor="middle" font-family="Arial" font-size="7" fill="#888">OIL-BASED · ALCOHOL-FREE</text>
+</svg>

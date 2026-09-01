@@ -68,7 +68,10 @@ async def build_catalog_lines(database: Database) -> list[str]:
 
 
 def _product_emoji(product_number: int) -> str:
-    return {1: "🌹", 2: "🌊", 3: "🌿", 4: "🫧"}.get(product_number, "🧴")
+    return {
+        1: "🥂", 2: "🔥", 3: "🏆", 4: "🌊", 5: "🦁", 6: "💵", 7: "🦅", 8: "🖤",
+        9: "🌹", 10: "🌙", 11: "⭐", 12: "👠", 13: "⚡", 14: "💎", 15: "🌸", 16: "🍒",
+    }.get(product_number, "🧴")
 
 
 async def list_all_products(database: Database) -> list[dict]:

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="360" viewBox="0 0 360 360">
+  <rect width="360" height="360" fill="#f6f6f6"/>
+  <rect x="120" y="60" width="120" height="240" rx="14" fill="#222222" stroke="#000" stroke-width="2"/>
+  <rect x="140" y="30" width="80" height="32" rx="6" fill="#111111"/>
+  <rect x="132" y="110" width="96" height="120" fill="#1a1a1a" stroke="#555" stroke-width="2"/>
+  <text x="180" y="132" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="13" fill="#ffffff">ZEN FRAGRANCES</text>
+  <line x1="138" y1="140" x2="222" y2="140" stroke="#888" stroke-width="1"/>
+  <text x="180" y="158" text-anchor="middle" font-family="Arial" font-size="8" fill="#bbb">GENERIC OF</text>
+  <text x="180" y="176" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="11" fill="#ffffff">SCANDAL</text>
+  <text x="180" y="192" text-anchor="middle" font-family="Arial" font-size="8" fill="#ddd">by Jean Paul Gaultier</text>
+  <text x="180" y="208" text-anchor="middle" font-family="Arial" font-size="8" fill="#aaa">30 ML / 1.0 OZ</text>
+  <rect x="140" y="216" width="80" height="10" rx="2" fill="#555"/>
+  <text x="180" y="224" text-anchor="middle" font-family="Arial" font-size="7" fill="#fff">INSPIRED BY, NOT A DUPE</text>
+  <rect x="132" y="250" width="96" height="34" rx="4" fill="#2a2a2a" stroke="#444"/>
+  <text x="180" y="262" text-anchor="middle" font-family="Arial" font-size="7" fill="#ccc">40% FRAGRANCE DOSAGE</text>
+  <text x="180" y="274" text-anchor="middle" font-family="Arial" font-size="7" fill="#ccc">LONGER LASTING</text>
+  <text x="180" y="285" text-anchor="middle" font-family="Arial" font-size="7" fill="#888">OIL-BASED · ALCOHOL-FREE</text>
+</svg>

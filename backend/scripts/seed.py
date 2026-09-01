@@ -7,17 +7,44 @@ from src.db.connection import connect_database, initialize_database
 
 
 PRODUCTS = [
-    {"product_number": 1, "name": "Red Shoes", "price": 350.00, "image_url": "https://example.com/products/red-shoes.jpg"},
-    {"product_number": 2, "name": "Blue Hat", "price": 120.00, "image_url": "https://example.com/products/blue-hat.jpg"},
-    {"product_number": 3, "name": "Black Bag", "price": 280.00, "image_url": "https://example.com/products/black-bag.jpg"},
-    {"product_number": 4, "name": "White T-Shirt", "price": 160.00, "image_url": "https://example.com/products/white-tshirt.jpg"},
+    # BUDGET PERFUMES — R30 wholesale (placeholder SVG label images)
+    # Men
+    {"product_number": 1, "name": "212 VIP", "price": 30.00, "gender": "men", "scent_family": "woody", "top_notes": "Citrus, bergamot", "description": "Inspired by the designer night-out scent.", "image_url": "/static/labels/212-vip.svg"},
+    {"product_number": 2, "name": "DESIRE", "price": 30.00, "gender": "men", "scent_family": "woody", "top_notes": "Spices, amber", "description": "Inspired by the designer desire scent.", "image_url": "/static/labels/desire.svg"},
+    {"product_number": 3, "name": "INVICTUS", "price": 30.00, "gender": "men", "scent_family": "aquatic", "top_notes": "Grapefruit, sea notes", "description": "Inspired by the designer sporty scent.", "image_url": "/static/labels/invictus.svg"},
+    {"product_number": 4, "name": "L'EAU D'ISSEY", "price": 30.00, "gender": "men", "scent_family": "aquatic", "top_notes": "Yuzu, marine notes", "description": "Inspired by the designer fresh aquatic scent.", "image_url": "/static/labels/leau-dissey.svg"},
+    {"product_number": 5, "name": "LEGEND", "price": 30.00, "gender": "men", "scent_family": "fresh", "top_notes": "Lavender, mint", "description": "Inspired by the designer bold scent.", "image_url": "/static/labels/legend.svg"},
+    {"product_number": 6, "name": "ONE MILLION", "price": 30.00, "gender": "men", "scent_family": "sweet", "top_notes": "Cinnamon, leather", "description": "Inspired by the designer sweet leather scent.", "image_url": "/static/labels/one-million.svg"},
+    {"product_number": 7, "name": "ONLY THE BRAVE", "price": 30.00, "gender": "men", "scent_family": "fresh", "top_notes": "Citrus, amber", "description": "Inspired by the designer daring scent.", "image_url": "/static/labels/only-the-brave.svg"},
+    {"product_number": 8, "name": "SCANDAL", "price": 30.00, "gender": "men", "scent_family": "woody", "top_notes": "Spices, woods", "description": "Inspired by the designer bold masculine scent.", "image_url": "/static/labels/scandal-m.svg"},
+    # Women
+    {"product_number": 9, "name": "ARMANI SI", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Mandarin, vanilla", "description": "Inspired by the designer elegant scent.", "image_url": "/static/labels/armani-si.svg"},
+    {"product_number": 10, "name": "BLACK OPIUM", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Coffee, vanilla", "description": "Inspired by the designer intense scent.", "image_url": "/static/labels/black-opium.svg"},
+    {"product_number": 11, "name": "CHANNEL NO 5", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Aldehydes, jasmine", "description": "Inspired by the designer classic scent.", "image_url": "/static/labels/channel-no-5.svg"},
+    {"product_number": 12, "name": "GOOD GIRL", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Almond, tuberose", "description": "Inspired by the designer chic scent.", "image_url": "/static/labels/good-girl.svg"},
+    {"product_number": 13, "name": "GUCCI RUSH", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Peach, vanilla", "description": "Inspired by the designer vibrant scent.", "image_url": "/static/labels/gucci-rush.svg"},
+    {"product_number": 14, "name": "LADY MILLION", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Orange blossom, honey", "description": "Inspired by the designer sparkling scent.", "image_url": "/static/labels/lady-million.svg"},
+    {"product_number": 15, "name": "NARCISO RODRIGUEZ", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Musk, jasmine", "description": "Inspired by the designer musky scent.", "image_url": "/static/labels/narciso-rodriguez.svg"},
+    {"product_number": 16, "name": "SCANDAL", "price": 30.00, "gender": "women", "scent_family": "floral", "top_notes": "Honey, gardenia", "description": "Inspired by the designer bold feminine scent.", "image_url": "/static/labels/scandal-w.svg"},
 ]
 
 PRODUCT_KEYWORDS = {
-    1: ["shoe", "shoes", "sneaker", "red shoe", "red shoes"],
-    2: ["hat", "cap", "blue hat"],
-    3: ["bag", "black bag", "backpack"],
-    4: ["tshirt", "t-shirt", "shirt", "white tshirt"],
+    1: ["212", "212 vip", "vip"],
+    2: ["desire"],
+    3: ["invictus"],
+    4: ["issey", "l'eau d'issey", "eau dissey"],
+    5: ["legend"],
+    6: ["one million", "million"],
+    7: ["only the brave", "brave"],
+    8: ["scandal"],
+    9: ["armani si", "si"],
+    10: ["black opium", "opium"],
+    11: ["channel no 5", "no 5", "channel 5", "chanel no 5"],
+    12: ["good girl"],
+    13: ["gucci rush", "rush"],
+    14: ["lady million"],
+    15: ["narciso rodriguez", "narciso"],
+    16: ["scandal ladies", "scandal women"],
 }
 
 MESSAGE_TEMPLATES = {
@@ -48,18 +75,26 @@ async def main() -> None:
             for product in PRODUCTS:
                 await connection.execute(
                     """
-                    INSERT INTO products (product_number, name, price, image_url)
-                    VALUES ($1, $2, $3, $4)
+                    INSERT INTO products (product_number, name, price, image_url, description, gender, scent_family, top_notes)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                     ON CONFLICT (product_number) DO UPDATE
                     SET name = EXCLUDED.name,
                         price = EXCLUDED.price,
                         image_url = EXCLUDED.image_url,
+                        description = EXCLUDED.description,
+                        gender = EXCLUDED.gender,
+                        scent_family = EXCLUDED.scent_family,
+                        top_notes = EXCLUDED.top_notes,
                         updated_at = NOW()
                     """,
                     product["product_number"],
                     product["name"],
                     product["price"],
                     product["image_url"],
+                    product.get("description"),
+                    product.get("gender"),
+                    product.get("scent_family"),
+                    product.get("top_notes"),
                 )
 
             for product_number, keywords in PRODUCT_KEYWORDS.items():
@@ -92,15 +127,20 @@ async def main() -> None:
         for product in PRODUCTS:
             connection.execute(
                 """
-                INSERT INTO products (product_number, name, price, image_url)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO products (product_number, name, price, image_url, description, gender, scent_family, top_notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(product_number) DO UPDATE SET
                     name = excluded.name,
                     price = excluded.price,
                     image_url = excluded.image_url,
+                    description = excluded.description,
+                    gender = excluded.gender,
+                    scent_family = excluded.scent_family,
+                    top_notes = excluded.top_notes,
                     updated_at = CURRENT_TIMESTAMP
                 """,
-                (product["product_number"], product["name"], product["price"], product["image_url"]),
+                (product["product_number"], product["name"], product["price"], product["image_url"],
+                 product.get("description"), product.get("gender"), product.get("scent_family"), product.get("top_notes")),
             )
 
         for product_number, keywords in PRODUCT_KEYWORDS.items():

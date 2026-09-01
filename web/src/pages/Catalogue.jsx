@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useCart } from '../useCart';
+import { productEmoji } from '../productEmoji';
 
 const GENDER_ICONS = { men: '👨', women: '👩', unisex: '👥' };
 
@@ -121,7 +122,7 @@ export default function Catalogue() {
             <div key={p.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
               <Link to={`/product/${p.id}`}>
               <div className="aspect-square bg-gray-100 flex items-center justify-center text-4xl">
-                {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" /> : '🫧'}
+                {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" /> : productEmoji(p)}
               </div>
               <div className="p-3">
                 <h3 className="font-medium text-sm truncate">{p.name}</h3>

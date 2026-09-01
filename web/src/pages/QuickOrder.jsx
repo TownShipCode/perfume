@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { productEmoji } from '../productEmoji';
 
 export default function QuickOrder() {
   const [products, setProducts] = useState([]);
@@ -67,7 +68,7 @@ export default function QuickOrder() {
             <div key={p.id}
               className={`bg-white rounded-xl border overflow-hidden transition-all ${isSelected ? 'border-purple-400 shadow-md ring-1 ring-purple-200' : 'border-gray-100 shadow-sm'}`}>
               <div className="aspect-square bg-gray-50 flex items-center justify-center text-3xl relative">
-                {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" /> : '🫧'}
+                {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" /> : productEmoji(p)}
                 {isSelected && <span className="absolute top-1 right-1 bg-purple-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">{qty}</span>}
               </div>
               <div className="p-2">

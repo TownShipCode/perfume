@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from src.api.agent_tools import router as agent_tools_routes
 from src.api.analytics import router as analytics_routes
 from src.api.auth import router as auth_routes
+from src.api.config import router as config_routes
 from src.api.customers import router as customer_routes
 from src.api.flyer import router as flyer_routes
 from src.api.newsletter import router as newsletter_routes
@@ -92,6 +93,7 @@ async def add_security_headers(request: Request, call_next):
 app.include_router(agent_tools_routes)
 app.include_router(analytics_routes)
 app.include_router(auth_routes)
+app.include_router(config_routes)
 app.include_router(product_routes)
 app.include_router(order_routes)
 app.include_router(payment_routes)

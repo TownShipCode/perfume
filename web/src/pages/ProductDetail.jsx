@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useCart } from '../useCart';
+import { productEmoji } from '../productEmoji';
 
 const GENDER_LABELS = { men: '👨 For Men', women: '👩 For Women', unisex: '👥 Unisex' };
+
+const TRUST_BADGES = ['🌱 Vegan', '🐰 Cruelty Free', '🚫 Alcohol-Free', '💧 Oil-Based', '🔁 Recyclable'];
 
 function stockBadge(qty) {
   if (qty == null) return null;
@@ -14,6 +17,7 @@ function stockBadge(qty) {
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const { addItem, items } = useCart();
@@ -38,7 +42,7 @@ export default function ProductDetail() {
         <div className="aspect-[3/2] bg-gradient-to-br from-purple-50 to-amber-50 flex items-center justify-center text-8xl">
           {product.image_url
             ? <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-4" />
-            : <span className="opacity-30">🫧</span>}
+            : productEmoji(product)}
         </div>
 
         <div className="p-6 md:p-8">
@@ -86,6 +90,15 @@ export default function ProductDetail() {
             </div>
           )}
 
+          {/* Trust badges — matches Forever Fragrances' clean-label row */}
+          <div className="flex flex-wrap gap-2 mb-5">
+            {TRUST_BADGES.map(b => (
+              <span key={b} className="inline-flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-full">
+                {b}
+              </span>
+            ))}
+          </div>
+
           {product.description && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-1">Description</h3>
@@ -97,6 +110,10 @@ export default function ProductDetail() {
             <button onClick={() => addItem(product)}
               className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors">
               {inCart ? `🛒 Add Another (${inCart.qty} in cart)` : '🛒 Add to Cart'}
+            </button>
+            <button onClick={() => { addItem(product); navigate('/checkout'); }}
+              className="inline-flex items-center gap-2 bg-purple-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-purple-950 transition-colors">
+              ⚡ Buy It Now
             </button>
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-700 transition-colors">
