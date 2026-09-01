@@ -1,0 +1,9 @@
+Risk,Likelihood,Impact,Mitigation,Owner,Status
+Manufacturing delays,Medium,High,"Dual-source by Week 8; 4-week buffer stock",Ops Lead,Monitor weekly
+Low agent retention,High,High,"Daily WhatsApp training; weekly bonuses; top-seller recognition",Sales Lead,Active
+Collection point delays,Medium,High,"Pargo-style partner signed by Week 2; backup courier",Ops Lead,Urgent
+WhatsApp bot failures,Low,Medium,"Manual override; 24/7 support team",Tech Lead,Tested
+Copycat competitor,High,Medium,"Speed to market; proprietary blends; community loyalty",Marketing,Active
+Cash flow constraints,Low,High,"Week 4 breakeven; lean operations",Finance,Green
+Payment friction,Medium,Medium,"Payment links; EFT; cash-on-delivery options",Tech,In progress
+Legal/compliance,Low,Low,"Registered business; tax compliant",Legal,Green

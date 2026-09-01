@@ -1,0 +1,5 @@
+Product Tier,SKUs,Cost/Unit (Manufacturing),Wholesale (Agent),Wholesale (Hub),Retail Price,Gross Margin %,Profit/Unit (Zen),Agent Profit/Unit,Hub Profit/Unit
+Budget,6,R18,R38,R32,R65,53%,R20,R27,R33
+Signature,10,R28,R50,R45,R100,44%,R22,R50,R55
+Premium/Oud,4,R45,R80,R65,R160,44%,R35,R80,R95
+Average (Weighted),20,R28,R52,R47,R105,47%,R24,R53,R58

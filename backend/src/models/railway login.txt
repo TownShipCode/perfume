@@ -1,3 +1,0 @@
-railway login
-cd backend
-railway up --service ccadb8e2-848d-4e16-b778-e968a853195d

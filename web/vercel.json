@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://zenfragrances-production.up.railway.app/api/:path*" },
+    { "source": "/static/:path*", "destination": "https://zenfragrances-production.up.railway.app/static/:path*" },
+    { "source": "/flyer", "destination": "https://zenfragrances-production.up.railway.app/flyer" },
+    { "source": "/health", "destination": "https://zenfragrances-production.up.railway.app/health" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

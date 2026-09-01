@@ -1,0 +1,4 @@
+Tier,Entry Cost,Starter Pack Contents,Wholesale Price (Avg),Sell Price (Avg),Profit/Unit,Break-Even (Units),Recruitment Commission,Volume Bonus
+Seller / Hawker,R300,"3 Signature (R60 each) + 2 Budget (R45 each)",R55,R105,R50,6 bottles (R300 cost),0%,0%
+Agent,R1200,"12 Signature (R50 each) + 6 Budget (R38 each) + 2 Premium (R120 each)",R52,R105,R53,23 bottles (R1,200 cost),5% on Seller wholesale,5% monthly rebate if >R5,000 GMV
+Hub,R6000,"60 Signature (R45 each) + 30 Budget (R32 each) + 10 Premium (R100 each)",R47,R105,R58,128 bottles (R6,000 cost),10% on Agent & Seller wholesale,10% monthly rebate if >R25,000 GMV

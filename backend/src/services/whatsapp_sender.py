@@ -62,7 +62,9 @@ async def send_image_message(recipient: str, image_url: str, caption: str | None
 #     if settings.whatsapp_send_mode != "live":
 #         return {"status": "dry_run", "recipient": recipient, "product_number": product_number}
 #
-#     phone_id = settings.whatsapp_phone_number_id or "1235032529693241"
+#     phone_id = settings.whatsapp_phone_number_id
+#     if not phone_id:
+#         return {"status": "failed", "reason": "missing_phone_number_id"}
 #     payload = {
 #         "messaging_product": "whatsapp",
 #         "to": recipient,
@@ -128,7 +130,9 @@ async def send_interactive_message(recipient: str, payload: dict[str, Any]) -> d
     if not settings.whatsapp_api_key:
         return {"status": "failed", "reason": "missing_api_key"}
 
-    phone_id = settings.whatsapp_phone_number_id or "1235032529693241"
+    phone_id = settings.whatsapp_phone_number_id
+    if not phone_id:
+        return {"status": "failed", "reason": "missing_phone_number_id"}
 
     try:
         if settings.whatsapp_provider == "kapso":
@@ -195,7 +199,9 @@ async def _send(settings: Settings, to: str, text: str) -> dict[str, Any]:
     if not settings.whatsapp_api_key:
         return {"status": "failed", "reason": "missing_api_key"}
 
-    phone_id = settings.whatsapp_phone_number_id or "1102791516242887"
+    phone_id = settings.whatsapp_phone_number_id
+    if not phone_id:
+        return {"status": "failed", "reason": "missing_phone_number_id"}
 
     try:
         if settings.whatsapp_provider == "kapso":
@@ -261,7 +267,9 @@ async def _send_image(settings: Settings, to: str, image_url: str, caption: str 
     if not settings.whatsapp_api_key:
         return {"status": "failed", "reason": "missing_api_key"}
 
-    phone_id = settings.whatsapp_phone_number_id or "1102791516242887"
+    phone_id = settings.whatsapp_phone_number_id
+    if not phone_id:
+        return {"status": "failed", "reason": "missing_phone_number_id"}
 
     try:
         if settings.whatsapp_provider == "kapso":

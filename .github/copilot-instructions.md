@@ -1,4 +1,4 @@
-# BioMed — Agent Instructions
+# Zen Fragrances — Agent Instructions
 
 ## ⚠️ PRE-FLIGHT (EVERY SESSION)
 
@@ -65,7 +65,7 @@ From `TownShipCode/wiki/learnings/token-waste-patterns.md`:
 - Platform: Railway (GitHub auto-deploy from `main`)
 - Dashboard: Vercel (auto-deploy from `main`)
 - Health check: `GET /health` (DB-independent)
-- Health check URL: `https://biomed-production.up.railway.app/health`
+- Health check URL: `https://zenfragrances-production.up.railway.app/health` (legacy Railway hostname — verify live; NOT biomed-production, that is the other BioMed project)
 
 ### Local Dev
 ```powershell
@@ -76,7 +76,7 @@ From `TownShipCode/wiki/learnings/token-waste-patterns.md`:
 .\.venv\Scripts\python -m pytest backend\tests
 
 # Run
-$env:PYTHONPATH = "C:\Users\Sanel\Desktop\miana\perfume\backend"
+$env:PYTHONPATH = "C:\Users\Sanel\Desktop\zenfragrances\backend"
 .\.venv\Scripts\python -m uvicorn src.main:app --host 127.0.0.1 --port 8000
 ```
 
