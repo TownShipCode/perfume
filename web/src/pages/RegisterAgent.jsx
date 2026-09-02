@@ -50,7 +50,7 @@ export default function RegisterAgent() {
           <p className="text-sm text-gray-500">You can now order via WhatsApp or sign in to your dashboard.</p>
           <div className="flex gap-3 justify-center flex-wrap">
             <Link to="/login" className="bg-purple-700 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-purple-800 transition-colors">Sign In to Dashboard</Link>
-            <a href="https://wa.me/27605283020" target="_blank" rel="noopener noreferrer"
+            <a href="https://wa.me/27719577798" target="_blank" rel="noopener noreferrer"
               className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors">
               Order via WhatsApp
             </a>
@@ -79,7 +79,7 @@ export default function RegisterAgent() {
             className="bg-white text-purple-700 px-8 py-3 rounded-xl font-bold text-lg hover:bg-purple-50 transition-colors">
             Start Selling Today
           </button>
-          <a href="https://wa.me/27605283020" target="_blank" rel="noopener noreferrer"
+          <a href="https://wa.me/27719577798" target="_blank" rel="noopener noreferrer"
             className="border-2 border-purple-300 text-white px-8 py-3 rounded-xl font-medium text-lg hover:bg-purple-600 transition-colors">
             Ask on WhatsApp
           </a>
@@ -177,7 +177,7 @@ export default function RegisterAgent() {
           <h2 className="text-xl font-bold text-center mb-1">Register as an Agent</h2>
           <p className="text-center text-sm text-gray-500 mb-6">
             Already have a team member&apos;s code? Enter it below. Don&apos;t have one?{' '}
-            <a href="https://wa.me/27605283020" target="_blank" rel="noopener noreferrer" className="text-purple-700 underline">Contact us on WhatsApp</a> and we&apos;ll assign you one.
+            <a href="https://wa.me/27719577798" target="_blank" rel="noopener noreferrer" className="text-purple-700 underline">Contact us on WhatsApp</a> and we&apos;ll assign you one.
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">

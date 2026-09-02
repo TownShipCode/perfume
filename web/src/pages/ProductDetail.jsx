@@ -31,7 +31,7 @@ export default function ProductDetail() {
   if (!product) return <div className="max-w-3xl mx-auto px-4 py-12 text-center text-gray-500">Product not found.</div>;
 
   const stock = stockBadge(product.stock_quantity);
-  const WA_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '27123456789';
+  const WA_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '27719577798';
   const whatsappLink = `https://wa.me/${WA_NUMBER}?text=order%20${encodeURIComponent(product.name)}`;
 
   return (

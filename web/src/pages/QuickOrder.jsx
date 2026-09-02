@@ -38,7 +38,7 @@ export default function QuickOrder() {
     const lines = cartItems.map(p => `${p.qty}x ${p.name}`);
     return encodeURIComponent(lines.join('\n'));
   };
-  const WA_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '27123456789';
+  const WA_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '27719577798';
   const waLink = `https://wa.me/${WA_NUMBER}?text=${buildWhatsappMsg()}`;
 
   const filtered = search ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase())) : products;
