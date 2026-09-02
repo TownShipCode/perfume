@@ -1,0 +1,8 @@
+# Keep the rest as-is; do not normalise line endings for other files.
+* -text
+
+# Force LF line endings for shell scripts (Docker/Railway run these on Linux).
+# core.autocrlf=true would otherwise rewrite them to CRLF on checkout.
+# These come AFTER the catch-all so they take precedence.
+*.sh text eol=lf
+*.bash text eol=lf

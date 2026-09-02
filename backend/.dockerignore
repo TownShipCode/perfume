@@ -1,0 +1,14 @@
+# Local/dev artifacts that must not be baked into the Docker image.
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+data/
+*.db
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+tests/
+*.egg-info/
+.git/
