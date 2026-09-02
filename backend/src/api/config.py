@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from src.config import get_settings
 
-router = APIRouter(tags=["config"])
+router = APIRouter(prefix="/api", tags=["config"])
 
 
 @router.get("/config")
