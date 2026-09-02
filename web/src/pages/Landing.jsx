@@ -40,31 +40,31 @@ export default function Landing() {
                 Wholesale perfumes for resellers
               </span>
               <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Inspired by your favourite designer scents — <span className="text-purple-200">not a dupe</span>.
+                Inspired by your favourite designer scents 
               </h1>
               <p className="text-lg text-purple-200 max-w-md mb-6">
-                Buy at wholesale, sell at your price. No starter pack, no minimum order — order on WhatsApp in seconds.
+                Buy at wholesale, sell at your price. Starter pack at R450 excluding shipping, no minimum order — order on WhatsApp in seconds.
               </p>
               <div className="flex flex-wrap gap-2 mb-8">
-                {['Inspired by, not a dupe', 'Oil-based · Alcohol-free', 'Long-lasting', 'Skin-friendly'].map(v => (
+                {['Inspired by, your favourite designer scents', 'Oil-based · Alcohol-free', 'Long-lasting', 'Skin-friendly'].map(v => (
                   <span key={v} className="bg-white/10 text-purple-50 text-xs font-semibold px-3 py-1.5 rounded-full">{v}</span>
                 ))}
               </div>
               <div className="flex gap-3 flex-wrap">
-                <Link to="/catalogue" className="bg-white text-purple-800 px-7 py-3 rounded-xl font-bold text-lg hover:bg-purple-50 transition-colors shadow-lg">
+                <Link to="/catalogue" className="bg-accent text-white px-7 py-3 rounded-xl font-bold text-lg hover:bg-accent-dark transition-colors shadow-lg">
                   Browse Catalogue
                 </Link>
                 <Link to="/quick-order" className="bg-white/10 text-white px-7 py-3 rounded-xl font-medium text-lg hover:bg-white/20 transition-colors border border-white/20">
                   Quick Order
                 </Link>
-                <Link to="/register/agent" className="text-purple-200 px-2 py-3 font-medium text-lg hover:text-white transition-colors">
+                <Link to="/register/agent" className="text-white/70 px-2 py-3 font-medium text-lg hover:text-white transition-colors">
                   Become an Agent →
                 </Link>
               </div>
             </div>
             {/* Featured bottle visual (emoji tile — on-brand, no asset needed) */}
             <div className="hidden md:flex items-center justify-center p-12 relative">
-              <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle at 50% 60%, #c4b5fd 0%, transparent 60%)' }} />
+              <div className="absolute inset-0 opacity-25" style={{ background: 'radial-gradient(circle at 50% 60%, #34B7F1 0%, transparent 60%)' }} />
               <div className="relative text-center">
                 <p className="text-7xl font-serif drop-shadow-lg">S</p>
                 <p className="mt-3 text-xs uppercase tracking-widest text-purple-200">This month's pick</p>
@@ -99,12 +99,12 @@ export default function Landing() {
             <div>
               <p className="text-3xl font-serif font-bold text-purple-700">1</p>
               <h3 className="font-semibold mb-1">Oil-based, not watered down</h3>
-              <p className="text-sm text-gray-500">High fragrance dosage, alcohol-free, and built to last. Inspired by your favourite designer scents — not a dupe.</p>
+              <p className="text-sm text-gray-500">High fragrance dosage, alcohol-free, and built to last. Inspired by your favourite designer scents.</p>
             </div>
             <div>
               <p className="text-3xl font-serif font-bold text-purple-700">2</p>
               <h3 className="font-semibold mb-1">Built for resellers</h3>
-              <p className="text-sm text-gray-500">No starter pack, no minimum order. Buy wholesale, set your own retail price, and earn 5% from agents you recruit.</p>
+              <p className="text-sm text-gray-500">No minimum order. Get a starter pack at R450 excluding shipping. Buy wholesale, set your own retail price.</p>
             </div>
             <div>
               <p className="text-3xl font-serif font-bold text-purple-700">3</p>
@@ -132,10 +132,10 @@ export default function Landing() {
           <h3 className="font-semibold mt-2 group-hover:text-purple-700">Find Your Scent</h3>
           <p className="text-xs text-gray-500 mt-1">A 30-second quiz</p>
         </Link>
-        <Link to="/register/agent" className="bg-gradient-to-br from-green-100 to-green-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
-          <span className="text-3xl font-serif font-bold text-green-700">A</span>
-          <h3 className="font-semibold mt-2 group-hover:text-green-700">Become an Agent</h3>
-          <p className="text-xs text-gray-500 mt-1">Sell at 2× wholesale</p>
+        <Link to="/register/agent" className="bg-[#14171A] text-white rounded-xl p-6 text-center hover:shadow-lg hover:bg-[#000000] transition-all group">
+          <span className="text-3xl font-serif font-bold text-[#34B7F1]">A</span>
+          <h3 className="font-semibold mt-2">Become an Agent</h3>
+          <p className="text-xs text-gray-300 mt-1">Sell at 2× wholesale</p>
         </Link>
       </section>
 
@@ -186,7 +186,7 @@ export default function Landing() {
           <h2 className="text-2xl font-bold mb-2">Get launch updates</h2>
           <p className="text-gray-500 text-sm mb-6">New fragrances, deals and restock alerts straight to your inbox. No spam.</p>
           {subscribed ? (
-            <p className="text-green-600 font-medium">Thanks! You're on the list.</p>
+            <p className="text-[#0B8FD6] font-medium">Thanks! You're on the list.</p>
           ) : (
             <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2">
               <input

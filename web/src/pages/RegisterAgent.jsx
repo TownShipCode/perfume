@@ -155,7 +155,7 @@ export default function RegisterAgent() {
             </div>
             <input type="range" min="5" max="200" step="5" value={bottles}
               onChange={e => setBottles(Number(e.target.value))}
-              className="w-full h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-700" />
+              className="w-full h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600" />
             <div className="flex justify-between text-xs text-gray-400 mt-1">
               <span>5</span><span>50</span><span>100</span><span>150</span><span>200</span>
             </div>

@@ -1,6 +1,43 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@400;700&display=swap');
 @import "tailwindcss";
 
+/*
+ * Zen Fragrances brand tokens — editorial black & white with a single
+ * sky-blue accent (#34B7F1). 60-30-10: rich ink 60%, white/paper 30%,
+ * blue 10% (CTAs, active states, badges only).
+ *
+ * The purple-* scale is remapped here so the existing class names recolour
+ * site-wide without touching every file. Do not reintroduce true purple.
+ */
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
+
+  /* Brand aliases */
+  --color-accent: #34B7F1;
+  --color-accent-dark: #0B8FD6;
+  --color-ink: #14171A;
+  --color-paper: #F0F2F5;
+  --color-rule: #898F9C;
+
+  /* Remapped legacy scale → neutral black/white/grey (+ blue at 600) */
+  --color-purple-50: #F6F8FA;
+  --color-purple-100: #E8ECF0;
+  --color-purple-200: #D7DDE3;
+  --color-purple-300: #B9C1CA;
+  --color-purple-400: #97A1AC;
+  --color-purple-500: #6E7A87;
+  --color-purple-600: #34B7F1;
+  --color-purple-700: #14171A;
+  --color-purple-800: #0B0D10;
+  --color-purple-900: #050607;
+  --color-purple-950: #000000;
+
+  /* Status-chip blues → accent family (only these two shades are used) */
+  --color-blue-100: #D8F1FC;
+  --color-blue-800: #0B8FD6;
+}
+
 :root {
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
