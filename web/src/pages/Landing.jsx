@@ -1,33 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { useCart } from '../useCart';
+import { productEmoji } from '../productEmoji';
 import Reviews from '../components/Reviews';
 
 export default function Landing() {
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-  const [subError, setSubError] = useState('');
-  const [openFaq, setOpenFaq] = useState(null);
+  const [featured, setFeatured] = useState([]);
+  const [productsState, setProductsState] = useState('loading'); // loading | ready | empty
+  const { addItem, items } = useCart();
 
-  const faqs = [
-    { q: 'Are these real designer perfumes?', a: 'They are premium interpretations inspired by iconic designer scents — not fakes. Our fragrances are oil-based, alcohol-free, long-lasting and skin-friendly.' },
-    { q: 'How do I order?', a: 'Two ways: browse this store and check out, or order on WhatsApp — just send a product name like "5 Rose Oud" and we\'ll confirm it for you.' },
-    { q: 'How long does delivery take?', a: '3-5 working days nationwide via The Courier Guy. R65 flat rate, and FREE delivery on orders over R2,000.' },
-    { q: 'Can I become an agent or reseller?', a: 'Yes — zero startup cost. Buy at wholesale, sell at your own price (~2×), and earn commission by building your team. No starter pack required.' },
-    { q: 'Are they safe on my skin?', a: 'We use high-quality, IFRA-compliant fragrance oils that are skin-friendly and alcohol-free.' },
-    { q: 'What if I don\'t like the scent?', a: 'Check our returns and exchange policy — we want you happy with your fragrance.' },
-  ];
-
-  async function handleSubscribe(e) {
-    e.preventDefault();
-    setSubError('');
-    try {
-      await api('/api/newsletter', { method: 'POST', body: JSON.stringify({ email }) });
-      setSubscribed(true);
-    } catch (err) {
-      setSubError(err.message);
-    }
-  }
+  // Product "display window": real catalogue items, so a visitor sees
+  // what is for sale immediately. Minimal text — the page's job is ordering.
+  useEffect(() => {
+    api('/api/products?page_size=8')
+      .then(d => {
+        const list = d.items || d.products || [];
+        setFeatured(list);
+        setProductsState(list.length ? 'ready' : 'empty');
+      })
+      .catch(() => setProductsState('empty'));
+  }, []);
 
   return (
     <div>
@@ -51,14 +44,11 @@ export default function Landing() {
                 ))}
               </div>
               <div className="flex gap-3 flex-wrap">
-                <Link to="/catalogue" className="bg-accent text-white px-7 py-3 rounded-xl font-bold text-lg hover:bg-accent-dark transition-colors shadow-lg">
-                  Browse Catalogue
-                </Link>
+                <a href="#shop" className="bg-accent text-white px-7 py-3 rounded-xl font-bold text-lg hover:bg-accent-dark transition-colors shadow-lg">
+                  Shop the collection
+                </a>
                 <Link to="/quick-order" className="bg-white/10 text-white px-7 py-3 rounded-xl font-medium text-lg hover:bg-white/20 transition-colors border border-white/20">
                   Quick Order
-                </Link>
-                <Link to="/register/agent" className="text-white/70 px-2 py-3 font-medium text-lg hover:text-white transition-colors">
-                  Become an Agent →
                 </Link>
               </div>
             </div>
@@ -77,144 +67,76 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="max-w-5xl mx-auto py-16 px-4 grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+      {/* Product display window — real items, order-first */}
+      <section id="shop" className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex items-end justify-between mb-5">
+          <h2 className="text-2xl md:text-3xl font-bold">Shop bestsellers</h2>
+          <Link to="/catalogue" className="text-accent font-medium text-sm whitespace-nowrap">View all →</Link>
+        </div>
+        {productsState === 'loading' ? (
+          <p className="text-gray-500 py-8 text-center">Loading fragrances…</p>
+        ) : productsState === 'empty' ? (
+          <div className="text-center py-8 border border-dashed border-gray-200 rounded-xl">
+            <p className="text-gray-500 mb-3">Stock is being added — the full range is in the catalogue.</p>
+            <Link to="/catalogue" className="inline-block bg-accent text-white px-6 py-2.5 rounded-lg font-medium hover:bg-accent-dark transition-colors">
+              Browse the catalogue
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {featured.map(p => {
+              const inCart = items.find(i => i.id === p.id);
+              return (
+                <div key={p.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                  <Link to={`/product/${p.id}`}>
+                    <div className="aspect-square bg-gray-100 flex items-center justify-center text-4xl">
+                      {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" /> : productEmoji(p)}
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-medium text-sm truncate">{p.name}</h3>
+                      <p className="text-ink font-bold mt-1">R{p.price}</p>
+                    </div>
+                  </Link>
+                  <div className="px-3 pb-3">
+                    <button onClick={() => addItem(p)}
+                      className={`w-full text-xs font-medium py-1.5 rounded-lg transition-colors ${inCart ? 'bg-purple-100 text-purple-700' : 'bg-accent text-white hover:bg-accent-dark'}`}>
+                      {inCart ? `In Cart (${inCart.qty})` : '+ Add to Cart'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* Ordering steps — short, sell-focused */}
+      <section className="max-w-5xl mx-auto py-8 px-4 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
         {[
-          { title: '99+ Fragrances', desc: 'Woody, floral, oriental, fresh — a scent for every customer.' },
-          { title: 'Nationwide Delivery', desc: 'R65 flat rate. Free shipping on orders over R2000.' },
-          { title: 'Agent Program', desc: 'Buy wholesale, sell at 2×. Earn 5% from your team.' },
-          { title: 'WhatsApp Ordering', desc: 'Order in seconds via WhatsApp. No website needed.' },
-        ].map(f => (
-          <div key={f.title} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
-            <p className="text-sm text-gray-500">{f.desc}</p>
+          { title: 'Pick a scent', desc: 'Add bottles to your cart.' },
+          { title: 'Checkout', desc: 'Pay by card or EFT.' },
+          { title: 'Delivered', desc: 'R65 flat · free over R2000.' },
+        ].map(s => (
+          <div key={s.title} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <h3 className="font-semibold mb-1">{s.title}</h3>
+            <p className="text-sm text-gray-500">{s.desc}</p>
           </div>
         ))}
       </section>
 
-      {/* Why Zen — brand story (Fragrance Passion / Guerlain style) */}
-      <section className="bg-white py-16 px-4 border-t border-gray-100">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Why Zen Fragrances</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-            <div>
-              <p className="text-3xl font-serif font-bold text-purple-700">1</p>
-              <h3 className="font-semibold mb-1">Oil-based, not watered down</h3>
-              <p className="text-sm text-gray-500">High fragrance dosage, alcohol-free, and built to last. Inspired by your favourite designer scents.</p>
-            </div>
-            <div>
-              <p className="text-3xl font-serif font-bold text-purple-700">2</p>
-              <h3 className="font-semibold mb-1">Built for resellers</h3>
-              <p className="text-sm text-gray-500">No minimum order. Get a starter pack at R450 excluding shipping. Buy wholesale, set your own retail price.</p>
-            </div>
-            <div>
-              <p className="text-3xl font-serif font-bold text-purple-700">3</p>
-              <h3 className="font-semibold mb-1">WhatsApp-native</h3>
-              <p className="text-sm text-gray-500">Order in seconds on WhatsApp. No apps, no portals — just message us and we confirm your order.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Category cards (Guerlain / Acqua di Parma style) */}
-      <section className="max-w-5xl mx-auto pb-16 px-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Link to="/catalogue?gender=men" className="bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
-          <span className="text-3xl font-serif font-bold text-purple-700">M</span>
-          <h3 className="font-semibold mt-2 group-hover:text-purple-700">Men's Scents</h3>
-          <p className="text-xs text-gray-500 mt-1">Bold, fresh &amp; confident</p>
-        </Link>
-        <Link to="/catalogue?gender=women" className="bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl p-6 text-center hover:shadow-md transition-all group">
-          <span className="text-3xl font-serif font-bold text-purple-700">W</span>
-          <h3 className="font-semibold mt-2 group-hover:text-purple-700">Women's Scents</h3>
-          <p className="text-xs text-gray-500 mt-1">Elegant, floral &amp; warm</p>
-        </Link>
-        <Link to="/scent-finder" className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 text-center hover:shadow-md transition-all group">
-          <span className="text-3xl font-serif font-bold text-purple-700">?</span>
-          <h3 className="font-semibold mt-2 group-hover:text-purple-700">Find Your Scent</h3>
-          <p className="text-xs text-gray-500 mt-1">A 30-second quiz</p>
-        </Link>
-        <Link to="/register/agent" className="bg-[#14171A] text-white rounded-xl p-6 text-center hover:shadow-lg hover:bg-[#000000] transition-all group">
-          <span className="text-3xl font-serif font-bold text-[#34B7F1]">A</span>
-          <h3 className="font-semibold mt-2">Become an Agent</h3>
-          <p className="text-xs text-gray-300 mt-1">Sell at 2× wholesale</p>
-        </Link>
-      </section>
-
-      <section className="max-w-5xl mx-auto pb-16 px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link to="/quick-order" className="bg-white rounded-xl p-6 shadow-sm border border-purple-100 hover:border-purple-300 hover:shadow-md transition-all text-center group">
-          <span className="text-3xl font-serif font-bold text-purple-700">Q</span>
-          <h3 className="font-semibold mt-2 group-hover:text-purple-700">Quick Order</h3>
-          <p className="text-sm text-gray-500 mt-1">Add quantities and send your order in one tap</p>
-        </Link>
-        <Link to="/blog" className="bg-white rounded-xl p-6 shadow-sm border border-purple-100 hover:border-purple-300 hover:shadow-md transition-all text-center group">
-          <span className="text-3xl font-serif font-bold text-purple-700">B</span>
-          <h3 className="font-semibold mt-2 group-hover:text-purple-700">Fragrance Blog</h3>
-          <p className="text-sm text-gray-500 mt-1">Guides, tips, and industry insights for resellers</p>
-        </Link>
-        <Link to="/agents" className="bg-white rounded-xl p-6 shadow-sm border border-purple-100 hover:border-purple-300 hover:shadow-md transition-all text-center group">
-          <span className="text-3xl font-serif font-bold text-purple-700">A</span>
-          <h3 className="font-semibold mt-2 group-hover:text-purple-700">Find an Agent</h3>
-          <p className="text-sm text-gray-500 mt-1">Find a Zen Fragrances agent in your area</p>
-        </Link>
-      </section>
-
-      {/* Reviews wall (Fragrance Passion style) */}
+      {/* Brief social proof — short quotes, sells more than copy */}
       <Reviews />
 
-      <section className="bg-white py-16 px-4">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8">Frequently asked questions</h2>
-          <div className="space-y-3">
-            {faqs.map((faq, i) => (
-              <div key={i} className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-100 transition-colors">
-                  <span className="font-medium text-gray-800 pr-4">{faq.q}</span>
-                  <span className={`text-purple-500 transition-transform flex-shrink-0 ${openFaq === i ? 'rotate-45' : ''}`}>＋</span>
-                </button>
-                {openFaq === i && (
-                  <div className="px-6 pb-4 text-sm text-gray-600 leading-relaxed">{faq.a}</div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-purple-50 py-16 px-4">
-        <div className="max-w-lg mx-auto text-center">
-          <h2 className="text-2xl font-bold mb-2">Get launch updates</h2>
-          <p className="text-gray-500 text-sm mb-6">New fragrances, deals and restock alerts straight to your inbox. No spam.</p>
-          {subscribed ? (
-            <p className="text-[#0B8FD6] font-medium">Thanks! You're on the list.</p>
-          ) : (
-            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="you@email.com"
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-              />
-              <button type="submit" className="bg-purple-700 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-purple-800 transition-colors">
-                Sign Up
-              </button>
-            </form>
-          )}
-          {subError && <p className="text-red-600 text-sm mt-3">{subError}</p>}
-        </div>
-      </section>
-
-      <section className="bg-purple-700 text-white py-16 text-center">
-        <h2 className="text-3xl font-bold mb-4">Ready to start selling?</h2>
-        <p className="text-purple-200 mb-6">Join as an agent, buy at wholesale, and sell at your own price.</p>
+      {/* Slim order-first closing band — registration is secondary */}
+      <section className="bg-[#14171A] text-white py-12 px-4 text-center">
+        <h2 className="text-2xl md:text-3xl font-bold mb-3">Order your first bottles</h2>
+        <p className="text-purple-200 mb-6 max-w-lg mx-auto">R30 wholesale · R65 delivery · free over R2000.</p>
         <div className="flex gap-4 justify-center flex-wrap">
-          <Link to="/register/agent" className="bg-white text-purple-700 px-8 py-3 rounded-xl font-medium text-lg hover:bg-purple-50 transition-colors">
-            Become an Agent
+          <Link to="/catalogue" className="bg-accent text-white px-8 py-3 rounded-xl font-medium text-lg hover:bg-accent-dark transition-colors">
+            Browse the collection
           </Link>
-          <Link to="/catalogue" className="border-2 border-white text-white px-8 py-3 rounded-xl font-medium text-lg hover:bg-purple-600 transition-colors">
-            Browse Catalogue
+          <Link to="/register/agent" className="border border-white/30 text-white/80 px-8 py-3 rounded-xl font-medium text-lg hover:text-white hover:border-white transition-colors">
+            Want to sell? Become an agent
           </Link>
         </div>
       </section>

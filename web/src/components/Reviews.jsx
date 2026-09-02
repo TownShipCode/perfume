@@ -1,7 +1,7 @@
 // Reviews wall — seeded placeholder reviews until real customer reviews exist (month 1).
 const REVIEWS = [
   { name: 'Thabo M.', role: 'Agent — Soweto', text: 'Ordered on WhatsApp, got my stock in 3 days. The Sauvage sells itself at R70.', stars: 5 },
-  { name: 'Nomsa K.', role: 'Agent — Tembisa', text: 'No starter pack is the whole point. I started with 10 bottles and grew my own team.', stars: 5 },
+  { name: 'Nomsa K.', role: 'Agent — Tembisa', text: 'Started with the R450 starter pack and grew my own team. The 5% commission adds up.', stars: 5 },
   { name: 'Sipho D.', role: 'Customer', text: 'Good Girl smells amazing and lasts the whole day. Better than what I used to pay 3x for.', stars: 5 },
   { name: 'Lerato P.', role: 'Agent — Mamelodi', text: 'The 5% commission from my team members adds up. Best side hustle I have.', stars: 5 },
 ];
