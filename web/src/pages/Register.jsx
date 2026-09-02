@@ -53,10 +53,10 @@ export default function Register() {
         </button>
       </form>
       <p className="text-center text-sm text-gray-500 mt-4">
-        Already have an account? <Link to="/login" className="text-purple-700">Sign In</Link>
+        Already have an account? <Link to="/login" className="text-accent font-medium">Sign In</Link>
       </p>
       <p className="text-center text-sm text-gray-500 mt-2">
-        Want to become an agent? <Link to="/register/agent" className="text-purple-700">Register as Agent</Link>
+        Want to become an agent? <Link to="/register/agent" className="text-accent font-medium">Register as Agent</Link>
       </p>
     </div>
   );

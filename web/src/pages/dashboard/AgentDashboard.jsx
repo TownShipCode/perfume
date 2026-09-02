@@ -68,6 +68,43 @@ export default function AgentDashboard() {
           </table>
         )}
       </div>
+
+      {/* ── WHY ZEN vs COMPETITORS (agents portal only) ── */}
+      <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-5 border-b border-gray-100">
+          <h3 className="font-semibold">Why agents choose Zen Fragrances</h3>
+          <p className="text-xs text-gray-400 mt-1">Share these advantages when signing up your own team.</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-left">
+              <tr>
+                <th className="px-5 py-3 font-semibold"></th>
+                <th className="px-5 py-3 font-semibold text-accent">Zen Fragrances</th>
+                <th className="px-5 py-3 text-gray-500">Competitors</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {[
+                ['Starter cost', 'R0 — start with 1 bottle', 'R960 starter pack'],
+                ['Ordering', 'WhatsApp — instant', 'Website only'],
+                ['Agent margin', '100% markup (2× wholesale)', '100% markup'],
+                ['Team commissions', '5% on agent orders', 'None'],
+                ['Stock check', 'WhatsApp: "stock 1"', 'Login + browse website'],
+                ['Delivery', 'R65 nationwide', 'R65 nationwide'],
+                ['Agent dashboard', 'Track orders, earnings, team', 'Account management'],
+                ['Fragrances', '99+ (expanding)', '42'],
+              ].map(([label, zen, competitors], i) => (
+                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                  <td className="px-5 py-3 font-medium text-gray-700">{label}</td>
+                  <td className="px-5 py-3 text-accent font-medium">{zen}</td>
+                  <td className="px-5 py-3 text-gray-500">{competitors}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

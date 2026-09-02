@@ -28,8 +28,7 @@ export default function RegisterAgent() {
 
   const profit = bottles * WHOLESALE_AVG;
   const revenue = bottles * WHOLESALE_AVG * RETAIL_MULTIPLIER;
-  const teamCommission = Math.round(bottles * 0.6 * WHOLESALE_AVG * 0.05);
-  const totalEarnings = profit + teamCommission;
+  const totalEarnings = profit;
 
   const faqs = [
     { q: 'Do I need a website or store?', a: 'No. All you need is WhatsApp on your phone. You order from us via WhatsApp, and sell to your customers however you like — in person, on social media, or via WhatsApp.' },
@@ -106,42 +105,6 @@ export default function RegisterAgent() {
         </div>
       </section>
 
-      {/* ── WHY ZEN vs OTHERS ── */}
-      <section className="bg-gray-50 py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8">Why agents choose Zen Fragrances</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm bg-white rounded-xl shadow-sm overflow-hidden">
-              <thead>
-                <tr className="bg-purple-50 text-left">
-                  <th className="px-6 py-3 font-semibold"></th>
-                  <th className="px-6 py-3 font-semibold text-purple-700">Zen Fragrances</th>
-                  <th className="px-6 py-3 text-gray-500">Fine Fragrance Collection</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {[
-                  ['Starter cost', 'R0 — start with 1 bottle', 'R960 starter pack'],
-                  ['Ordering', 'WhatsApp — instant', 'Website only'],
-                  ['Agent margin', '100% markup (2× wholesale)', '100% markup'],
-                  ['Team commissions', '5% on agent orders', 'None'],
-                  ['Stock check', 'WhatsApp: "stock 1"', 'Login + browse website'],
-                  ['Delivery', 'R65 nationwide', 'R65 nationwide'],
-                  ['Agent dashboard', 'Track orders, earnings, team', 'Account management'],
-                  ['Fragrances', '99+ (expanding)', '42'],
-                ].map(([label, zen, ffc], i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                    <td className="px-6 py-3 font-medium text-gray-700">{label}</td>
-                    <td className="px-6 py-3 text-purple-700 font-medium">{zen}</td>
-                    <td className="px-6 py-3 text-gray-500">{ffc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
       {/* ── EARNINGS CALCULATOR ── */}
       <section className="max-w-4xl mx-auto py-16 px-4">
         <h2 className="text-2xl font-bold text-center mb-2">What you could earn</h2>
@@ -174,10 +137,6 @@ export default function RegisterAgent() {
               <span className="text-gray-600">Your profit (100% markup)</span>
               <span className="font-bold text-green-700">R{profit.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-purple-100">
-              <span className="text-gray-600">Team commission (3 agents)</span>
-              <span className="font-medium text-purple-700">+ R{teamCommission.toLocaleString()}</span>
-            </div>
             <div className="flex justify-between py-3">
               <span className="text-gray-800 font-semibold">Total monthly earnings</span>
               <span className="text-xl font-bold text-purple-700">R{totalEarnings.toLocaleString()}</span>
@@ -185,7 +144,7 @@ export default function RegisterAgent() {
           </div>
 
           <p className="text-xs text-gray-400 mt-4 text-center">
-            Based on R{WHOLESALE_AVG} avg wholesale × {RETAIL_MULTIPLIER}× markup. Team: 3 agents selling 60% of your volume at 5% commission.
+            Based on R{WHOLESALE_AVG} avg wholesale × {RETAIL_MULTIPLIER}× markup.
           </p>
         </div>
       </section>
