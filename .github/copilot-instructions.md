@@ -62,10 +62,10 @@ From `TownShipCode/wiki/learnings/token-waste-patterns.md`:
 - Dashboard: `dashboard/src/`
 
 ### Deploy Pipeline
-- Platform: Railway (GitHub auto-deploy from `main`)
-- Dashboard: Vercel (auto-deploy from `main`)
+- Platform: Railway (deploy via `railway up --detach` from `backend/`; GitHub auto-deploy not connected)
+- Dashboard: Vercel (auto-deploy from `main`, project `zenfragrances`)
 - Health check: `GET /health` (DB-independent)
-- Health check URL: `https://zenfragrances-production.up.railway.app/health` (legacy Railway hostname — verify live; NOT biomed-production, that is the other BioMed project)
+- Backend LIVE URL: `https://backend-production-e48d.up.railway.app/health` (real hostname; `zenfragrances-production.up.railway.app` was NEVER provisioned — 404)
 
 ### Local Dev
 ```powershell
