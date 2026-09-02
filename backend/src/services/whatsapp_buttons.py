@@ -24,16 +24,9 @@ BUTTON_TO_CMD: dict[str, str] = {
     "confirm_add": "add_confirm",
     "cancel_add": "add_cancel",
     "view_cart": "cart",
+    "become_agent": "become agent",
+    "shop_now": "catalogue",
 }
-
-
-def register_quantity_mappings(quantity_options: tuple[int, ...]) -> None:
-    """Register quantity button IDs → quantity values in BUTTON_TO_CMD.
-
-    Called at startup so the webhook knows that tapping [3] means quantity 3.
-    """
-    for qty in quantity_options:
-        BUTTON_TO_CMD[f"qty_{qty}"] = str(qty)
 
 
 def build_welcome_buttons(body_text: str, web_url: str) -> dict[str, Any]:
@@ -43,8 +36,8 @@ def build_welcome_buttons(body_text: str, web_url: str) -> dict[str, Any]:
     Meta/Kapso interactive BUTTON messages only support reply buttons —
     URL buttons ("type": "url") are NOT allowed in a button message and cause
     the whole send to fail with 400/422. Reply buttons map back to commands via
-    BUTTON_TO_CMD. The web-store link is available via the "Browse Store" reply
-    (maps to the catalogue command) and is always included in the fallback text.
+    BUTTON_TO_CMD. Three clear jobs are offered: order/shop (catalogue),
+    become an agent, or help. The web-store link is always in the fallback text.
     """
     return {
         "type": "interactive",
@@ -53,8 +46,8 @@ def build_welcome_buttons(body_text: str, web_url: str) -> dict[str, Any]:
             "body": {"text": body_text},
             "action": {
                 "buttons": [
-                    {"type": "reply", "reply": {"id": "browse_store", "title": "🛍️ Browse Store"}},
-                    {"type": "reply", "reply": {"id": "view_cart", "title": "🛒 View Cart"}},
+                    {"type": "reply", "reply": {"id": "shop_now", "title": "🛍️ Shop / Order"}},
+                    {"type": "reply", "reply": {"id": "become_agent", "title": "🤝 Become an Agent"}},
                     {"type": "reply", "reply": {"id": "help", "title": "❓ Help"}},
                 ]
             },

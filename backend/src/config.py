@@ -77,6 +77,27 @@ class Settings:
     def database_mode(self) -> str:
         return "postgres" if self.database_url else "sqlite"
 
+    @property
+    def live_payment_methods(self) -> tuple[str, ...]:
+        """Payment methods that are actually usable right now.
+
+        A method listed in PAYMENT_METHODS_ENABLED is only offered when the real
+        credentials exist:
+          - yoco needs YOCO_SECRET_KEY
+          - eft needs a real account number (not the all-zeros placeholder)
+
+        Until at least one method is truly configured, payment is NOT live, so
+        the bot must not show pay buttons or fake bank details to customers.
+        """
+        live: list[str] = []
+        if "yoco" in self.payment_methods_enabled and self.yoco_secret_key:
+            live.append("yoco")
+        if "eft" in self.payment_methods_enabled:
+            account = (self.account_number or "").strip()
+            if account and account != "0000000000":
+                live.append("eft")
+        return tuple(live)
+
 
 def _optional(name: str) -> str | None:
     value = os.getenv(name)

@@ -92,7 +92,7 @@ export default function RegisterAgent() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             { step: '1', icon: '1', title: 'Register', desc: 'Fill in your details below. Get your agent code instantly. No approval. No waiting.' },
-            { step: '2', icon: '2', title: 'Order via WhatsApp', desc: 'Type "5 Rose Oud" on WhatsApp. Confirm. We deliver to your door in 3-5 days. R65 flat rate.' },
+            { step: '2', icon: '2', title: 'Order via WhatsApp', desc: 'Type "5 BLACK OPIUM" on WhatsApp. Confirm. We deliver to your door in 3-5 days. R65 flat rate.' },
             { step: '3', icon: '3', title: 'Sell at Your Price', desc: 'Sell to your customers at ~2× wholesale. Keep 100% of your markup. Build a team, earn 5% from their orders.' },
           ].map(item => (
             <div key={item.step} className="text-center">

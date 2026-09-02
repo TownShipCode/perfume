@@ -65,7 +65,7 @@ FLYER_HTML = """<!DOCTYPE html>
 
 <div class="footer">
   <div><a class="cta" href="{whatsapp_link}" target="_blank" rel="noopener">📱 Order on WhatsApp</a></div>
-  <p>Or send a product name — e.g. "5 Rose Oud" — to order directly on WhatsApp.</p>
+  <p>Or send a product name — e.g. "5 BLACK OPIUM" — to order directly on WhatsApp.</p>
   <p>{store_name} — Edition {edition} · Prices valid until {valid_until}</p>
 </div>
 </body>

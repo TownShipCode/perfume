@@ -329,8 +329,8 @@ def test_order_flow_returns_welcome_catalogue_for_greeting(tmp_path, monkeypatch
             # Meta/Kapso only allow reply buttons in a button message (URL buttons 400/422)
             buttons = reply["payload"]["interactive"]["action"]["buttons"]
             assert buttons and all(b.get("type") == "reply" for b in buttons)
-            assert any(b.get("reply", {}).get("id") == "view_cart" for b in buttons)
-            assert any(b.get("reply", {}).get("id") == "help" for b in buttons)
+            assert any(b.get("reply", {}).get("id") == "shop_now" for b in buttons)
+            assert any(b.get("reply", {}).get("id") == "become_agent" for b in buttons)
         finally:
             await close_database(database)
 

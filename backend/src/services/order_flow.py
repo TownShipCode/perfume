@@ -12,7 +12,7 @@ from src.services.cart_service import add_item_to_cart, build_cart
 from src.services.catalog_service import build_catalog_lines, get_keyword_map, get_product_by_number, list_active_products, search_products
 from src.services.customer_service import get_customer_by_phone, get_or_create_customer, save_customer_profile
 from src.services.order_service import create_order, get_latest_open_order, record_pop_received
-from src.services.order_parser import parse_order
+from src.services.order_parser import parse_order, product_candidates, split_quantity_and_name
 from src.services.session_service import get_or_create_session, get_session_by_phone, save_session_state
 from src.services.state_machine import State
 
@@ -28,6 +28,22 @@ ADDRESS_STEPS = [
 ]
 
 logger = logging.getLogger(__name__)
+
+# Conversational filler words that could accidentally fuzzy-match a product
+# name (e.g. "good" → GOOD GIRL). Bare-name auto-resolution is skipped when
+# the whole typed text is one of these, so small talk is not hijacked into
+# a quantity prompt. Quantity-prefixed order lines ("5 good") are unaffected.
+_CHAT_ONLY_WORDS = {
+    "yes", "no", "ok", "okay", "good", "great", "nice", "cool", "sure",
+    "thanks", "thank", "please", "fine", "what", "how", "who", "when",
+    "where", "why", "go", "stop", "wait", "hold", "hello", "hi", "hey",
+    "right", "wrong", "awesome", "perfect", "really", "maybe", "well",
+}
+
+
+def _is_chat_only_text(text: str) -> bool:
+    stripped = (text or "").strip().lower()
+    return bool(stripped) and stripped in _CHAT_ONLY_WORDS
 
 
 async def _get_catalogue_image_url(database: Database) -> str | None:
@@ -180,7 +196,7 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
             "action": "become_agent",
             "state": session.get("state", State.IDLE),
             "customer_name": customer.get("name") or "",
-            "register_url": f"{settings.api_base_url.replace('/api', '')}/register-agent",
+            "register_url": f"{settings.web_base_url.rstrip('/')}/register/agent",
         }
 
     # ── Recovery challenge active? (Phase 4) ──
@@ -189,9 +205,10 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
 
     # In POP_WAITING, handle payment method selection + cancel/checkout
     if session.get("state") == State.POP_WAITING:
-        if lowered == "yoco" and "yoco" in settings.payment_methods_enabled:
+        live_methods = settings.live_payment_methods
+        if lowered == "yoco" and "yoco" in live_methods:
             return await _handle_yoco_payment(database, session, settings)
-        if lowered == "eft" and "eft" in settings.payment_methods_enabled:
+        if lowered == "eft" and "eft" in live_methods:
             return await _handle_eft_payment(session)
         # Let them browse catalogue while waiting
         if lowered in settings.whatsapp_catalog_commands:
@@ -206,7 +223,7 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
     # ── Cart view: show current cart on demand ──
     if lowered in ("cart", "view cart", "my cart"):
         if not cart_items:
-            return {"action": "text", "text": "🛒 Your cart is empty.\n\nType a product name to add items, e.g. _\"5 Rose Oud\"_."}
+            return {"action": "text", "text": "🛒 Your cart is empty.\n\nType a product name to add items, e.g. _\"5 BLACK OPIUM\"_."}
         price_map = await _build_price_map(database)
         cart = build_cart(cart_items, price_map)
         return {
@@ -226,7 +243,7 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
                 last = o
                 break
         if not last or not last.get("items"):
-            return {"action": "text", "text": "📭 No previous orders found.\n\nType a product name to start, e.g. _\"5 Rose Oud\"_."}
+            return {"action": "text", "text": "📭 No previous orders found.\n\nType a product name to start, e.g. _\"5 BLACK OPIUM\"_."}
         items = last["items"]
         product_ids = [it.get("product_id") for it in items if it.get("product_id")]
         from src.services.catalog_service import get_products_by_ids
@@ -347,7 +364,88 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
         }
 
     keyword_map = await get_keyword_map(database)
+    quantity_hint, product_text = split_quantity_and_name(text)
+
+    # ── Ambiguity / partial-name resolution (product LIST picker) ──
+    # A phrase like "scandal" or "million" can match several products
+    # (SCANDAL men vs women, ONE MILLION vs LADY MILLION). Never silently
+    # guess — offer a tappable LIST so the correct product is chosen.
+    active_products = await list_active_products(database)
+    candidates = product_candidates(product_text, active_products) if product_text else []
+
+    if len(candidates) > 1:
+        logger.warning(
+            "handle_text_message | AMBIGUOUS→PICKER phone=%s state=%s text=%s candidates=%s",
+            phone_number[-4:], session.get("state"), text[:60],
+            [c.get("product_number") for c in candidates],
+        )
+        return {
+            "action": "product_picker",
+            "state": session.get("state", State.IDLE),
+            "candidates": candidates[:10],
+        }
+
     parsed = parse_order(text, keyword_map)
+
+    # Partial input that resolves to exactly one product:
+    #  - "5 black"  → confirm the order straight away (qty already given)
+    #  - "black"    → start a quantity prompt (mirrors typing its number)
+    if (
+        parsed is None
+        and len(candidates) == 1
+        and product_text
+        and not _is_chat_only_text(product_text)
+    ):
+        product = candidates[0]
+        product_number = int(product.get("product_number") or 0)
+        full = await get_product_by_number(database, product_number)
+        chosen = full or product
+        logger.warning(
+            "handle_text_message | PARTIAL→PRODUCT phone=%s text=%s product=%s qty=%s",
+            phone_number[-4:], text[:60], product_number, quantity_hint,
+        )
+
+        if quantity_hint is not None:
+            # Quantity typed with a partial name → go straight to confirm.
+            unit_total = quantity_hint * float(chosen["price"])
+            temp["__pending_order__"] = {
+                "product_id": chosen["id"],
+                "product_name": chosen["name"],
+                "quantity": quantity_hint,
+                "unit_price": str(chosen["price"]),
+            }
+            await save_session_state(
+                database, phone_number,
+                state=State.ORDERING, cart=cart_items,
+                current_step=0, temp_address=temp,
+            )
+            result: dict[str, object] = {
+                "action": "confirm_order",
+                "state": State.ORDERING,
+                "product_name": chosen["name"],
+                "quantity": quantity_hint,
+                "unit_price": str(chosen["price"]),
+                "unit_total": f"{unit_total:,.2f}",
+            }
+            if chosen.get("image_url"):
+                result["image_url"] = chosen["image_url"]
+            return result
+
+        # Bare partial name → ask for quantity first.
+        await save_session_state(
+            database, phone_number,
+            state=State.ORDERING, cart=cart_items,
+            current_step=0,
+            temp_address={"__pending_product__": {"id": chosen["id"], "name": chosen["name"], "price": str(chosen["price"])}},
+        )
+        return {
+            "action": "quantity_selection",
+            "product_name": chosen["name"],
+            "price": str(chosen["price"]),
+            "description": chosen.get("description", ""),
+            "image_url": chosen.get("image_url"),
+        }
+
     if parsed is None:
         logger.warning(
             "handle_text_message | UNMATCHED→WELCOME phone=%s state=%s text=%s",
@@ -360,7 +458,12 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
             "action": "interactive_welcome",
             "state": session.get("state", State.IDLE),
             "customer_name": customer_name,
-            "greeting": f"👋 Hi{greeting}! Welcome to Zen Fragrances. What would you like to do?",
+            "greeting": (
+                f"👋 Hi{greeting}! Welcome to *Zen Fragrances*. What would you like to do?\n\n"
+                "🛍️ *Order* — type a product name (e.g. _\"5 BLACK OPIUM\"_) or its number.\n"
+                "🤝 *Become an Agent* — buy wholesale, sell at your price.\n"
+                "❓ *Help* — commands & FAQs."
+            ),
             "web_url": f"{web_url}/catalogue",
         }
 
@@ -698,7 +801,7 @@ async def _add_pending_to_cart(
         return {
             "action": "interactive_welcome",
             "customer_name": "",
-            "greeting": f"👋 *Welcome to {settings.store_name}!* ✨\n\nWholesale perfumes for resellers.\nType a product name to order — e.g. \"5 Rose Oud\".\nWhat would you like to do?",
+            "greeting": f"👋 *Welcome to {settings.store_name}!* ✨\n\nWholesale perfumes for resellers.\nWhat would you like to do?\n\n🛍️ *Order* — type a product name (e.g. _\"5 BLACK OPIUM\"_).\n🤝 *Become an Agent* — reply AGENT.\n❓ *Help* — reply HELP.",
             "web_url": f"{settings.web_base_url.rstrip('/')}/catalogue",
         }
 

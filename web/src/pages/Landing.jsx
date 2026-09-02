@@ -36,7 +36,7 @@ export default function Landing() {
                 Inspired by your favourite designer scents 
               </h1>
               <p className="text-lg text-purple-200 max-w-md mb-6">
-                Buy at wholesale, sell at your price. Starter pack at R450 excluding shipping, no minimum order — order on WhatsApp in seconds.
+                Buy at wholesale, sell at your price. Starter pack at R420 excluding shipping, no minimum order — order on WhatsApp in seconds.
               </p>
               <div className="flex flex-wrap gap-2 mb-8">
                 {['Inspired by, your favourite designer scents', 'Oil-based · Alcohol-free', 'Long-lasting', 'Skin-friendly'].map(v => (
