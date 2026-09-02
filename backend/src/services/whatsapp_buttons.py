@@ -39,8 +39,12 @@ def register_quantity_mappings(quantity_options: tuple[int, ...]) -> None:
 def build_welcome_buttons(body_text: str, web_url: str) -> dict[str, Any]:
     """
     Welcome buttons shown when a customer says "hi" / "hello".
-    WhatsApp allows up to 3 buttons per interactive message.
-    The first button is a click-through URL button to the web store (no raw URL text).
+
+    Meta/Kapso interactive BUTTON messages only support reply buttons —
+    URL buttons ("type": "url") are NOT allowed in a button message and cause
+    the whole send to fail with 400/422. Reply buttons map back to commands via
+    BUTTON_TO_CMD. The web-store link is available via the "Browse Store" reply
+    (maps to the catalogue command) and is always included in the fallback text.
     """
     return {
         "type": "interactive",
@@ -49,9 +53,9 @@ def build_welcome_buttons(body_text: str, web_url: str) -> dict[str, Any]:
             "body": {"text": body_text},
             "action": {
                 "buttons": [
-                    {"type": "url", "title": "🛍️ Visit Store", "url": web_url},
+                    {"type": "reply", "reply": {"id": "browse_store", "title": "🛍️ Browse Store"}},
                     {"type": "reply", "reply": {"id": "view_cart", "title": "🛒 View Cart"}},
-                    {"type": "reply", "reply": {"id": "help", "title": "ℹ️ Help"}},
+                    {"type": "reply", "reply": {"id": "help", "title": "❓ Help"}},
                 ]
             },
         },
@@ -59,20 +63,24 @@ def build_welcome_buttons(body_text: str, web_url: str) -> dict[str, Any]:
 
 
 def build_visit_store_buttons(body_text: str, web_url: str) -> dict[str, Any]:
-    """A single click-through URL button message to the web store.
+    """
+    A click-through "Visit Store" message to the web store.
 
-    Meta Cloud API URL buttons open the browser directly when tapped,
-    unlike reply buttons which only send a webhook back to us.
+    Meta URL buttons cannot be embedded in a regular interactive button message.
+    The correct schema is a dedicated cta_url interactive message
+    (interactive.type = "cta_url" with action.name = "cta_url" + parameters).
+    Verified to send successfully via Kapso (HTTP 200).
     """
     return {
         "type": "interactive",
         "interactive": {
-            "type": "button",
-            "body": {"text": body_text},
+            "type": "cta_url",
+            "header": {"type": "text", "text": "Zen Fragrances"},
+            "body": {"text": body_text[:1024]},
+            "footer": {"text": "Tap the button below to open the store."},
             "action": {
-                "buttons": [
-                    {"type": "url", "title": "🛍️ Visit Store", "url": web_url},
-                ]
+                "name": "cta_url",
+                "parameters": {"display_text": "🛍️ Visit Store", "url": web_url},
             },
         },
     }
@@ -163,5 +171,54 @@ def build_payment_buttons(body_text: str, methods_enabled: tuple[str, ...]) -> d
             "type": "button",
             "body": {"text": body_text},
             "action": {"buttons": buttons},
+        },
+    }
+
+
+def register_picker_mappings(candidates: list[dict[str, Any]]) -> None:
+    """Register LIST row ids (pick_<product_number>) → product-number commands.
+
+    When a user taps a row in the product LIST picker, the webhook receives a
+    list_reply whose id we map back to a bare product number, so the existing
+    numeric ordering path (quantity prompt → add) resumes seamlessly.
+    """
+    for product in candidates:
+        number = product.get("product_number")
+        if number is not None:
+            BUTTON_TO_CMD[f"pick_{number}"] = str(number)
+
+
+def build_product_list_picker(
+    body_text: str,
+    candidates: list[dict[str, Any]],
+    button_label: str = "Select product",
+) -> dict[str, Any]:
+    """Build a WhatsApp interactive LIST message for ambiguous product names.
+
+    When a partial/ambiguous name matches several products (e.g. "scandal"
+    = SCANDAL men OR women; "million" = ONE MILLION OR LADY MILLION), present
+    each match as a tappable row instead of guessing. Max 10 rows/section.
+    """
+    rows: list[dict[str, str]] = []
+    for product in candidates[:10]:
+        number = product.get("product_number")
+        name = str(product.get("name") or "Product")
+        gender = str(product.get("gender") or "").capitalize()
+        price = product.get("price")
+        title = f"{number}. {name}"[:24]
+        description = f"R{price} · {gender}"[:72] if price is not None else f"{gender}"[:72]
+        rows.append({"id": f"pick_{number}", "title": title, "description": description})
+
+    return {
+        "type": "interactive",
+        "interactive": {
+            "type": "list",
+            "body": {"text": body_text[:1024]},
+            "action": {
+                "button": button_label[:20],
+                "sections": [
+                    {"title": "Products", "rows": rows},
+                ],
+            },
         },
     }

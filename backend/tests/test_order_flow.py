@@ -238,9 +238,11 @@ def test_order_flow_returns_catalogue_for_menu_command(tmp_path, monkeypatch) ->
             reply = await build_customer_reply(database, result)
             assert reply is not None
             assert reply["type"] == "interactive"
-            buttons = reply["payload"]["interactive"]["action"]["buttons"]
-            assert any(b.get("type") == "url" and "catalogue" in b.get("url", "") for b in buttons)
-            assert "Browse Our Catalogue" in reply["payload"]["interactive"]["body"]["text"]
+            interactive = reply["payload"]["interactive"]
+            assert interactive["type"] == "cta_url"
+            assert interactive["action"]["name"] == "cta_url"
+            assert "catalogue" in interactive["action"]["parameters"]["url"]
+            assert "Browse Our Catalogue" in interactive["body"]["text"]
 
             session = await get_session_by_phone(database, "27820000000")
             assert session is not None
@@ -324,10 +326,11 @@ def test_order_flow_returns_welcome_catalogue_for_greeting(tmp_path, monkeypatch
             assert reply is not None
             assert reply["type"] == "interactive"
             assert "payload" in reply
-            # Interactive payload should contain a click-through Visit Store URL button + reply buttons
+            # Meta/Kapso only allow reply buttons in a button message (URL buttons 400/422)
             buttons = reply["payload"]["interactive"]["action"]["buttons"]
-            assert any(b.get("type") == "url" and "Visit Store" in b.get("title", "") for b in buttons)
-            assert any(b.get("type") == "reply" and b.get("reply", {}).get("id") == "view_cart" for b in buttons)
+            assert buttons and all(b.get("type") == "reply" for b in buttons)
+            assert any(b.get("reply", {}).get("id") == "view_cart" for b in buttons)
+            assert any(b.get("reply", {}).get("id") == "help" for b in buttons)
         finally:
             await close_database(database)
 
