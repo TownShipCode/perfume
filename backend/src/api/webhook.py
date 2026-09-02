@@ -41,13 +41,17 @@ async def verify_webhook(
 async def receive_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
-    x_hub_signature_256: str | None = Header(default=None),
+    x_webhook_signature: str | None = Header(default=None),  # Kapso (kind=kapso): raw hex
+    x_hub_signature_256: str | None = Header(default=None),  # Meta / Kapso-meta: sha256=<hex>
 ) -> JSONResponse:
     settings = get_settings()
 
-    # Verify payload signature (Kapso forwards Meta's HMAC)
+    # Verify payload signature. Kapso (kind=kapso) signs with X-Webhook-Signature
+    # (raw HMAC-SHA256 hex); Meta-style uses X-Hub-Signature-256 (sha256=<hex>).
     raw_body = await request.body()
-    if not verify_signature(raw_body, x_hub_signature_256, settings):
+    signature = x_webhook_signature or x_hub_signature_256
+    if not verify_signature(raw_body, signature, settings):
+        logger.warning("WEBHOOK invalid_signature | header=%s", "x_webhook_signature" if x_webhook_signature else ("x_hub_signature_256" if x_hub_signature_256 else "none"))
         return JSONResponse(status_code=200, content={"status": "rejected", "reason": "invalid_signature"})
 
     # Parse the webhook payload

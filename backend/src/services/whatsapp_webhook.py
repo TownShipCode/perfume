@@ -32,12 +32,19 @@ def verify_signature(body: bytes, signature: str | None, settings: Settings) -> 
     if not secret:
         return not settings.is_production
 
-    if not signature or not signature.startswith("sha256="):
+    if not signature:
+        return False
+
+    # Meta forwards "sha256=<hex>"; Kapso (kind=kapso) sends raw hex in
+    # X-Webhook-Signature with no prefix. Normalise both before comparing.
+    raw = signature
+    if raw.startswith("sha256="):
+        raw = raw[len("sha256="):]
+    if not raw or len(raw) != 64 or not all(c in "0123456789abcdef" for c in raw.lower()):
         return False
 
     digest = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
-    expected = f"sha256={digest}"
-    return hmac.compare_digest(expected, signature)
+    return hmac.compare_digest(digest, raw.lower())
 
 
 def extract_message_event(payload: dict[str, Any]) -> dict[str, Any] | None:

@@ -81,6 +81,29 @@ def test_verify_signature_accepts_matching_sha256_header() -> None:
     assert verify_signature(body, signature, settings) is True
 
 
+def test_verify_signature_accepts_kapso_raw_hex_header() -> None:
+    """Kapso (kind=kapso) sends X-Webhook-Signature as raw hex, no sha256= prefix."""
+    settings = make_settings()
+    body = b'{"message":{"id":"wamid.1","from":"27820000000","type":"text","text":{"body":"hi"}}}'
+    signature = hmac.new(b"secret-key", body, hashlib.sha256).hexdigest()
+    assert verify_signature(body, signature, settings) is True
+
+
+def test_verify_signature_rejects_wrong_kapso_signature() -> None:
+    settings = make_settings()
+    body = b'{"hello":"world"}'
+    signature = hmac.new(b"wrong-secret", body, hashlib.sha256).hexdigest()
+    assert verify_signature(body, signature, settings) is False
+
+
+def test_verify_signature_rejects_missing_signature_in_production() -> None:
+    settings = make_settings(app_env="production", whatsapp_app_secret="secret-key")
+    body = b'{"hello":"world"}'
+    assert verify_signature(body, None, settings) is False
+    assert verify_signature(body, "", settings) is False
+    assert verify_signature(body, "sha256=nothex", settings) is False
+
+
 def test_extract_message_event_supports_meta_payload_shape() -> None:
     payload = {
         "entry": [
