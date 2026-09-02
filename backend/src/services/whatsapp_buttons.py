@@ -29,6 +29,15 @@ BUTTON_TO_CMD: dict[str, str] = {
 }
 
 
+def register_quantity_mappings(quantity_options: tuple[int, ...]) -> None:
+    """Register quantity button IDs → quantity values in BUTTON_TO_CMD.
+
+    Called at startup so the webhook knows that tapping [3] means quantity 3.
+    """
+    for qty in quantity_options:
+        BUTTON_TO_CMD[f"qty_{qty}"] = str(qty)
+
+
 def build_welcome_buttons(body_text: str, web_url: str) -> dict[str, Any]:
     """
     Welcome buttons shown when a customer says "hi" / "hello".
