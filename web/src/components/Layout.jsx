@@ -47,9 +47,9 @@ export default function Layout() {
           <Link to="/blog" className="text-gray-600 hover:text-purple-700 hidden md:inline">Blog</Link>
           <Link to="/agents" className="text-gray-600 hover:text-purple-700 hidden md:inline">Find Agent</Link>
           <Link to="/track" className="text-gray-600 hover:text-purple-700 hidden md:inline">Track Order</Link>
-          <Link to="/cart" className="relative text-gray-600 hover:text-purple-700">
+          <Link to="/cart" className="relative inline-flex items-center gap-1 text-gray-600 hover:text-purple-700">
             Cart
-            {count > 0 && <span className="absolute -top-2 -right-3 bg-purple-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{count}</span>}
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-purple-600 text-white text-[11px] font-bold">{count}</span>
           </Link>
           {user ? (
             <>
@@ -75,6 +75,10 @@ export default function Layout() {
         <div className="md:hidden bg-white border-b border-gray-200 px-6 py-4 flex flex-col gap-3 text-sm">
           <Link to="/catalogue" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Catalogue</Link>
           <Link to="/quick-order" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Quick Order</Link>
+          <Link to="/cart" onClick={() => setMenuOpen(false)} className="inline-flex items-center justify-between text-gray-700 hover:text-purple-700">
+            <span>Cart</span>
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-purple-600 text-white text-[11px] font-bold">{count}</span>
+          </Link>
           <Link to="/scent-finder" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Find Your Scent</Link>
           <Link to="/blog" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Blog</Link>
           <Link to="/agents" onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-purple-700">Find an Agent</Link>

@@ -32,16 +32,16 @@ export default function TrackOrder() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold mb-2">Track My Order</h1>
-      <p className="text-gray-500 mb-6">Enter the phone number you ordered with to see your latest orders and delivery status.</p>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-2">Track My Order</h1>
+      <p className="text-gray-500 mb-6 text-sm">Enter the phone number you ordered with to see your latest orders and delivery status.</p>
 
-      <form onSubmit={handleSubmit} className="flex gap-2 mb-8">
+      <form onSubmit={handleSubmit} className="flex gap-2 mb-6">
         <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)}
           placeholder="e.g. 0821234567"
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm" />
+          className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-sm" />
         <button type="submit" disabled={loading}
-          className="bg-purple-700 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-purple-800 disabled:opacity-50">
+          className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 transition-colors">
           {loading ? 'Checking...' : 'Track'}
         </button>
       </form>
