@@ -150,7 +150,10 @@ async def _deliver_reply_safe(database, event: dict, reply: dict | None) -> None
     try:
         delivery = await deliver_reply(event, reply)
         if delivery and delivery.get("status") not in ("sent", "dry_run", "skipped"):
-            logger.warning("WEBHOOK bg_delivery_failed | status=%s", delivery.get("status"))
+            logger.warning("WEBHOOK bg_delivery_failed | status=%s | detail=%s | to=%s",
+                           delivery.get("status"), str(delivery)[:300], event.get("from"))
+        elif delivery is None:
+            logger.warning("WEBHOOK bg_delivery_none | reply=%s to=%s", bool(reply), event.get("from"))
     except Exception as exc:
         logger.error("WEBHOOK bg_delivery_error | %s", exc)
 

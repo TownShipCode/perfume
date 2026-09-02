@@ -15,6 +15,10 @@ async def deliver_reply(event: dict[str, Any], reply: dict[str, Any] | None) -> 
     if not recipient:
         return {"status": "skipped", "reason": "missing_recipient"}
 
+    # Normalize E.164: Kapso/Meta expect "27833218913" (no leading +).
+    # webhook.py stores "+27833218913" for DB consistency, so strip it for sends.
+    recipient = recipient.lstrip("+")
+
     # Interactive messages (buttons, location requests, etc.)
     if reply.get("type") == "interactive":
         payload = reply.get("payload")
