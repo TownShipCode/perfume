@@ -1,0 +1,64 @@
+name: Backend tests (SQLite + Postgres parity)
+
+on:
+  push:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-tests.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # A real Postgres service so schema/migrations are validated on the
+    # production engine, not only through the SQLite compat shim.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: zen_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install backend
+        working-directory: backend
+        run: |
+          pip install -e .
+          pip install pytest
+
+      - name: Run suite on SQLite (fast default)
+        working-directory: backend
+        env:
+          LOCAL_SQLITE_PATH: app-ci.db
+          WHATSAPP_SEND_MODE: dry_run
+        run: |
+          python -m pytest tests -q -p no:cacheprovider --ignore=tests/test_postgres_parity.py
+
+      - name: Run Postgres parity tests (real Postgres engine)
+        # The SQLite suite's per-test files can't share one PG schema yet, so
+        # the parity file is the Postgres gate: it runs the REAL migration
+        # chain on Postgres and asserts the schema invariants that production
+        # depends on (e.g. the partial email unique index).
+        working-directory: backend
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zen_test
+          WHATSAPP_SEND_MODE: dry_run
+        run: |
+          python -m pytest tests/test_postgres_parity.py -q -p no:cacheprovider
