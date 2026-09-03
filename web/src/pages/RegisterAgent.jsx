@@ -65,14 +65,14 @@ export default function RegisterAgent() {
       {/* ── HERO ── */}
       <section className="bg-gradient-to-b from-purple-700 to-purple-900 text-white py-16 px-4 text-center">
         <span className="inline-block bg-purple-500/40 text-purple-100 text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          NO STARTER PACK REQUIRED
+          REGISTER ONCE · NO STARTER PACK REQUIRED
         </span>
         <h1 className="text-3xl md:text-4xl font-bold mb-3">
           Turn your phone into a perfume business
         </h1>
         <p className="text-purple-200 max-w-lg mx-auto mb-6 text-lg">
           Buy wholesale. Sell at <strong>2× your price</strong>. Earn <strong>5% commission</strong> from agents you recruit.
-          All from WhatsApp. No website needed.
+          Registration is <strong>once-off</strong> — after that you just order like normal. All from WhatsApp. No website needed.
         </p>
         <div className="flex gap-3 justify-center flex-wrap">
           <button onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth' })}

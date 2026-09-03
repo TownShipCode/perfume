@@ -232,17 +232,15 @@ def test_order_flow_returns_catalogue_for_menu_command(tmp_path, monkeypatch) ->
                 database,
                 {"message_id": "m1", "from": "27820000000", "type": "text", "text": "menu", "profile_name": "Alice"},
             )
-            assert result["action"] == "catalogue_web"
-            assert "catalogue" in result["web_url"]
+            assert result["action"] == "catalogue"
+            assert "Red Shoes" in result["catalogue"]
+            assert "Blue Hat" in result["catalogue"]
 
             reply = await build_customer_reply(database, result)
             assert reply is not None
-            assert reply["type"] == "interactive"
-            interactive = reply["payload"]["interactive"]
-            assert interactive["type"] == "cta_url"
-            assert interactive["action"]["name"] == "cta_url"
-            assert "catalogue" in interactive["action"]["parameters"]["url"]
-            assert "Browse Our Catalogue" in interactive["body"]["text"]
+            assert "Red Shoes" in reply["text"]
+            assert "Blue Hat" in reply["text"]
+            assert "1" in reply["text"]  # product numbers present for in-chat ordering
 
             session = await get_session_by_phone(database, "27820000000")
             assert session is not None
@@ -279,7 +277,8 @@ def test_order_flow_uses_configured_catalogue_commands(tmp_path, monkeypatch) ->
                 database,
                 {"message_id": "m1", "from": "27820000000", "type": "text", "text": "shop", "profile_name": "Alice"},
             )
-            assert configured["action"] == "catalogue_web"
+            assert configured["action"] == "catalogue"
+            assert "Red Shoes" in configured["catalogue"]
 
             default_menu = await handle_text_message(
                 database,

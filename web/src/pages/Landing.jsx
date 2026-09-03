@@ -10,10 +10,10 @@ export default function Landing() {
   const [productsState, setProductsState] = useState('loading'); // loading | ready | empty
   const { addItem, items } = useCart();
 
-  // Product "display window": real catalogue items, so a visitor sees
-  // what is for sale immediately. Minimal text — the page's job is ordering.
+  // Product "display window": a tight set of 4 bestsellers; the full range
+  // lives on /catalogue. Minimal text — the page's job is ordering.
   useEffect(() => {
-    api('/api/products?page_size=8')
+    api('/api/products?page_size=4')
       .then(d => {
         const list = d.items || d.products || [];
         setFeatured(list);

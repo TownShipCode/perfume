@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from decimal import Decimal
 from typing import Any
 
@@ -65,6 +66,56 @@ async def build_catalog_lines(database: Database) -> list[str]:
         emoji = _product_emoji(num)
         lines.append(f"{emoji} *{num}.* {name} — R{price}")
     return lines
+
+
+# ── In-chat (WhatsApp) recent catalogue ──
+# The bot renders the active products as a plain numbered list so customers can
+# see the recent catalogue WITHOUT leaving WhatsApp. Rendering involves a
+# keyword join, so we cache the rendered text and only rebuild it when the
+# products actually change (fingerprint = count + max updated_at). A short TTL
+# is a safety net for external/seed writes.
+_CATALOGUE_CACHE: dict[str, object] = {"fingerprint": None, "text": None, "ts": 0.0}
+_CATALOGUE_TTL_SECONDS = 30.0
+
+
+def invalidate_catalogue_cache() -> None:
+    """Drop the cached in-chat catalogue (call on product writes)."""
+    _CATALOGUE_CACHE.update({"fingerprint": None, "text": None, "ts": 0.0})
+
+
+async def _catalogue_fingerprint(database: Database) -> str:
+    mode = database.mode
+    if mode == "postgres":
+        row = await fetch_one(
+            database,
+            "SELECT COUNT(*) AS c, COALESCE(MAX(updated_at)::text, '') AS m FROM products WHERE is_active = TRUE",
+        )
+    else:
+        row = await fetch_one(
+            database,
+            "SELECT COUNT(*) AS c, COALESCE(MAX(updated_at), '') AS m FROM products WHERE is_active = 1",
+        )
+    if row is None:
+        return "0|"
+    return f"{row['c']}|{row['m']}"
+
+
+async def build_recent_catalogue_text(database: Database) -> str:
+    """Return the rendered in-chat catalogue, cached until products change."""
+    now = time.monotonic()
+    fingerprint = await _catalogue_fingerprint(database)
+    cache = _CATALOGUE_CACHE
+    if (
+        cache["fingerprint"] == fingerprint
+        and cache["text"] is not None
+        and (now - float(cache["ts"])) < _CATALOGUE_TTL_SECONDS
+    ):
+        return str(cache["text"])
+
+    lines = await build_catalog_lines(database)
+    text = "\n".join(lines) if lines else "No products available right now."
+    cache.update({"fingerprint": fingerprint, "text": text, "ts": now})
+    return text
 
 
 def _product_emoji(product_number: int) -> str:
@@ -139,6 +190,7 @@ async def get_keyword_map(database: Database) -> dict[str, dict[str, Any]]:
 
 
 async def create_product(database: Database, payload: ProductInput) -> dict[str, Any]:
+    invalidate_catalogue_cache()
     normalized_keywords = _normalize_keywords(payload.keywords)
 
     if database.mode == "postgres":
@@ -275,6 +327,7 @@ async def get_products_by_ids(database: Database, product_ids: list[int]) -> dic
 
 
 async def update_product(database: Database, product_id: int, payload: ProductUpdateInput) -> dict[str, Any] | None:
+    invalidate_catalogue_cache()
     existing = await get_product_by_id(database, product_id)
     if existing is None:
         return None
@@ -339,6 +392,7 @@ async def update_product(database: Database, product_id: int, payload: ProductUp
 
 
 async def delete_product(database: Database, product_id: int) -> bool:
+    invalidate_catalogue_cache()
     existing = await get_product_by_id(database, product_id)
     if existing is None:
         return False

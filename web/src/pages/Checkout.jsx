@@ -4,13 +4,36 @@ import { useCart } from '../useCart';
 import { api } from '../api';
 import { useConfig, shippingFee, freeThreshold } from '../useConfig';
 
+const DELIVERY_STORAGE_KEY = 'zf_delivery_details';
+
+function loadSavedDelivery() {
+  try {
+    const raw = localStorage.getItem(DELIVERY_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveDelivery(form) {
+  try {
+    // Only persist what the customer typed (skip empty optional fields).
+    const saved = {};
+    Object.keys(form).forEach(k => { if (form[k]) saved[k] = form[k]; });
+    localStorage.setItem(DELIVERY_STORAGE_KEY, JSON.stringify(saved));
+  } catch { /* storage unavailable — non-fatal */ }
+}
+
 export default function Checkout() {
   const { items, total, clearCart } = useCart();
   const navigate = useNavigate();
   const config = useConfig();
   const shipFee = shippingFee(config);
   const threshold = freeThreshold(config);
-  const [form, setForm] = useState({ name: '', surname: '', email: '', phone: '', area: '', street: '', city: '', postal_code: '', province: '' });
+  const [form, setForm] = useState(() => ({
+    name: '', surname: '', email: '', phone: '', area: '', street: '', city: '', postal_code: '', province: '',
+    ...loadSavedDelivery(),
+  }));
   const [payment, setPayment] = useState('yoco');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -40,6 +63,8 @@ export default function Checkout() {
         payment_method: payment,
       };
       const result = await api('/api/orders/web', { method: 'POST', body: JSON.stringify(payload) });
+      // Remember details so the next order on this device is pre-filled.
+      saveDelivery(form);
       clearCart();
       const orderId = result.order?.id;
       if (result.checkout_url) {

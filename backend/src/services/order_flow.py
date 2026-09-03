@@ -93,11 +93,14 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
     )
 
     if lowered in settings.whatsapp_catalog_commands:
-        web_url = settings.web_base_url.rstrip("/")
+        # In-chat recent catalogue — customers see + order directly in WhatsApp,
+        # no need to leave the platform. Cached (see build_recent_catalogue_text).
+        from src.services.catalog_service import build_recent_catalogue_text
+        catalogue = await build_recent_catalogue_text(database)
         return {
-            "action": "catalogue_web",
+            "action": "catalogue",
             "state": session.get("state", State.IDLE),
-            "web_url": f"{web_url}/catalogue",
+            "catalogue": catalogue,
         }
 
     # ── Confirmation step: agent confirmed/cancelled a pending order ──

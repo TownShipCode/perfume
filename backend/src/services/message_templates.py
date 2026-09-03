@@ -453,7 +453,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         customer_name = result.get("customer_name", "")
         greeting = f" {customer_name}" if customer_name else ""
         register_url = result.get("register_url", "")
-        return {"text": f"🚀 *Become a Zen Fragrances Agent!*\n\nHi{greeting}! Ready to start your own perfume business?\n\n✨ *Why become an agent?*\n• Buy at wholesale prices (R40-100/bottle)\n• Sell at your own retail price (~2× markup)\n• No starter pack required\n• Order via WhatsApp — no website needed\n• Earn commission by building your own team\n\n📝 Register here:\n{register_url}\n\nAlready registered? Just start ordering — your agent discount is automatic!"}
+        return {"text": f"🚀 *Become a Zen Fragrances Agent!*\n\nHi{greeting}! Ready to start your own perfume business?\n\n✅ *Registration is once-off* — fill it in now and you're set for life. No re-registering, no renewal.\n\n✨ *Why become an agent?*\n• Buy at wholesale prices (R40-100/bottle)\n• Sell at your own retail price (~2× markup)\n• No starter pack required\n• Order via WhatsApp — no website needed\n• Earn commission by building your own team\n\n📝 Register here (one time only):\n{register_url}\n\nAlready registered? Just start ordering — your agent discount is automatic!"}
 
     if action == "internal_error":
         return {"text": result.get("text", "Something went wrong. Please try again.")}

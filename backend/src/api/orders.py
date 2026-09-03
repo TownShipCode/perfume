@@ -292,10 +292,15 @@ async def create_web_order(request: Request, payload: WebOrderRequest) -> dict[s
     shipping = settings.shipping_fee if subtotal < settings.free_shipping_threshold else Decimal("0")
     total = subtotal + shipping
 
-    # Get or create customer
-    phone = payload.phone.strip() if payload.phone else "27820000000"
-    if not phone.startswith("+"):
-        phone = f"+{phone}" if not phone.startswith("+") else phone
+    # Get or create customer.
+    # Normalise to the same bare-E.164 format the WhatsApp bot uses (no "+"),
+    # so a customer who checks out on the web is recognised on WhatsApp too and
+    # does not re-enter delivery details on their next order.
+    phone = (payload.phone or "").strip()
+    if phone.startswith("+"):
+        phone = phone[1:]
+    if not phone:
+        phone = "27820000000"
     customer = await get_or_create_customer(db, phone, payload.name)
 
     # Build address
@@ -309,6 +314,22 @@ async def create_web_order(request: Request, payload: WebOrderRequest) -> dict[s
         cart_items=cart_items,
         total=total,
         shipping_fee=shipping,
+    )
+
+    # Persist the delivery profile so repeat customers (web or WhatsApp) are
+    # recognised and don't re-enter their details on the next order.
+    from src.services.customer_service import save_customer_profile
+    await save_customer_profile(
+        db,
+        phone,
+        name=payload.name,
+        surname=payload.surname,
+        email=payload.email,
+        area=payload.area,
+        street=payload.street,
+        city=payload.city,
+        postal_code=payload.postal_code,
+        province=payload.province,
     )
 
     # Yoco checkout
