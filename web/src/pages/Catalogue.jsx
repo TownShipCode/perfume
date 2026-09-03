@@ -48,7 +48,7 @@ export default function Catalogue() {
     if (category) params.set('category', category);
     if (gender) params.set('gender', gender);
     if (scentFamily) params.set('scent_family', scentFamily);
-    params.set('page_size', '24');
+    params.set('page_size', '100');
     api(`/api/products?${params}`)
       .then(d => setProducts(d.items || d.products || []))
       .catch(() => setProducts([]))

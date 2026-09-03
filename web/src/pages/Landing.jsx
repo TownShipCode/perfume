@@ -39,7 +39,7 @@ export default function Landing() {
                 Buy at wholesale, sell at your price. Starter pack at R420 excluding shipping, no minimum order — order on WhatsApp in seconds.
               </p>
               <div className="flex flex-wrap gap-2 mb-8">
-                {['Inspired by, your favourite designer scents', 'Oil-based · Alcohol-free', 'Long-lasting', 'Skin-friendly'].map(v => (
+                {['Inspired by your favourite designer scents', 'Oil-based · Alcohol-free', 'Long-lasting', 'Skin-friendly'].map(v => (
                   <span key={v} className="bg-white/10 text-purple-50 text-xs font-semibold px-3 py-1.5 rounded-full">{v}</span>
                 ))}
               </div>

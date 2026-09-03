@@ -26,20 +26,36 @@ async def get_products(
     request: Request,
     search: str = "",
     page: int = 1,
-    page_size: int = 20,
+    page_size: int | None = None,
     category: str = "",
     gender: str = "",
     sort: str = "number",
 ) -> dict[str, object]:
-    """Paginated + filtered product search for WhatsApp + web store."""
+    """Paginated + filtered product search for WhatsApp + web store.
+
+    When no filter is given, the full list is returned unless an explicit
+    ``page_size`` is provided (then the list is paginated in-memory). Callers
+    that need everything (legacy dashboard management) pass no page_size and
+    still get the complete list, including inactive products.
+    """
     if search or category or gender:
         return await search_products(
             request.app.state.database, search,
-            page=page, page_size=page_size,
+            page=page, page_size=page_size or 20,
             category=category or None, gender=gender or None, sort=sort,
         )
     products = await list_all_products(request.app.state.database)
-    return {"items": products, "count": len(products)}
+    if page_size is None:
+        return {"items": products, "count": len(products)}
+    start = (page - 1) * page_size
+    page_items = products[start : start + page_size]
+    return {
+        "items": page_items,
+        "count": len(page_items),
+        "total": len(products),
+        "page": page,
+        "page_size": page_size,
+    }
 
 
 @router.get("/categories")
