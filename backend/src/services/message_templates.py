@@ -10,37 +10,37 @@ from src.db.connection import Database, execute, fetch_all, fetch_one
 
 
 DEFAULT_TEMPLATES = {
-    "catalogue": "📋 *Available Products*\n\n{catalogue}\n\n💡 Type a number to order, or *info 1* for details & image.",
-    "welcome_catalogue": "👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n💡 Type a number to order, or *info 1* for details & image.",
+    "catalogue": "*Available Products*\n\n{catalogue}\n\nType a number to order, or *info 1* for details & image.",
+    "welcome_catalogue": "Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\nType a number to order, or *info 1* for details & image.",
     "product_detail": "{product_name}\n{description}\nPrice: R{price}\n\n_Reply with \"1 {product_name}\" to order._",
-    "language_selection": "🌍 Please choose your language:\n🇬🇧 Reply: en for English\n🇿🇦 Reply: zu for isiZulu",
-    "language_set": "✅ Language set to {lang}.\n\n👋 Hi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_Reply with a number to order, e.g. \"1\" for 1x BLACK OPIUM._",
-    "cart_update": "🛒 Added {quantity}x *{product_name}*\nTotal: R{total}",
-    "address_request_name": "👤 What is your FIRST NAME?",
-    "address_request_surname": "📝 What is your SURNAME?",
-    "address_request": "📍 What is your AREA?",
-    "address_request_street": "🏠 Now send your STREET and HOUSE NUMBER.",
-    "address_request_city": "🏙️ Now send your CITY.",
-    "address_request_postal_code": "📮 Now send your POSTAL CODE.",
-    "address_request_province": "🗺️ Now send your PROVINCE.",
-    "address_collection_intro": "🚚 *Let's get your order to you!*\n\nTo make sure your products reach you safely, please share a few delivery details.",
-    "profile_confirmation": "📋 *Your Profile*\n\n👤 Name: {customer_name}\n📝 Surname: {surname}\n📍 Address: {full_address}\n📧 Email: {email}\n🗺️ Province: {province}\n\nIs this correct?",
-    "address_confirmation": "✅ Address saved: {full_address}. Is this correct?",
+    "language_selection": "Please choose your language:\nen — English\nzu — isiZulu",
+    "language_set": "Language set to {lang}.\n\nHi{customer_name}! Here is our catalogue:\n\n{catalogue}\n\n_Reply with a number to order, e.g. \"1\" for 1x BLACK OPIUM._",
+    "cart_update": "Added {quantity}x *{product_name}*\nTotal: R{total}",
+    "address_request_name": "What is your FIRST NAME?",
+    "address_request_surname": "What is your SURNAME?",
+    "address_request": "What is your AREA?",
+    "address_request_street": "Now send your STREET and HOUSE NUMBER.",
+    "address_request_city": "Now send your CITY.",
+    "address_request_postal_code": "Now send your POSTAL CODE.",
+    "address_request_province": "Now send your PROVINCE.",
+    "address_collection_intro": "*Let's get your order to you!*\n\nTo make sure your products reach you safely, please share a few delivery details.",
+    "profile_confirmation": "*Your Profile*\n\nName: {customer_name}\nSurname: {surname}\nAddress: {full_address}\nEmail: {email}\nProvince: {province}\n\nIs this correct?",
+    "address_confirmation": "Address saved: {full_address}. Is this correct?",
     "address_confirmation_pending": "Please reply *YES* to use your saved address, or *NO* to enter a new one.",
-    "order_final": "✅ *Order #{order_number}*\n\nSubtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\nHow would you like to pay?",
+    "order_final": "*Order #{order_number}*\n\nSubtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\nHow would you like to pay?",
     "payment_selection": "",
-    "bank_details": "🏦 *EFT / Bank Deposit*\n\nBank: {bank_name}\nAccount: {account_number}\nHolder: {account_holder}\nBranch: {branch_code}\nReference: *{order_number}*\n\n📸 Please send your POP once paid.\n🗑️ Type *CANCEL* to cancel.",
-    "yoco_payment_link": "💳 *Pay securely with Yoco*\n\nTap the link to complete your payment:\n{checkout_url}\n\nYour order will be confirmed automatically.",
-    "payment_received": "✅ *Payment received — thank you!* 🙏\n\nOrder #{order_number} is confirmed. We'll notify you once your order is on the way.",
-    "payment_declined": "❌ *Payment declined*\n\nPlease try again or use EFT / Bank Deposit instead.\n\nType *CATALOGUE* to browse or *CHECKOUT* to try again.",
-    "pop_received": "📸 *POP received — thank you!* 🙏\n\nWe'll review your payment and confirm your order shortly.\nYou'll receive a notification once your order is on the way.",
-    "order_confirmed": "✅ *Order #{order_number} Confirmed!* 🎉\n\nHi {customer_name}, your order has been processed and sent to our fulfilment team.\n\n🛒 {items}\n💰 Total: R{total}\n🚚 Delivery: {courier}\n\nWe'll notify you once your order is on the way. Thank you for choosing Zen Fragrances! ✨",
-    "order_shipped": "🚚 *Your order is on the way!*\n\nOrder #{order_number}\n📦 Waybill: {tracking_info}\n🔗 Track your order: {tracking_url}\n\n📍 Delivery to:\n{full_address}\n\nThank you for choosing Zen Fragrances! ✨",
-    "checkout_blocked": "🛒 Your cart is empty. Add a product first — reply with a number like *1*.",
-    "unmatched": "❓ I couldn't match that.\n\nType *CATALOGUE* to see products, or a product number like *1* to start ordering.",
-    "awaiting_pop": "⏳ Your order is waiting for POP (proof of payment).\n\n📸 Please send your POP image to confirm.\n🗑️ Type *CANCEL* to cancel this order.\n\n_Your order will expire in {expiry_hours}h if no POP is received._",
-    "order_cancelled": "🗑️ Order cancelled.\n\nWhenever you're ready, just say *Hi* to start a new order. We're here for you! ✨",
-    "manufacturer_forward": "📦 *New Order #{order_number}*\n\n👤 {customer_name}\n📞 {phone_number}\n📍 {full_address}\n\n🛒 Items:\n{items}\n\n🚚 Courier: {courier_name}",
+    "bank_details": "*EFT / Bank Deposit*\n\nBank: {bank_name}\nAccount: {account_number}\nHolder: {account_holder}\nBranch: {branch_code}\nReference: *{order_number}*\n\nPlease send your POP once paid.\nType *CANCEL* to cancel.",
+    "yoco_payment_link": "*Pay securely with Yoco*\n\nTap the link to complete your payment:\n{checkout_url}\n\nYour order will be confirmed automatically.",
+    "payment_received": "*Payment received — thank you!*\n\nOrder #{order_number} is confirmed. We'll notify you once your order is on the way.",
+    "payment_declined": "*Payment declined*\n\nPlease try again or use EFT / Bank Deposit instead.\n\nType *CATALOGUE* to browse or *CHECKOUT* to try again.",
+    "pop_received": "*POP received — thank you!*\n\nWe'll review your payment and confirm your order shortly.\nYou'll receive a notification once your order is on the way.",
+    "order_confirmed": "*Order #{order_number} Confirmed!*\n\nHi {customer_name}, your order has been processed and sent to our fulfilment team.\n\n{items}\nTotal: R{total}\nDelivery: {courier}\n\nWe'll notify you once your order is on the way. Thank you for choosing Zen Fragrances!",
+    "order_shipped": "*Your order is on the way!*\n\nOrder #{order_number}\nWaybill: {tracking_info}\nTrack your order: {tracking_url}\n\nDelivery to:\n{full_address}\n\nThank you for choosing Zen Fragrances!",
+    "checkout_blocked": "Your cart is empty. Add a product first — reply with a number like *1*.",
+    "unmatched": "I couldn't match that.\n\nType *CATALOGUE* to see products, or a product number like *1* to start ordering.",
+    "awaiting_pop": "Your order is waiting for POP (proof of payment).\n\nPlease send your POP image to confirm.\nType *CANCEL* to cancel this order.\n\n_Your order will expire in {expiry_hours}h if no POP is received._",
+    "order_cancelled": "Order cancelled.\n\nWhenever you're ready, just say *Hi* to start a new order. We're here for you!",
+    "manufacturer_forward": "*New Order #{order_number}*\n\n{customer_name}\n{phone_number}\n{full_address}\n\nItems:\n{items}\n\nCourier: {courier_name}",
 }
 
 
@@ -55,7 +55,7 @@ def _visit_store_reply(body_text: str, web_url: str) -> dict[str, Any]:
     return {
         "type": "interactive",
         "payload": build_visit_store_buttons(body_text, web_url),
-        "fallback_text": f"{body_text}\n🔗 {web_url}",
+        "fallback_text": f"{body_text}\n{web_url}",
     }
 
 
@@ -71,11 +71,11 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         cart = result.get("cart") or {}
         items = cart.get("items", [])
         item_lines = "\n".join(f"  {it.get('quantity', 0)}× {it.get('product_name', '?')} — R{it.get('subtotal', '0')}" for it in items) if items else "(empty)"
-        body = f"🛒 *Your Cart*\n\n{item_lines}\n\n💴 Total: R{cart.get('total', '0.00')}\n\nWhat would you like to do?"
+        body = f"*Your Cart*\n\n{item_lines}\n\nTotal: R{cart.get('total', '0.00')}\n\nWhat would you like to do?"
         return {
             "type": "interactive",
             "payload": build_cart_buttons(body),
-            "fallback_text": f"🛒 Cart total: R{cart.get('total', '0.00')}. Type CHECKOUT to order or type a product name to add more.",
+            "fallback_text": f"Cart total: R{cart.get('total', '0.00')}. Type CHECKOUT to order or type a product name to add more.",
         }
 
     if action == "cart_updated":
@@ -106,7 +106,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
     if action == "catalogue_web":
         web_url = result.get("web_url", "")
         return _visit_store_reply(
-            "🛍️ *Browse Our Catalogue*\n\nView all fragrances with images, filters & scent notes.\n\n⚡ Or order directly here — type a product name, e.g. _\"5 BLACK OPIUM\"_.",
+            "*Browse Our Catalogue*\n\nView all fragrances with images, filters & scent notes.\n\nOr order directly here — type a product name, e.g. _\"5 BLACK OPIUM\"_.",
             web_url,
         )
 
@@ -130,10 +130,10 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         from src.services.whatsapp_buttons import build_product_list_picker, register_picker_mappings
         candidates = result.get("candidates") or []
         if not candidates:
-            return {"text": "❓ I couldn't match that.\n\nType *CATALOGUE* to see products."}
+            return {"text": "I couldn't match that.\n\nType *CATALOGUE* to see products."}
         register_picker_mappings(candidates)
         body = (
-            "🤔 *I found a few matching fragrances.*\n\n"
+            "I found a few matching fragrances:\n\n"
             "Tap the one you meant, or reply with its number."
         )
         fallback_lines = "\n".join(
@@ -152,19 +152,19 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         customer_name = result.get("customer_name") or ""
         greeting = f" {customer_name}" if customer_name else ""
         body = result.get("greeting") or (
-            f"👋 Hi{greeting}! Welcome to *Zen Fragrances*.\n\n"
+            f"Hi{greeting}! Welcome to *Zen Fragrances*.\n\n"
             "What would you like to do?\n\n"
-            "🛍️ *Order* — type a product name (e.g. _\"5 BLACK OPIUM\"_) or its number.\n"
-            "🤝 *Become an Agent* — buy wholesale, sell at your price.\n"
-            "❓ *Help* — commands & FAQs."
+            "*Order* — type a product name (e.g. _\"5 BLACK OPIUM\"_) or its number.\n"
+            "*Become an Agent* — buy wholesale, sell at your price.\n"
+            "*Help* — commands & FAQs."
         )
         web_url = result.get("web_url", "")
         fallback = (
-            f"👋 Hi{greeting}! Welcome to Zen Fragrances.\n\n"
-            "🛍️ *Order* — type a product name (e.g. _\"5 BLACK OPIUM\"_).\n"
-            "📋 *Catalogue* — " + (web_url or "reply CATALOGUE") + "\n"
-            "🤝 *Become an Agent* — reply AGENT.\n"
-            "❓ *Help* — reply HELP."
+            f"Hi{greeting}! Welcome to Zen Fragrances.\n\n"
+            "*Order* — type a product name (e.g. _\"5 BLACK OPIUM\"_).\n"
+            "*Catalogue* — " + (web_url or "reply CATALOGUE") + "\n"
+            "*Become an Agent* — reply AGENT.\n"
+            "*Help* — reply HELP."
         )
         return {
             "type": "interactive",
@@ -183,22 +183,22 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         image_url = result.get("image_url")
 
         if image_url and description:
-            caption = f"🛒 *{product_name}* — R{price}\n\n{description}"
+            caption = f"*{product_name}* — R{price}\n\n{description}"
             buttons_body = f"How many {product_name}?"
             return [
                 {"image_url": image_url, "text": caption},
                 {
                     "type": "interactive",
                     "payload": build_quantity_buttons(buttons_body, settings.quantity_options),
-                    "fallback_text": f"🛒 *{product_name}* — R{price}\n\nHow many? Type a number (e.g. 2).",
+                    "fallback_text": f"*{product_name}* — R{price}\n\nHow many? Type a number (e.g. 2).",
                 },
             ]
 
-        body = f"🛒 *{product_name}* — R{price}\n\nHow many would you like?\nType a number or tap:"
+        body = f"*{product_name}* — R{price}\n\nHow many would you like?\nType a number or tap:"
         return {
             "type": "interactive",
             "payload": build_quantity_buttons(body, settings.quantity_options),
-            "fallback_text": f"🛒 *{product_name}* — R{price}\n\nHow many? Type a number (e.g. 2).",
+            "fallback_text": f"*{product_name}* — R{price}\n\nHow many? Type a number (e.g. 2).",
         }
 
     if action == "address_collection_started":
@@ -269,19 +269,19 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
             # Payment not configured yet → clear path: order is captured, we
             # confirm payment details with the customer out-of-band.
             return {"text": (
-                f"✅ *Order #{order_number} placed!*\n\n"
+                f"*Order #{order_number} placed!*\n\n"
                 f"Subtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\n"
-                "📞 Payment isn't active online yet — our team will confirm your "
+                "Payment isn't active online yet — our team will confirm your "
                 "payment details to complete the order. Reply *CANCEL* if you'd like to cancel."
             )}
 
         # Send payment selection buttons
         from src.services.whatsapp_buttons import build_payment_buttons
-        body = f"✅ *Order #{order_number}*\n\nSubtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\nHow would you like to pay?"
+        body = f"*Order #{order_number}*\n\nSubtotal: R{subtotal}\nDelivery: {shipping_line}\n*Total: R{total}*\n\nHow would you like to pay?"
         return {
             "type": "interactive",
             "payload": build_payment_buttons(body, live_methods),
-            "fallback_text": f"✅ Order #{order_number} — R{total}. Reply YOCO to pay online or EFT for bank details.",
+            "fallback_text": f"Order #{order_number} — R{total}. Reply YOCO to pay online or EFT for bank details.",
         }
 
     if action == "pop_received":
@@ -291,7 +291,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         settings = get_settings()
         web_url = settings.web_base_url.rstrip("/")
         return _visit_store_reply(
-            "🛒 *Your cart is empty!*\n\nBrowse our store, or type a product name here, e.g. _\"5 BLACK OPIUM\"_.",
+            "*Your cart is empty!*\n\nBrowse our store, or type a product name here, e.g. _\"5 BLACK OPIUM\"_.",
             f"{web_url}/catalogue",
         )
 
@@ -300,7 +300,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         settings = get_settings()
         web_url = settings.web_base_url.rstrip("/")
         return _visit_store_reply(
-            f"❓ Product #{attempted} not found.\n\nBrowse our full store, or type a product name directly, e.g. _\"5 BLACK OPIUM\"_.",
+            f"Product #{attempted} not found.\n\nBrowse our full store, or type a product name directly, e.g. _\"5 BLACK OPIUM\"_.",
             f"{web_url}/catalogue",
         )
 
@@ -330,7 +330,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
             base["image_url"] = image_url
         if product_url:
             # Click-through URL button instead of raw URL text
-            button = _visit_store_reply("🔗 *View this product on our website*", product_url)
+            button = _visit_store_reply("*View this product on our website*", product_url)
             return [base, button]
         return base
 
@@ -338,17 +338,17 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         settings = get_settings()
         web_url = result.get("web_url") or f"{settings.web_base_url.rstrip('/')}/catalogue"
         return _visit_store_reply(
-            f"💡 *{settings.store_name}*\n\n⚡ Quick order via WhatsApp:\n• Type a product name: e.g. _\"5 BLACK OPIUM\"_\n• Check stock: _\"stock 10\"_\n• View cart: _\"cart\"_\n• Checkout: _\"checkout\"_\n• Become an Agent: _\"agent\"_\n• Cancel: _\"cancel\"_",
+            f"*{settings.store_name}*\n\nQuick order via WhatsApp:\n• Type a product name: e.g. _\"5 BLACK OPIUM\"_\n• Check stock: _\"stock 10\"_\n• View cart: _\"cart\"_\n• Checkout: _\"checkout\"_\n• Become an Agent: _\"agent\"_\n• Cancel: _\"cancel\"_",
             web_url,
         )
 
     if action == "confirm_order":
         from src.services.whatsapp_buttons import build_confirm_order_buttons
-        body = f"🛒 *Confirm your order*\n\n{result.get('quantity', '?')}× *{result.get('product_name', 'item')}*\nR{result.get('unit_price', '0')} each = R{result.get('unit_total', '0')}\n\nAdd to cart?"
+        body = f"*Confirm your order*\n\n{result.get('quantity', '?')}× *{result.get('product_name', 'item')}*\nR{result.get('unit_price', '0')} each = R{result.get('unit_total', '0')}\n\nAdd to cart?"
         reply = {
             "type": "interactive",
             "payload": build_confirm_order_buttons(body),
-            "fallback_text": f"🛒 Adding {result.get('quantity', '?')}× {result.get('product_name', 'item')} at R{result.get('unit_total', '0')}. Reply YES to confirm or type CANCEL.",
+            "fallback_text": f"Adding {result.get('quantity', '?')}× {result.get('product_name', 'item')} at R{result.get('unit_total', '0')}. Reply YES to confirm or type CANCEL.",
         }
         if result.get("image_url"):
             return [{"image_url": result["image_url"], "text": f"*{result.get('product_name', 'item')}*"}, reply]
@@ -358,16 +358,16 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         cart = result.get("cart") or {}
         total = cart.get("total", "0")
         item_count = len(cart.get("items", []))
-        tips = "\n\n💡 *Tips:* `stock 10` · `cart` · `checkout` · `cancel`" if item_count == 1 else ""
-        return {"text": f"✅ *{result.get('quantity', '?')}× {result.get('product_name', 'item')} added!*\n\n🛒 Cart: {item_count} item{'s' if item_count != 1 else ''} · R{total}\n\nType another product or *CHECKOUT* when ready.{tips}"}
+        tips = "\n\n*Tips:* `stock 10` · `cart` · `checkout` · `cancel`" if item_count == 1 else ""
+        return {"text": f"*{result.get('quantity', '?')}× {result.get('product_name', 'item')} added!*\n\nCart: {item_count} item{'s' if item_count != 1 else ''} · R{total}\n\nType another product or *CHECKOUT* when ready.{tips}"}
 
     if action == "order_cancelled_pending":
-        return {"text": "❌ Order cancelled.\n\nType a product name to start again, or *HELP* for options."}
+        return {"text": "Order cancelled.\n\nType a product name to start again, or *HELP* for options."}
 
     if action == "repeat_order":
         item_list = result.get("item_list", "")
         total = result.get("total", "0")
-        return {"text": f"🔄 *Last order restored!*\n\n{item_list}\n\n💰 Total: R{total}\n\nType *CHECKOUT* to order or add more products.\nType *CANCEL* to clear."}
+        return {"text": f"*Last order restored!*\n\n{item_list}\n\nTotal: R{total}\n\nType *CHECKOUT* to order or add more products.\nType *CANCEL* to clear."}
 
     if action == "language_selection":
         return {"text": await render_template(database, "language_selection")}
@@ -391,15 +391,15 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         live_methods = settings.live_payment_methods
         if not live_methods:
             return {"text": (
-                f"✅ Order #{result.get('order_number', '')} placed — R{result.get('total', '0')}.\n\n"
-                "📞 Payment isn't active online yet — our team will confirm your "
+                f"Order #{result.get('order_number', '')} placed — R{result.get('total', '0')}.\n\n"
+                "Payment isn't active online yet — our team will confirm your "
                 "payment details to complete the order."
             )}
-        body = f"✅ *Order #{result.get('order_number', '')}*\n\nSubtotal: R{result.get('subtotal', '0')}\nDelivery: {result.get('shipping_line', '')}\n*Total: R{result.get('total', '0')}*\n\nHow would you like to pay?"
+        body = f"*Order #{result.get('order_number', '')}*\n\nSubtotal: R{result.get('subtotal', '0')}\nDelivery: {result.get('shipping_line', '')}\n*Total: R{result.get('total', '0')}*\n\nHow would you like to pay?"
         return {
             "type": "interactive",
             "payload": build_payment_buttons(body, live_methods),
-            "fallback_text": f"✅ Order #{result.get('order_number', '')} confirmed — R{result.get('total', '0')}. Reply YOCO to pay online or EFT for bank details.",
+            "fallback_text": f"Order #{result.get('order_number', '')} confirmed — R{result.get('total', '0')}. Reply YOCO to pay online or EFT for bank details.",
         }
 
     if action == "bank_details":
@@ -439,7 +439,7 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
 
     if action == "price_list":
         url = result.get("url", "")
-        return {"text": f"📋 *Agent Wholesale Price List*\n\nDownload or print our current wholesale price list:\n{url}\n\n_Share this with your customers. Suggested retail: 2× wholesale._"}
+        return {"text": f"*Agent Wholesale Price List*\n\nDownload or print our current wholesale price list:\n{url}\n\n_Share this with your customers. Suggested retail: 2× wholesale._"}
 
     if action == "catalog_link":
         catalog_url = result.get("catalog_url", "")
@@ -447,13 +447,13 @@ async def build_customer_reply(database: Database, result: dict[str, object] | N
         #  - WhatsApp auto-hyperlinks wa.me/c/... → already a click-through link
         #  - opens INSIDE WhatsApp (data-friendly)
         #  - text links can be FORWARDED/shared to customers; interactive URL buttons cannot
-        return {"text": f"🛍️ *WhatsApp Catalog*\n\nView all our fragrances inside WhatsApp.\n\n{catalog_url}\n\n_Tap to open, or forward to share with customers._"}
+        return {"text": f"*WhatsApp Catalog*\n\nView all our fragrances inside WhatsApp.\n\n{catalog_url}\n\n_Tap to open, or forward to share with customers._"}
 
     if action == "become_agent":
         customer_name = result.get("customer_name", "")
         greeting = f" {customer_name}" if customer_name else ""
         register_url = result.get("register_url", "")
-        return {"text": f"🚀 *Become a Zen Fragrances Agent!*\n\nHi{greeting}! Ready to start your own perfume business?\n\n✅ *Registration is once-off* — fill it in now and you're set for life. No re-registering, no renewal.\n\n✨ *Why become an agent?*\n• Buy at wholesale prices (R40-100/bottle)\n• Sell at your own retail price (~2× markup)\n• No starter pack required\n• Order via WhatsApp — no website needed\n• Earn commission by building your own team\n\n📝 Register here (one time only):\n{register_url}\n\nAlready registered? Just start ordering — your agent discount is automatic!"}
+        return {"text": f"*Become a Zen Fragrances Agent!*\n\nHi{greeting}! Ready to start your own perfume business?\n\n*Registration is once-off* — fill it in now and you're set for life. No re-registering, no renewal.\n\n*Why become an agent?*\n• Buy at wholesale prices (R40-100/bottle)\n• Sell at your own retail price (~2× markup)\n• No starter pack required\n• Order via WhatsApp — no website needed\n• Earn commission by building your own team\n\nRegister here (one time only):\n{register_url}\n\nAlready registered? Just start ordering — your agent discount is automatic!"}
 
     if action == "internal_error":
         return {"text": result.get("text", "Something went wrong. Please try again.")}

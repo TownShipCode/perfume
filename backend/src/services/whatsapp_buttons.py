@@ -55,9 +55,9 @@ def build_welcome_buttons(body_text: str, web_url: str) -> dict[str, Any]:
             "body": {"text": body_text},
             "action": {
                 "buttons": [
-                    {"type": "reply", "reply": {"id": "shop_now", "title": "🛍️ Shop / Order"}},
-                    {"type": "reply", "reply": {"id": "become_agent", "title": "🤝 Become an Agent"}},
-                    {"type": "reply", "reply": {"id": "help", "title": "❓ Help"}},
+                    {"type": "reply", "reply": {"id": "shop_now", "title": "Shop / Order"}},
+                    {"type": "reply", "reply": {"id": "become_agent", "title": "Become an Agent"}},
+                    {"type": "reply", "reply": {"id": "help", "title": "Help"}},
                 ]
             },
         },
@@ -82,7 +82,7 @@ def build_visit_store_buttons(body_text: str, web_url: str) -> dict[str, Any]:
             "footer": {"text": "Tap the button below to open the store."},
             "action": {
                 "name": "cta_url",
-                "parameters": {"display_text": "🛍️ Visit Store", "url": web_url},
+                "parameters": {"display_text": "Visit Store", "url": web_url},
             },
         },
     }
@@ -99,8 +99,8 @@ def build_confirm_buttons(body_text: str) -> dict[str, Any]:
             "body": {"text": body_text},
             "action": {
                 "buttons": [
-                    {"type": "reply", "reply": {"id": "yes", "title": "✅ Yes"}},
-                    {"type": "reply", "reply": {"id": "no", "title": "❌ No"}},
+                    {"type": "reply", "reply": {"id": "yes", "title": "Yes"}},
+                    {"type": "reply", "reply": {"id": "no", "title": "No"}},
                 ]
             },
         },
@@ -135,8 +135,8 @@ def build_cart_buttons(body_text: str) -> dict[str, Any]:
             "body": {"text": body_text},
             "action": {
                 "buttons": [
-                    {"type": "reply", "reply": {"id": "add_more", "title": "➕ Add More"}},
-                    {"type": "reply", "reply": {"id": "order", "title": "🛒 Checkout"}},
+                    {"type": "reply", "reply": {"id": "add_more", "title": "Add More"}},
+                    {"type": "reply", "reply": {"id": "order", "title": "Checkout"}},
                 ]
             },
         },
@@ -152,8 +152,8 @@ def build_confirm_order_buttons(body_text: str) -> dict[str, Any]:
             "body": {"text": body_text},
             "action": {
                 "buttons": [
-                    {"type": "reply", "reply": {"id": "confirm_add", "title": "✅ Confirm"}},
-                    {"type": "reply", "reply": {"id": "cancel_add", "title": "❌ Cancel"}},
+                    {"type": "reply", "reply": {"id": "confirm_add", "title": "Confirm"}},
+                    {"type": "reply", "reply": {"id": "cancel_add", "title": "Cancel"}},
                 ]
             },
         },
@@ -164,9 +164,9 @@ def build_payment_buttons(body_text: str, methods_enabled: tuple[str, ...]) -> d
     """Payment selection buttons — Yoco or EFT based on config."""
     buttons: list[dict[str, Any]] = []
     if "yoco" in methods_enabled:
-        buttons.append({"type": "reply", "reply": {"id": "pay_yoco", "title": "💳 Pay with Yoco"}})
+        buttons.append({"type": "reply", "reply": {"id": "pay_yoco", "title": "Pay with Yoco"}})
     if "eft" in methods_enabled:
-        buttons.append({"type": "reply", "reply": {"id": "pay_eft", "title": "🏦 EFT / Deposit"}})
+        buttons.append({"type": "reply", "reply": {"id": "pay_eft", "title": "EFT / Deposit"}})
     return {
         "type": "interactive",
         "interactive": {

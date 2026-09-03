@@ -18,13 +18,13 @@ from src.services.state_machine import State
 
 
 ADDRESS_STEPS = [
-    ("name", "� *Let's get your order to you!*\n\nTo make sure your products reach you safely, please share a few delivery details.\n\n👤 What is your FIRST NAME?"),
-    ("surname", "📝 What is your SURNAME?"),
-    ("area", "📍 What is your AREA?"),
-    ("street", "🏠 Now send your STREET and HOUSE NUMBER."),
-    ("city", "🏙️ Now send your CITY."),
-    ("postal_code", "📮 Now send your POSTAL CODE."),
-    ("province", "🗺️ Now send your PROVINCE."),
+    ("name", "*Let's get your order to you!*\n\nTo make sure your products reach you safely, please share a few delivery details.\n\nWhat is your FIRST NAME?"),
+    ("surname", "What is your SURNAME?"),
+    ("area", "What is your AREA?"),
+    ("street", "Now send your STREET and HOUSE NUMBER."),
+    ("city", "Now send your CITY."),
+    ("postal_code", "Now send your POSTAL CODE."),
+    ("province", "Now send your PROVINCE."),
 ]
 
 logger = logging.getLogger(__name__)
@@ -194,7 +194,7 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
     # ── Agent referral: customer can become an agent ──
     if lowered == "agent" or lowered == "become agent" or lowered == "become an agent":
         if customer.get("role") == "agent":
-            return {"action": "text", "text": "✨ You're already a Zen Fragrances agent! Use your dashboard to manage orders and track commissions."}
+            return {"action": "text", "text": "You're already a Zen Fragrances agent! Use your dashboard to manage orders and track commissions."}
         return {
             "action": "become_agent",
             "state": session.get("state", State.IDLE),
@@ -226,7 +226,7 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
     # ── Cart view: show current cart on demand ──
     if lowered in ("cart", "view cart", "my cart"):
         if not cart_items:
-            return {"action": "text", "text": "🛒 Your cart is empty.\n\nType a product name to add items, e.g. _\"5 BLACK OPIUM\"_."}
+            return {"action": "text", "text": "Your cart is empty.\n\nType a product name to add items, e.g. _\"5 BLACK OPIUM\"_."}
         price_map = await _build_price_map(database)
         cart = build_cart(cart_items, price_map)
         return {
@@ -246,7 +246,7 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
                 last = o
                 break
         if not last or not last.get("items"):
-            return {"action": "text", "text": "📭 No previous orders found.\n\nType a product name to start, e.g. _\"5 BLACK OPIUM\"_."}
+            return {"action": "text", "text": "No previous orders found.\n\nType a product name to start, e.g. _\"5 BLACK OPIUM\"_."}
         items = last["items"]
         product_ids = [it.get("product_id") for it in items if it.get("product_id")]
         from src.services.catalog_service import get_products_by_ids
@@ -261,7 +261,7 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
                 pname = name_map.get(pid, {}).get("name", f"#{pid}") if name_map else f"#{pid}"
                 item_names.append(f"  {qty}× {pname}")
         if not restored:
-            return {"action": "text", "text": "📭 Couldn't restore your last order.\n\nType a product name to start fresh."}
+            return {"action": "text", "text": "Couldn't restore your last order.\n\nType a product name to start fresh."}
         await save_session_state(
             database, phone_number,
             state=State.ORDERING, cart=restored,
@@ -462,10 +462,10 @@ async def _handle_text_message_impl(database: Database, event: dict) -> dict[str
             "state": session.get("state", State.IDLE),
             "customer_name": customer_name,
             "greeting": (
-                f"👋 Hi{greeting}! Welcome to *Zen Fragrances*. What would you like to do?\n\n"
-                "🛍️ *Order* — type a product name (e.g. _\"5 BLACK OPIUM\"_) or its number.\n"
-                "🤝 *Become an Agent* — buy wholesale, sell at your price.\n"
-                "❓ *Help* — commands & FAQs."
+                f"Hi{greeting}! Welcome to *Zen Fragrances*. What would you like to do?\n\n"
+                "*Order* — type a product name (e.g. _\"5 BLACK OPIUM\"_) or its number.\n"
+                "*Become an Agent* — buy wholesale, sell at your price.\n"
+                "*Help* — commands & FAQs."
             ),
             "web_url": f"{web_url}/catalogue",
         }
@@ -550,7 +550,7 @@ async def _handle_address_collection(
             "action": "address_collection_progress",
             "state": session.get("state"),
             "current_step": int(session.get("current_step", 0)),
-            "prompt": "ℹ️ You're providing your delivery details.\n\nReply *CANCEL* to start over, or continue answering the questions.",
+            "prompt": "You're providing your delivery details.\n\nReply *CANCEL* to start over, or continue answering the questions.",
         }
 
     if lowered in settings.whatsapp_catalog_commands:
@@ -558,7 +558,7 @@ async def _handle_address_collection(
             "action": "address_collection_progress",
             "state": session.get("state"),
             "current_step": int(session.get("current_step", 0)),
-            "prompt": "📋 Please finish providing your delivery details first — then you can browse the catalogue.\n\nReply *CANCEL* to start over.",
+            "prompt": "Please finish providing your delivery details first — then you can browse the catalogue.\n\nReply *CANCEL* to start over.",
         }
 
     if lowered in settings.whatsapp_greeting_commands:
@@ -567,7 +567,7 @@ async def _handle_address_collection(
             "action": "address_collection_progress",
             "state": session.get("state"),
             "current_step": int(session.get("current_step", 0)),
-            "prompt": f"👋 You're in the middle of providing your delivery details.\n\n{_prompt}\n\n_Type CANCEL to start over._",
+            "prompt": f"You're in the middle of providing your delivery details.\n\n{_prompt}\n\n_Type CANCEL to start over._",
         }
 
     step_index = int(session.get("current_step", 0))
@@ -575,7 +575,7 @@ async def _handle_address_collection(
     key, _prompt = ADDRESS_STEPS[min(step_index, len(ADDRESS_STEPS) - 1)]
     value = text.strip()
     if len(value) < 2:
-        return {"action": "address_collection_progress", "state": session.get("state"), "current_step": step_index, "prompt": f"⚠️ Please enter a valid {key.replace('_', ' ')}.\n\n{_prompt}"}
+        return {"action": "address_collection_progress", "state": session.get("state"), "current_step": step_index, "prompt": f"Please enter a valid {key.replace('_', ' ')}.\n\n{_prompt}"}
     temp_address[key] = value
 
     if step_index < len(ADDRESS_STEPS) - 1:
@@ -804,7 +804,7 @@ async def _add_pending_to_cart(
         return {
             "action": "interactive_welcome",
             "customer_name": "",
-            "greeting": f"👋 *Welcome to {settings.store_name}!* ✨\n\nWholesale perfumes for resellers.\nWhat would you like to do?\n\n🛍️ *Order* — type a product name (e.g. _\"5 BLACK OPIUM\"_).\n🤝 *Become an Agent* — reply AGENT.\n❓ *Help* — reply HELP.",
+            "greeting": f"*Welcome to {settings.store_name}!*\n\nWholesale perfumes for resellers.\nWhat would you like to do?\n\n*Order* — type a product name (e.g. _\"5 BLACK OPIUM\"_).\n*Become an Agent* — reply AGENT.\n*Help* — reply HELP.",
             "web_url": f"{settings.web_base_url.rstrip('/')}/catalogue",
         }
 
@@ -869,13 +869,13 @@ async def _handle_agent_join(
     if customer.get("role") == "agent" and customer.get("agent_code"):
         return {
             "action": "already_agent",
-            "text": f"⚠️ You're already registered as agent *{customer['agent_code']}*.\nType CATALOGUE to start ordering.",
+            "text": f"You're already registered as agent *{customer['agent_code']}*.\nType CATALOGUE to start ordering.",
         }
 
     # Validate team code
     team_member = await get_customer_by_agent_code(database, team_code)
     if team_member is None or team_member.get("role") != "team_member":
-        return {"action": "error", "text": "❌ Team code not found. Check with your team member."}
+        return {"action": "error", "text": "Team code not found. Check with your team member."}
 
     # Generate recovery PIN
     recovery_pin = str(secrets.randbelow(10000)).zfill(4)
@@ -890,15 +890,15 @@ async def _handle_agent_join(
     )
 
     if agent is None:
-        return {"action": "error", "text": "❌ Registration failed. Please try again or contact support."}
+        return {"action": "error", "text": "Registration failed. Please try again or contact support."}
 
     agent_code_val = agent.get("agent_code", "")
     return {
         "action": "agent_registered",
         "text": (
-            f"✅ *Welcome to Zen Fragrances!*\n\n"
+            f"*Welcome to Zen Fragrances!*\n\n"
             f"Your agent code: *{agent_code_val}*\n"
-            f"🔐 Recovery PIN: *{recovery_pin}* — save this!\n\n"
+            f"Recovery PIN: *{recovery_pin}* — save this!\n\n"
             f"Type *CATALOGUE* to browse, *STOCK <number>* to check availability, "
             f"or reply with a product number to order."
         ),
@@ -921,7 +921,7 @@ async def _handle_agent_recovery(
     agent = await get_customer_by_agent_code(database, agent_code_input)
 
     if agent is None:
-        return {"action": "error", "text": "❌ Agent code not found."}
+        return {"action": "error", "text": "Agent code not found."}
 
     # If PIN provided: direct recovery
     if len(parts) >= 3:
@@ -931,9 +931,9 @@ async def _handle_agent_recovery(
             await migrate_phone_number(database, agent["phone_number"], new_phone)
             return {
                 "action": "agent_recovered",
-                "text": "✅ Your account is now linked to this number. Type CATALOGUE to start ordering.",
+                "text": "Your account is now linked to this number. Type CATALOGUE to start ordering.",
             }
-        return {"action": "error", "text": "❌ Incorrect PIN. If you forgot it, contact your team member for help."}
+        return {"action": "error", "text": "Incorrect PIN. If you forgot it, contact your team member for help."}
 
     # Challenge mode: ask for last order total
     session["recovery_agent_code"] = agent_code_input
@@ -946,7 +946,7 @@ async def _handle_agent_recovery(
     )
     return {
         "action": "recovery_challenge",
-        "text": "🔐 To verify your identity, what was the total of your last order? (e.g. R990)",
+        "text": "To verify your identity, what was the total of your last order? (e.g. R990)",
     }
 
 
@@ -991,7 +991,7 @@ async def _handle_recovery_challenge(
         )
         return {
             "action": "agent_recovered",
-            "text": f"✅ Verified! Your account is now on this number. Type CATALOGUE to order.",
+            "text": f"Verified! Your account is now on this number. Type CATALOGUE to order.",
         }
 
     attempts += 1
@@ -1000,7 +1000,7 @@ async def _handle_recovery_challenge(
             database, phone_number,
             state=State.IDLE, cart=[], current_step=0, temp_address=None,
         )
-        return {"action": "error", "text": "❌ Too many failed attempts. Contact your team member or use RECOVER <code> <pin>."}
+        return {"action": "error", "text": "Too many failed attempts. Contact your team member or use RECOVER <code> <pin>."}
 
     await save_session_state(
         database, phone_number,
@@ -1008,7 +1008,7 @@ async def _handle_recovery_challenge(
         current_step=0,
         temp_address={"recovery_agent_code": agent_code_val, "recovery_attempts": attempts},
     )
-    return {"action": "recovery_challenge", "text": f"❌ Not correct. Try again or contact your team member. ({3 - attempts} attempts left)"}
+    return {"action": "recovery_challenge", "text": f"Not correct. Try again or contact your team member. ({3 - attempts} attempts left)"}
 
 
 # ── Phase 8: Stock check ──
@@ -1034,19 +1034,19 @@ async def _handle_stock_check(database: Database, lowered: str) -> dict[str, obj
         product = products[0] if products else None
 
     if product is None:
-        return {"action": "stock_not_found", "text": f"❌ Product not found: {query}"}
+        return {"action": "stock_not_found", "text": f"Product not found: {query}"}
 
     name = product.get("name", query)
     stock = product.get("stock_quantity")
 
     if stock is None:
-        return {"action": "stock_info", "text": f"📦 *{name}*: In stock ✅"}
+        return {"action": "stock_info", "text": f"*{name}*: In stock"}
     elif stock > 5:
-        return {"action": "stock_info", "text": f"📦 *{name}*: {stock} in stock ✅"}
+        return {"action": "stock_info", "text": f"*{name}*: {stock} in stock"}
     elif stock > 0:
-        return {"action": "stock_info", "text": f"⚠️ *{name}*: only *{stock}* left! Order soon."}
+        return {"action": "stock_info", "text": f"*{name}*: only *{stock}* left! Order soon."}
     else:
-        return {"action": "stock_info", "text": f"❌ *{name}* is out of stock."}
+        return {"action": "stock_info", "text": f"*{name}* is out of stock."}
 
 
 async def handle_image_message(database: Database, event: dict) -> dict[str, object]:

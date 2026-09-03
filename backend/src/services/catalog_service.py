@@ -63,8 +63,7 @@ async def build_catalog_lines(database: Database) -> list[str]:
         num = product["product_number"]
         name = product["name"]
         price = product["price"]
-        emoji = _product_emoji(num)
-        lines.append(f"{emoji} *{num}.* {name} — R{price}")
+        lines.append(f"*{num}.* {name} — R{price}")
     return lines
 
 
@@ -116,13 +115,6 @@ async def build_recent_catalogue_text(database: Database) -> str:
     text = "\n".join(lines) if lines else "No products available right now."
     cache.update({"fingerprint": fingerprint, "text": text, "ts": now})
     return text
-
-
-def _product_emoji(product_number: int) -> str:
-    return {
-        1: "🥂", 2: "🔥", 3: "🏆", 4: "🌊", 5: "🦁", 6: "💵", 7: "🦅", 8: "🖤",
-        9: "🌹", 10: "🌙", 11: "⭐", 12: "👠", 13: "⚡", 14: "💎", 15: "🌸", 16: "🍒",
-    }.get(product_number, "🧴")
 
 
 async def list_all_products(database: Database) -> list[dict]:
